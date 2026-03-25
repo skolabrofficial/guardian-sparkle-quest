@@ -14,16 +14,527 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      announcements: {
+        Row: {
+          author_id: string | null
+          content: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          priority: string | null
+          target_role: Database["public"]["Enums"]["app_role"] | null
+          title: string
+        }
+        Insert: {
+          author_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          priority?: string | null
+          target_role?: Database["public"]["Enums"]["app_role"] | null
+          title: string
+        }
+        Update: {
+          author_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          priority?: string | null
+          target_role?: Database["public"]["Enums"]["app_role"] | null
+          title?: string
+        }
+        Relationships: []
+      }
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      courses: {
+        Row: {
+          created_at: string
+          day_of_week: string | null
+          description: string | null
+          difficulty: string | null
+          faculty_id: string | null
+          id: string
+          is_active: boolean | null
+          lektor_id: string | null
+          max_students: number | null
+          time_slot: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week?: string | null
+          description?: string | null
+          difficulty?: string | null
+          faculty_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          lektor_id?: string | null
+          max_students?: number | null
+          time_slot?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: string | null
+          description?: string | null
+          difficulty?: string | null
+          faculty_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          lektor_id?: string | null
+          max_students?: number | null
+          time_slot?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enrollments: {
+        Row: {
+          course_id: string
+          enrolled_at: string
+          id: string
+          status: string | null
+          student_id: string
+        }
+        Insert: {
+          course_id: string
+          enrolled_at?: string
+          id?: string
+          status?: string | null
+          student_id: string
+        }
+        Update: {
+          course_id?: string
+          enrolled_at?: string
+          id?: string
+          status?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faculties: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          reason: string
+          reporter_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          reason: string
+          reporter_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          reason?: string
+          reporter_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      schedule_items: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          day_of_week: string
+          id: string
+          room: string | null
+          time_slot: string
+          title: string
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          day_of_week: string
+          id?: string
+          room?: string | null
+          time_slot: string
+          title: string
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          day_of_week?: string
+          id?: string
+          room?: string | null
+          time_slot?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_notes: {
+        Row: {
+          content: string | null
+          course_id: string | null
+          created_at: string
+          id: string
+          is_public: boolean | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_notes_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          is_completed: boolean | null
+          sort_order: number | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          is_completed?: boolean | null
+          sort_order?: number | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          is_completed?: boolean | null
+          sort_order?: number | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json | null
+        }
+        Relationships: []
+      }
+      tutoring_answers: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          is_best: boolean | null
+          mentor_id: string
+          question_id: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          is_best?: boolean | null
+          mentor_id: string
+          question_id: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          is_best?: boolean | null
+          mentor_id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutoring_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "tutoring_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tutoring_questions: {
+        Row: {
+          context: string | null
+          created_at: string
+          id: string
+          question: string
+          status: string | null
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context?: string | null
+          created_at?: string
+          id?: string
+          question: string
+          status?: string | null
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context?: string | null
+          created_at?: string
+          id?: string
+          question?: string
+          status?: string | null
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "developer" | "dohledci" | "lektor" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +661,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["developer", "dohledci", "lektor", "student"],
+    },
   },
 } as const
