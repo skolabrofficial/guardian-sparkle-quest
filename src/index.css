@@ -2,95 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --background: 225 60% 97%;
+    --foreground: 0 0% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 0 0% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 11%;
+    --primary: 2 100% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 35 100% 65%;
+    --secondary-foreground: 30 100% 20%;
+    --muted: 225 40% 96%;
+    --muted-foreground: 215 12% 40%;
+    --accent: 163 65% 42%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 20% 91%;
+    --input: 220 20% 91%;
+    --ring: 222 80% 60%;
+    --radius: 18px;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
+    --brand-1: 2 100% 67%;
+    --brand-2: 35 100% 65%;
+    --brand-3: 222 100% 65%;
+    --panel: 0 0% 100%;
+    --panel-soft: 228 100% 98%;
+    --shadow-elegant: 0 18px 34px rgba(20, 26, 40, 0.12);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222 84% 5%;
     --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
+    --card: 222 84% 5%;
     --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 84% 5%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
+    --primary: 2 100% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 35 100% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 163 65% 42%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 217 33% 18%;
+    --input: 217 33% 18%;
+    --ring: 213 27% 84%;
   }
 }
 
@@ -98,8 +71,143 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
+    font-family: 'Nunito', 'Trebuchet MS', 'Segoe UI', sans-serif;
   }
+}
+
+@layer components {
+  .sign-card {
+    @apply no-underline font-extrabold text-foreground bg-card py-3.5 px-2.5 pb-5 text-center rounded-[14px] relative transition-all duration-200 ease-in-out;
+    box-shadow: var(--shadow-elegant);
+    transform: rotate(-1deg);
+  }
+  .sign-card::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -12px;
+    width: 6px;
+    height: 18px;
+    background: #cfa975;
+    transform: translateX(-50%);
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 2px #ad7f49;
+  }
+  .sign-card:hover {
+    transform: translateY(-4px) rotate(1deg);
+    box-shadow: 0 16px 26px rgba(20, 26, 40, 0.16);
+  }
+  .sign-card.active {
+    transform: translateY(-6px) rotate(1deg);
+    box-shadow: 0 16px 26px rgba(20, 26, 40, 0.2);
+  }
+
+  .s-red { @apply bg-red-50 border-2 border-red-200; }
+  .s-blue { @apply bg-blue-50 border-2 border-blue-200; }
+  .s-green { @apply bg-green-50 border-2 border-green-200; }
+  .s-cyan { @apply bg-cyan-50 border-2 border-cyan-200; }
+  .s-yellow { @apply bg-yellow-50 border-2 border-yellow-200; }
+  .s-purple { @apply bg-purple-50 border-2 border-purple-200; }
+  .s-orange { @apply bg-orange-50 border-2 border-orange-200; }
+
+  .feature-card {
+    @apply bg-card rounded-[20px] p-[18px] border border-border;
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .panel-card {
+    @apply bg-card rounded-[18px] p-3.5 px-4 border border-border;
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .stat-card {
+    @apply bg-card rounded-2xl p-3 px-3.5 border border-border text-center;
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .catalog-card {
+    @apply bg-card rounded-[18px] p-3.5 px-4 border border-dashed border-blue-300;
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .poster-gradient {
+    @apply w-full h-40 rounded-xl;
+    background: linear-gradient(120deg, rgba(255,255,255,0.4), transparent 40%),
+      radial-gradient(circle at 30% 30%, #ffb54d, #ff7b55 45%, #b23b3b 100%);
+    box-shadow: inset 0 0 0 4px rgba(255,255,255,0.65);
+  }
+
+  .btn-alik-primary {
+    @apply border-none font-bold py-2 px-2.5 rounded-xl cursor-pointer text-white;
+    background: linear-gradient(180deg, #ff7f3a, #ff5b2a);
+    box-shadow: 0 6px 0 #d9481c;
+  }
+  .btn-alik-primary:hover { filter: brightness(1.05); }
+  .btn-alik-primary:active { box-shadow: 0 2px 0 #d9481c; transform: translateY(4px); }
+
+  .btn-alik-secondary {
+    @apply border-none font-bold py-2 px-2.5 rounded-xl cursor-pointer;
+    background: linear-gradient(180deg, #ffe29b, #f3c35b);
+    color: #6a3a00;
+    box-shadow: 0 6px 0 #c89b46;
+  }
+
+  .btn-alik-accent {
+    @apply border-none font-extrabold py-3.5 px-[18px] rounded-2xl cursor-pointer text-white text-base;
+    background: linear-gradient(180deg, #6ad6c8, #27c1a6);
+    box-shadow: 0 10px 0 #1c9f88;
+  }
+
+  .btn-alik-outline {
+    @apply border border-blue-200 font-bold py-2 px-2.5 rounded-[10px] cursor-pointer;
+    background: #f7f9ff;
+    color: #2e4c7c;
+  }
+
+  .search-tag {
+    @apply px-2 py-1 rounded-full text-xs cursor-pointer select-none;
+    background: #edf5ff;
+    color: #17609b;
+  }
+
+  .hero-section {
+    @apply rounded-3xl p-[18px] px-5 relative overflow-hidden border border-border;
+    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.75)),
+      radial-gradient(circle at 0% 0%, #e9f6ff 0%, transparent 55%),
+      radial-gradient(circle at 100% 100%, #fff0da 0%, transparent 60%);
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .schedule-item-card {
+    @apply rounded-xl p-2.5 px-3 border border-blue-200 flex justify-between gap-2.5 text-sm;
+    background: #f6f9ff;
+  }
+
+  .catalog-item-card {
+    @apply flex justify-between gap-3 p-2 px-2.5 rounded-xl text-sm;
+    background: #eef5ff;
+  }
+
+  .activity-header {
+    @apply grid grid-cols-[1fr_80px] gap-2.5 p-2.5 px-3 text-white font-bold rounded-t-[18px];
+    background: #3a86d6;
+  }
+
+  .activity-row-item {
+    @apply grid grid-cols-[1fr_80px] gap-2.5 p-2.5 px-3;
+  }
+  .activity-row-item:nth-child(odd) {
+    background: #f0f6ff;
+  }
+}
+
+@keyframes floatIn {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-float-in {
+  animation: floatIn 0.6s ease both;
 }
