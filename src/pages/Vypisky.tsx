@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -47,7 +48,7 @@ export default function Vypisky() {
             {showForm && (
               <form onSubmit={handleAdd} className="grid gap-2 mt-3">
                 <input placeholder="Název" value={title} onChange={e => setTitle(e.target.value)} required className="border-2 border-blue-200 rounded-xl py-2 px-3 text-sm outline-none" />
-                <textarea placeholder="Obsah výpisků..." value={content} onChange={e => setContent(e.target.value)} className="border-2 border-blue-200 rounded-xl py-2 px-3 text-sm outline-none min-h-[120px]" />
+                <textarea placeholder="Obsah výpisků... (podporuje Markdown a $\LaTeX$)" value={content} onChange={e => setContent(e.target.value)} className="border-2 border-blue-200 rounded-xl py-2 px-3 text-sm outline-none min-h-[120px] font-mono" />
                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)} /> Veřejné výpisky</label>
                 <button type="submit" className="btn-alik-accent text-sm">Uložit</button>
               </form>
@@ -58,9 +59,12 @@ export default function Vypisky() {
             <h3 className="mt-0 mb-2.5">Nejnovější výpisky</h3>
             <div className="grid gap-2.5">
               {notes.map(n => (
-                <div key={n.id} className="catalog-item-card">
-                  <strong>{n.title}</strong>
-                  <span style={{ color: '#345b8b', whiteSpace: 'nowrap' }}>{n.is_public ? '🌐' : '🔒'} {new Date(n.created_at).toLocaleDateString('cs')}</span>
+                <div key={n.id} className="catalog-item-card flex-col">
+                  <div className="flex justify-between w-full">
+                    <strong>{n.title}</strong>
+                    <span style={{ color: '#345b8b', whiteSpace: 'nowrap' }}>{n.is_public ? '🌐' : '🔒'} {new Date(n.created_at).toLocaleDateString('cs')}</span>
+                  </div>
+                  {n.content && <div className="mt-1 w-full"><MarkdownRenderer content={n.content} className="text-xs" /></div>}
                 </div>
               ))}
               {notes.length === 0 && <p className="text-muted-foreground text-sm">Zatím žádné výpisky.</p>}

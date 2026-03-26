@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -117,7 +118,7 @@ export default function Doucovani() {
               <select value={topic} onChange={e => setTopic(e.target.value)} className="border-2 border-blue-200 rounded-xl py-2.5 px-3 text-sm bg-card outline-none">
                 <option>Matematika</option><option>Český jazyk</option><option>Vědy</option><option>Umění</option><option>Programování</option><option>Obecné</option>
               </select>
-              <textarea placeholder="Napiš svůj dotaz..." value={questionText} onChange={e => setQuestionText(e.target.value)} required className="border-2 border-blue-200 rounded-xl py-2.5 px-3 text-sm outline-none min-h-[120px] resize-y" />
+              <textarea placeholder="Napiš svůj dotaz... (podporuje Markdown a $\LaTeX$)" value={questionText} onChange={e => setQuestionText(e.target.value)} required className="border-2 border-blue-200 rounded-xl py-2.5 px-3 text-sm outline-none min-h-[120px] resize-y font-mono" />
               <input placeholder="Kde ses zasekl/a? (volitelné)" value={context} onChange={e => setContext(e.target.value)} className="border-2 border-blue-200 rounded-xl py-2.5 px-3 text-sm outline-none" />
               <button type="submit" className="btn-alik-primary">Odeslat dotaz</button>
             </form>
@@ -144,7 +145,7 @@ export default function Doucovani() {
               {answers.length === 0 && <p className="text-muted-foreground text-sm">Zatím žádná odpověď.</p>}
               {answers.map(a => (
                 <div key={a.id} className="catalog-item-card mb-2 flex-col">
-                  <span className="text-sm">{a.answer}</span>
+                  <div className="text-sm"><MarkdownRenderer content={a.answer} /></div>
                   <div className="flex justify-between mt-1">
                     <span className="text-xs text-muted-foreground">{new Date(a.created_at).toLocaleString('cs')}</span>
                     {a.visibility === 'private_asker' && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff3cd', color: '#856404' }}>🔒 Soukromé</span>}
@@ -153,7 +154,7 @@ export default function Doucovani() {
               ))}
               {canAnswer && (
                 <form onSubmit={handleSubmitA} className="grid gap-2 mt-3">
-                  <textarea placeholder="Vaše odpověď..." value={answerText} onChange={e => setAnswerText(e.target.value)} required className="border-2 border-blue-200 rounded-xl py-2 px-3 text-sm outline-none min-h-[80px]" />
+                  <textarea placeholder="Vaše odpověď... (podporuje Markdown a $\LaTeX$)" value={answerText} onChange={e => setAnswerText(e.target.value)} required className="border-2 border-blue-200 rounded-xl py-2 px-3 text-sm outline-none min-h-[80px] font-mono" />
                   <div className="flex gap-2 items-center">
                     <select value={answerVisibility} onChange={e => setAnswerVisibility(e.target.value)} className="border-2 border-blue-200 rounded-xl py-2 px-3 text-sm outline-none">
                       <option value="public_all">🌐 Zveřejnit všem</option>

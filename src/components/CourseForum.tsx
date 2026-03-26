@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface ForumPost {
   id: string;
@@ -181,7 +182,7 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
           </div>
         </div>
       ) : (
-        <p className="text-sm my-1">{post.content}</p>
+        <div className="text-sm my-1"><MarkdownRenderer content={post.content} /></div>
       )}
 
       {/* Actions */}

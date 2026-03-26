@@ -72,7 +72,8 @@ export default function AppHeader({ searchLabel = 'Najít', searchPlaceholder = 
               </div>
             </div>
             <div className="grid gap-1.5 mt-2">
-              <button className="btn-alik-secondary text-sm" onClick={() => navigate('/studium')}>Studijní plán</button>
+              <button className="btn-alik-secondary text-sm" onClick={() => navigate('/profil')}>👤 Můj profil</button>
+              <button className="btn-alik-outline text-sm" onClick={() => navigate('/studium')}>Studijní plán</button>
               <button className="btn-alik-primary text-sm" onClick={signOut}>Odhlásit se</button>
             </div>
           </>

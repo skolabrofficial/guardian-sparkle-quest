@@ -77,6 +77,36 @@ export type Database = {
         }
         Relationships: []
       }
+      block_messages: {
+        Row: {
+          acknowledged_at: string | null
+          block_id: string
+          created_at: string
+          generated_by: string | null
+          id: string
+          message_text: string
+          sent_to_alik: boolean | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          block_id: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          message_text: string
+          sent_to_alik?: boolean | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          block_id?: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          message_text?: string
+          sent_to_alik?: boolean | null
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           created_at: string
