@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -65,10 +66,10 @@ export default function Kurzy() {
             <h3 className="mt-0 mb-2.5">Nejoblíbenější kurzy</h3>
             <div className="grid gap-2.5">
               {filtered.map(c => (
-                <div key={c.id} className="catalog-item-card">
+                <Link key={c.id} to={`/kurzy/${c.id}`} className="catalog-item-card no-underline text-foreground hover:bg-blue-50 transition-colors">
                   <strong>{c.title}</strong>
-                  <span style={{ color: '#345b8b', whiteSpace: 'nowrap' }}>{c.day_of_week} {c.time_slot}</span>
-                </div>
+                  <span style={{ color: '#345b8b', whiteSpace: 'nowrap' }}>{c.day_of_week} {c.time_slot} →</span>
+                </Link>
               ))}
               {filtered.length === 0 && <p className="text-muted-foreground text-sm">Žádné kurzy k zobrazení.</p>}
             </div>
@@ -80,7 +81,6 @@ export default function Kurzy() {
             <h4 className="mt-0">Doporučení</h4>
             <ul className="pl-4 text-sm"><li>Začni lehčími kurzy</li><li>Vyber si 2–3 hlavní směry</li><li>Nezapomeň na odpočinek</li></ul>
           </div>
-          <button className="btn-alik-accent">Vybrat kurz</button>
         </aside>
       </main>
     </AppLayout>
