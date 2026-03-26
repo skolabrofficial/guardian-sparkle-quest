@@ -16,6 +16,7 @@ import Studium from "./pages/Studium";
 import Vypisky from "./pages/Vypisky";
 import Doucovani from "./pages/Doucovani";
 import Rektorat from "./pages/Rektorat";
+import Profil from "./pages/Profil";
 import Blocked from "./pages/Blocked";
 import NotFound from "./pages/NotFound";
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/vypisky" element={<BlockGuard><Vypisky /></BlockGuard>} />
             <Route path="/doucovani" element={<BlockGuard><Doucovani /></BlockGuard>} />
             <Route path="/rektorat" element={<BlockGuard><Rektorat /></BlockGuard>} />
+            <Route path="/profil" element={<BlockGuard><Profil /></BlockGuard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
