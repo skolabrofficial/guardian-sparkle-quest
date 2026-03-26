@@ -10,6 +10,7 @@ interface AuthContextType {
   role: AppRole | null;
   profile: { display_name: string; avatar_url: string | null } | null;
   loading: boolean;
+  isBlocked: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -27,14 +28,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [profile, setProfile] = useState<{ display_name: string; avatar_url: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   const fetchUserData = async (userId: string) => {
-    const [roleRes, profileRes] = await Promise.all([
+    const [roleRes, profileRes, blockRes] = await Promise.all([
       supabase.from('user_roles').select('role').eq('user_id', userId).limit(1).single(),
       supabase.from('profiles').select('display_name, avatar_url').eq('user_id', userId).limit(1).single(),
+      supabase.from('user_blocks').select('id').eq('user_id', userId).eq('is_active', true).limit(1).maybeSingle(),
     ]);
     if (roleRes.data) setRole(roleRes.data.role as AppRole);
     if (profileRes.data) setProfile(profileRes.data);
+    setIsBlocked(!!blockRes.data);
   };
 
   useEffect(() => {
@@ -46,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setRole(null);
         setProfile(null);
+        setIsBlocked(false);
       }
       setLoading(false);
     });
@@ -84,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isStaff = isDeveloper || isDohledci;
 
   return (
-    <AuthContext.Provider value={{ user, session, role, profile, loading, signIn, signUp, signOut, isStaff, isDeveloper, isDohledci, isLektor }}>
+    <AuthContext.Provider value={{ user, session, role, profile, loading, isBlocked, signIn, signUp, signOut, isStaff, isDeveloper, isDohledci, isLektor }}>
       {children}
     </AuthContext.Provider>
   );

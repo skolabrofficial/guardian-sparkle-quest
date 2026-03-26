@@ -4,16 +4,19 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import BlockGuard from "@/components/BlockGuard";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Fakulty from "./pages/Fakulty";
 import Kurzy from "./pages/Kurzy";
+import KurzDetail from "./pages/KurzDetail";
 import Rozvrh from "./pages/Rozvrh";
 import Studium from "./pages/Studium";
 import Vypisky from "./pages/Vypisky";
 import Doucovani from "./pages/Doucovani";
 import Rektorat from "./pages/Rektorat";
+import Blocked from "./pages/Blocked";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,16 +29,18 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/fakulty" element={<Fakulty />} />
-            <Route path="/kurzy" element={<Kurzy />} />
-            <Route path="/rozvrh" element={<Rozvrh />} />
-            <Route path="/studium" element={<Studium />} />
-            <Route path="/vypisky" element={<Vypisky />} />
-            <Route path="/doucovani" element={<Doucovani />} />
-            <Route path="/rektorat" element={<Rektorat />} />
+            <Route path="/blocked" element={<Blocked />} />
+            <Route path="/" element={<BlockGuard><Index /></BlockGuard>} />
+            <Route path="/fakulty" element={<BlockGuard><Fakulty /></BlockGuard>} />
+            <Route path="/kurzy" element={<BlockGuard><Kurzy /></BlockGuard>} />
+            <Route path="/kurzy/:id" element={<BlockGuard><KurzDetail /></BlockGuard>} />
+            <Route path="/rozvrh" element={<BlockGuard><Rozvrh /></BlockGuard>} />
+            <Route path="/studium" element={<BlockGuard><Studium /></BlockGuard>} />
+            <Route path="/vypisky" element={<BlockGuard><Vypisky /></BlockGuard>} />
+            <Route path="/doucovani" element={<BlockGuard><Doucovani /></BlockGuard>} />
+            <Route path="/rektorat" element={<BlockGuard><Rektorat /></BlockGuard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
