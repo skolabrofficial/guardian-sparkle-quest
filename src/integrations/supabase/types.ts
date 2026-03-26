@@ -166,6 +166,7 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string
+          dean_id: string | null
           description: string | null
           icon: string | null
           id: string
@@ -176,6 +177,7 @@ export type Database = {
         Insert: {
           color?: string | null
           created_at?: string
+          dean_id?: string | null
           description?: string | null
           icon?: string | null
           id?: string
@@ -186,6 +188,7 @@ export type Database = {
         Update: {
           color?: string | null
           created_at?: string
+          dean_id?: string | null
           description?: string | null
           icon?: string | null
           id?: string
@@ -194,6 +197,73 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      forum_posts: {
+        Row: {
+          author_id: string
+          content: string
+          course_id: string
+          created_at: string
+          id: string
+          is_deleted: boolean | null
+          is_locked: boolean | null
+          is_pinned: boolean | null
+          label: string | null
+          moved_from_course_id: string | null
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          course_id: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean | null
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
+          label?: string | null
+          moved_from_course_id?: string | null
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean | null
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
+          label?: string | null
+          moved_from_course_id?: string | null
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_posts_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_posts_moved_from_course_id_fkey"
+            columns: ["moved_from_course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_posts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -438,6 +508,7 @@ export type Database = {
           is_best: boolean | null
           mentor_id: string
           question_id: string
+          visibility: string
         }
         Insert: {
           answer: string
@@ -446,6 +517,7 @@ export type Database = {
           is_best?: boolean | null
           mentor_id: string
           question_id: string
+          visibility?: string
         }
         Update: {
           answer?: string
@@ -454,6 +526,7 @@ export type Database = {
           is_best?: boolean | null
           mentor_id?: string
           question_id?: string
+          visibility?: string
         }
         Relationships: [
           {
@@ -495,6 +568,111 @@ export type Database = {
           topic?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_blocks: {
+        Row: {
+          affected_areas: string[] | null
+          appeal_response: string | null
+          appeal_reviewed_at: string | null
+          appeal_reviewed_by: string | null
+          appeal_status: string | null
+          appeal_submitted_at: string | null
+          appeal_text: string | null
+          block_count: number | null
+          block_type: string
+          blocked_at: string
+          blocked_by: string
+          details: string | null
+          escalated: boolean | null
+          escalated_to: string | null
+          evidence_urls: string[] | null
+          expires_at: string | null
+          id: string
+          internal_notes: string | null
+          ip_note: string | null
+          is_active: boolean
+          is_permanent: boolean | null
+          last_warning_at: string | null
+          metadata: Json | null
+          notification_sent: boolean | null
+          reason: string
+          review_scheduled_at: string | null
+          severity: string
+          unblock_reason: string | null
+          unblocked_at: string | null
+          unblocked_by: string | null
+          user_id: string
+          warning_count: number | null
+        }
+        Insert: {
+          affected_areas?: string[] | null
+          appeal_response?: string | null
+          appeal_reviewed_at?: string | null
+          appeal_reviewed_by?: string | null
+          appeal_status?: string | null
+          appeal_submitted_at?: string | null
+          appeal_text?: string | null
+          block_count?: number | null
+          block_type?: string
+          blocked_at?: string
+          blocked_by: string
+          details?: string | null
+          escalated?: boolean | null
+          escalated_to?: string | null
+          evidence_urls?: string[] | null
+          expires_at?: string | null
+          id?: string
+          internal_notes?: string | null
+          ip_note?: string | null
+          is_active?: boolean
+          is_permanent?: boolean | null
+          last_warning_at?: string | null
+          metadata?: Json | null
+          notification_sent?: boolean | null
+          reason: string
+          review_scheduled_at?: string | null
+          severity?: string
+          unblock_reason?: string | null
+          unblocked_at?: string | null
+          unblocked_by?: string | null
+          user_id: string
+          warning_count?: number | null
+        }
+        Update: {
+          affected_areas?: string[] | null
+          appeal_response?: string | null
+          appeal_reviewed_at?: string | null
+          appeal_reviewed_by?: string | null
+          appeal_status?: string | null
+          appeal_submitted_at?: string | null
+          appeal_text?: string | null
+          block_count?: number | null
+          block_type?: string
+          blocked_at?: string
+          blocked_by?: string
+          details?: string | null
+          escalated?: boolean | null
+          escalated_to?: string | null
+          evidence_urls?: string[] | null
+          expires_at?: string | null
+          id?: string
+          internal_notes?: string | null
+          ip_note?: string | null
+          is_active?: boolean
+          is_permanent?: boolean | null
+          last_warning_at?: string | null
+          metadata?: Json | null
+          notification_sent?: boolean | null
+          reason?: string
+          review_scheduled_at?: string | null
+          severity?: string
+          unblock_reason?: string | null
+          unblocked_at?: string | null
+          unblocked_by?: string | null
+          user_id?: string
+          warning_count?: number | null
         }
         Relationships: []
       }
