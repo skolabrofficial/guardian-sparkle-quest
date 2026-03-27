@@ -4,17 +4,12 @@ import AppLayout from '@/components/layout/AppLayout';
 import CourseForum from '@/components/CourseForum';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { nameWithRole } from '@/lib/roleUtils';
 
 interface Course {
-  id: string;
-  title: string;
-  description: string | null;
-  day_of_week: string | null;
-  time_slot: string | null;
-  difficulty: string | null;
-  lektor_id: string | null;
-  faculty_id: string | null;
-  max_students: number | null;
+  id: string; title: string; description: string | null; day_of_week: string | null;
+  time_slot: string | null; difficulty: string | null; lektor_id: string | null;
+  faculty_id: string | null; max_students: number | null;
 }
 
 export default function KurzDetail() {
@@ -23,6 +18,7 @@ export default function KurzDetail() {
   const [course, setCourse] = useState<Course | null>(null);
   const [allCourses, setAllCourses] = useState<{ id: string; title: string }[]>([]);
   const [lektorName, setLektorName] = useState<string | null>(null);
+  const [lektorRole, setLektorRole] = useState<string | null>(null);
   const [enrolled, setEnrolled] = useState(false);
   const [enrollCount, setEnrollCount] = useState(0);
   const [facultyDeanId, setFacultyDeanId] = useState<string | null>(null);
@@ -41,8 +37,12 @@ export default function KurzDetail() {
     if (courseRes.data) {
       setCourse(courseRes.data);
       if (courseRes.data.lektor_id) {
-        const { data: prof } = await supabase.from('profiles').select('display_name').eq('user_id', courseRes.data.lektor_id).single();
-        if (prof) setLektorName(prof.display_name);
+        const [profRes, roleRes] = await Promise.all([
+          supabase.from('profiles').select('display_name').eq('user_id', courseRes.data.lektor_id).single(),
+          supabase.from('user_roles').select('role').eq('user_id', courseRes.data.lektor_id).single(),
+        ]);
+        if (profRes.data) setLektorName(profRes.data.display_name);
+        if (roleRes.data) setLektorRole(roleRes.data.role);
       }
       if (courseRes.data.faculty_id) {
         const { data: fac } = await supabase.from('faculties').select('dean_id').eq('id', courseRes.data.faculty_id).single();
@@ -50,8 +50,6 @@ export default function KurzDetail() {
       }
     }
     if (allRes.data) setAllCourses(allRes.data);
-
-    // Check enrollment
     if (user) {
       const { data: enr } = await supabase.from('enrollments').select('id').eq('course_id', id).eq('student_id', user.id).maybeSingle();
       setEnrolled(!!enr);
@@ -77,14 +75,14 @@ export default function KurzDetail() {
       <main className="grid grid-cols-1 lg:grid-cols-[1.7fr_0.9fr] gap-5 items-start">
         <div className="grid gap-[18px]">
           <article className="feature-card animate-float-in">
-            <Link to="/kurzy" className="text-xs text-muted-foreground no-underline mb-2 block">← Zpět na kurzy</Link>
+            <Link to="/kurzy" className="text-xs text-muted-foreground no-underline mb-2 block hover:text-primary transition-colors">← Zpět na kurzy</Link>
             <h2 className="mt-0 text-[22px]">{course.title}</h2>
             {course.description && <p>{course.description}</p>}
             <div className="flex flex-wrap gap-3 mt-3 text-sm">
-              {course.day_of_week && <span className="px-2.5 py-1.5 rounded-full font-bold" style={{ background: '#eef5ff', color: '#315493' }}>{course.day_of_week} {course.time_slot}</span>}
-              {course.difficulty && <span className="px-2.5 py-1.5 rounded-full font-bold" style={{ background: '#f0fdf4', color: '#166534' }}>{course.difficulty}</span>}
-              {lektorName && <span className="px-2.5 py-1.5 rounded-full font-bold" style={{ background: '#fff8e0', color: '#8b6914' }}>👨‍🏫 {lektorName}</span>}
-              <span className="px-2.5 py-1.5 rounded-full font-bold" style={{ background: '#f5f0ff', color: '#5b21b6' }}>{enrollCount}/{course.max_students || '∞'} studentů</span>
+              {course.day_of_week && <span className="px-2.5 py-1.5 rounded-full font-bold bg-muted text-foreground">{course.day_of_week} {course.time_slot}</span>}
+              {course.difficulty && <span className="px-2.5 py-1.5 rounded-full font-bold bg-accent/10 text-accent">{course.difficulty}</span>}
+              {lektorName && <span className="px-2.5 py-1.5 rounded-full font-bold" style={{ background: '#fff8e0', color: '#8b6914' }}>👨‍🏫 {nameWithRole(lektorName, lektorRole)}</span>}
+              <span className="px-2.5 py-1.5 rounded-full font-bold bg-muted text-foreground">{enrollCount}/{course.max_students || '∞'} studentů</span>
             </div>
           </article>
 
@@ -92,19 +90,19 @@ export default function KurzDetail() {
         </div>
 
         <aside className="grid gap-[18px]">
-          <div className="panel-card">
+          <div className="panel-card animate-slide-up stagger-1">
             <h4 className="mt-0">Zápis do kurzu</h4>
-            <button onClick={toggleEnroll} className={enrolled ? 'btn-alik-outline w-full' : 'btn-alik-accent w-full'}>
+            <button onClick={toggleEnroll} className={`${enrolled ? 'btn-alik-outline' : 'btn-alik-accent'} w-full`}>
               {enrolled ? 'Odhlásit se z kurzu' : 'Zapsat se do kurzu'}
             </button>
           </div>
-          <div className="panel-card">
+          <div className="panel-card animate-slide-up stagger-2">
             <h4 className="mt-0">Informace</h4>
             <ul className="pl-4 text-sm">
               <li>Den: {course.day_of_week || '—'}</li>
               <li>Čas: {course.time_slot || '—'}</li>
               <li>Obtížnost: {course.difficulty || '—'}</li>
-              <li>Lektor: {lektorName || '—'}</li>
+              <li>Lektor: {lektorName ? nameWithRole(lektorName, lektorRole) : '—'}</li>
             </ul>
           </div>
         </aside>

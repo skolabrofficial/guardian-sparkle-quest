@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { getRoleSymbol } from '@/lib/roleUtils';
 
 export default function Index() {
-  const { user } = useAuth();
+  const { user, profile, role } = useAuth();
   const [stats, setStats] = useState({ courses: 0, faculties: 0, students: 0, mentors: 0 });
   const [announcements, setAnnouncements] = useState<Array<{ id: string; title: string; content: string | null }>>([]);
 
@@ -27,7 +28,9 @@ export default function Index() {
         <div className="grid gap-[18px]">
           <article className="feature-card grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] gap-4 animate-float-in">
             <div>
-              <h2 className="mt-0 text-[22px]">Vítejte na Alíkově Univerzitě!</h2>
+              <h2 className="mt-0 text-[22px]">
+                {user ? `Vítejte, ${profile?.display_name || 'studente'}${getRoleSymbol(role)}!` : 'Vítejte na Alíkově Univerzitě!'}
+              </h2>
               <p>Vzdělávací platforma plná kurzů, mentorů a zábavy.</p>
               <p className="text-muted-foreground">Začněte výběrem fakulty nebo kurzu.</p>
               <Link to="/kurzy" className="inline-flex items-center gap-1 text-primary font-bold no-underline hover:gap-2 transition-all duration-200">
@@ -58,7 +61,7 @@ export default function Index() {
               <h3 className="mt-0 mb-2">📢 Oznámení</h3>
               <div className="grid gap-2">
                 {announcements.map(a => (
-                  <div key={a.id} className="catalog-item-card hover:bg-blue-50/80 transition-colors rounded-xl">
+                  <div key={a.id} className="catalog-item-card hover:shadow-sm transition-all duration-200 rounded-xl">
                     <strong>{a.title}</strong>
                     <span className="text-muted-foreground text-xs">{a.content?.slice(0, 50)}</span>
                   </div>

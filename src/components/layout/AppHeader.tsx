@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import NotificationBell from '@/components/NotificationBell';
+import { getRoleSymbol, ROLE_LABELS, ROLE_GRADIENT, ROLE_COLORS } from '@/lib/roleUtils';
 import { Search, User, LogOut, BookOpen, LogIn, UserPlus } from 'lucide-react';
 
 interface AppHeaderProps {
@@ -15,20 +16,6 @@ export default function AppHeader({ searchLabel = 'Najít', searchPlaceholder = 
   const { user, profile, role, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-
-  const roleLabel: Record<string, string> = {
-    developer: 'Vývojář',
-    dohledci: 'Dohledčí',
-    lektor: 'Lektor',
-    student: 'Student',
-  };
-
-  const roleColors: Record<string, string> = {
-    developer: 'from-red-400 to-orange-500',
-    dohledci: 'from-amber-400 to-yellow-500',
-    lektor: 'from-blue-400 to-cyan-500',
-    student: 'from-green-400 to-emerald-500',
-  };
 
   return (
     <header className="hero-section grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_0.9fr] gap-4 items-center animate-float-in">
@@ -83,7 +70,7 @@ export default function AppHeader({ searchLabel = 'Najít', searchPlaceholder = 
         {user ? (
           <>
             <div className="flex items-center gap-2.5">
-              <div className={`w-[50px] h-[60px] rounded-[14px] border-2 border-card bg-gradient-to-b ${roleColors[role || 'student']}`} style={{ boxShadow: '0 6px 12px rgba(0,0,0,0.12)' }}>
+              <div className={`w-[50px] h-[60px] rounded-[14px] border-2 border-card bg-gradient-to-b ${ROLE_GRADIENT[role || 'student']}`} style={{ boxShadow: '0 6px 12px rgba(0,0,0,0.12)' }}>
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="" className="w-full h-full rounded-[12px] object-cover" />
                 ) : (
@@ -93,8 +80,12 @@ export default function AppHeader({ searchLabel = 'Najít', searchPlaceholder = 
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <strong className="block truncate">{profile?.display_name || user.email}</strong>
-                <small className="block text-muted-foreground">{roleLabel[role || 'student'] || 'Student'}</small>
+                <strong className="block truncate">
+                  {profile?.display_name || user.email}{getRoleSymbol(role)}
+                </strong>
+                <small className="block text-muted-foreground" style={{ color: ROLE_COLORS[role || 'student'] }}>
+                  {ROLE_LABELS[role || 'student'] || 'Student'}
+                </small>
               </div>
               <NotificationBell />
             </div>
