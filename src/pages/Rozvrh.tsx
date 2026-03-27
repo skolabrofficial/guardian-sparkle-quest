@@ -28,6 +28,8 @@ export default function Rozvrh() {
     else { toast.success('Přidáno do rozvrhu'); setTitle(''); setDay(''); setTime(''); setRoom(''); setShowForm(false); load(); }
   };
 
+  const days = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek'];
+
   return (
     <AppLayout searchLabel="Najít blok v rozvrhu" searchPlaceholder="např. animace, sport" searchTags={['dnes', 'tento týden', 'můj plán']}>
       <main className="grid grid-cols-1 lg:grid-cols-[1.7fr_0.9fr] gap-5 items-start">
@@ -36,21 +38,24 @@ export default function Rozvrh() {
             <div>
               <h2 className="mt-0 text-[22px]">Tvůj týdenní rozvrh</h2>
               <p>Jasně, přehledně a bez stresu.</p>
-              <p className="text-muted-foreground">Další hodina začíná brzy.</p>
+              <p className="text-muted-foreground">{items.length} bloků v rozvrhu.</p>
             </div>
             <div className="grid place-items-center"><div className="poster-gradient" /></div>
           </article>
 
           {isStaff && (
-            <div className="panel-card">
+            <div className="panel-card animate-slide-up stagger-1">
               <button className="btn-alik-primary text-sm" onClick={() => setShowForm(!showForm)}>{showForm ? 'Zrušit' : '+ Přidat do rozvrhu'}</button>
               {showForm && (
                 <form onSubmit={handleAdd} className="grid gap-2 mt-3">
-                  <input placeholder="Název" value={title} onChange={e => setTitle(e.target.value)} required className="border-2 border-blue-200 rounded-xl py-2 px-3 text-sm outline-none" />
+                  <input placeholder="Název" value={title} onChange={e => setTitle(e.target.value)} required className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" />
                   <div className="grid grid-cols-3 gap-2">
-                    <input placeholder="Den" value={day} onChange={e => setDay(e.target.value)} required className="border-2 border-blue-200 rounded-xl py-2 px-3 text-sm outline-none" />
-                    <input placeholder="Čas" value={time} onChange={e => setTime(e.target.value)} required className="border-2 border-blue-200 rounded-xl py-2 px-3 text-sm outline-none" />
-                    <input placeholder="Místnost" value={room} onChange={e => setRoom(e.target.value)} className="border-2 border-blue-200 rounded-xl py-2 px-3 text-sm outline-none" />
+                    <select value={day} onChange={e => setDay(e.target.value)} required className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card focus:border-secondary transition-colors">
+                      <option value="">Den...</option>
+                      {days.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                    <input placeholder="Čas" value={time} onChange={e => setTime(e.target.value)} required className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" />
+                    <input placeholder="Místnost" value={room} onChange={e => setRoom(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" />
                   </div>
                   <button type="submit" className="btn-alik-accent text-sm">Uložit</button>
                 </form>
@@ -58,26 +63,34 @@ export default function Rozvrh() {
             </div>
           )}
 
-          <div className="panel-card">
+          <div className="panel-card animate-slide-up stagger-2">
             <h3 className="mt-0 mb-2.5">Rozvrh na tento týden</h3>
-            <div className="grid gap-2.5">
-              {items.map(item => (
-                <div key={item.id} className="schedule-item-card">
-                  <strong>{item.title}</strong>
-                  <span style={{ color: '#3b547a', whiteSpace: 'nowrap' }}>{item.day_of_week} {item.time_slot}</span>
+            {days.map(d => {
+              const dayItems = items.filter(i => i.day_of_week === d);
+              if (dayItems.length === 0) return null;
+              return (
+                <div key={d} className="mb-3">
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">{d}</h4>
+                  <div className="grid gap-2">
+                    {dayItems.map(item => (
+                      <div key={item.id} className="schedule-item-card hover:shadow-sm transition-all duration-200">
+                        <strong>{item.title}</strong>
+                        <span className="text-xs whitespace-nowrap" style={{ color: 'hsl(var(--ring))' }}>{item.time_slot}{item.room && ` • ${item.room}`}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-              {items.length === 0 && <p className="text-muted-foreground text-sm">Rozvrh je prázdný.</p>}
-            </div>
+              );
+            })}
+            {items.length === 0 && <p className="text-muted-foreground text-sm">Rozvrh je prázdný.</p>}
           </div>
         </div>
 
         <aside className="grid gap-[18px]">
-          <div className="panel-card">
+          <div className="panel-card animate-slide-up stagger-3">
             <h4 className="mt-0">Tipy</h4>
             <ul className="pl-4 text-sm"><li>Nechej si 15 minut rezervu</li><li>Vyber si klidnou místnost</li><li>Připrav si pomůcky</li></ul>
           </div>
-          <button className="btn-alik-accent">Upravit rozvrh</button>
         </aside>
       </main>
     </AppLayout>
