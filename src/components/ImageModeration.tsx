@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import MarkdownRenderer from './MarkdownRenderer';
 import { nameWithRole } from '@/lib/roleUtils';
 
 const REJECTION_REASONS = [
@@ -47,6 +46,9 @@ function generateEmbedCode(): string {
   return `(vlož ${result})`;
 }
 
+// Bypass strict typing for tables not yet in generated types
+const db = () => supabase as any;
+
 interface Props {
   profiles?: any[];
   roles?: any[];
@@ -63,7 +65,7 @@ export default function ImageModeration({ profiles = [], roles = [] }: Props) {
   const [editValues, setEditValues] = useState<Record<string, string>>({});
 
   const loadImages = async () => {
-    let q = supabase.from('uploaded_images').select('*').order('created_at', { ascending: false });
+    let q = db().from('uploaded_images').select('*').order('created_at', { ascending: false });
     if (filter !== 'all') q = q.eq('status', filter);
     const { data } = await q;
     if (data) setImages(data);
@@ -71,7 +73,6 @@ export default function ImageModeration({ profiles = [], roles = [] }: Props) {
 
   useEffect(() => { loadImages(); }, [filter]);
 
-  // Realtime subscription
   useEffect(() => {
     const channel = supabase.channel('image-moderation')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'uploaded_images' }, () => loadImages())
@@ -88,14 +89,10 @@ export default function ImageModeration({ profiles = [], roles = [] }: Props) {
   const approveImage = async (img: any) => {
     if (!user) return;
     const code = generateEmbedCode();
-    await supabase.from('uploaded_images').update({
-      status: 'approved',
-      embed_code: code,
-      reviewed_by: user.id,
-      reviewed_at: new Date().toISOString(),
-    } as any).eq('id', img.id);
+    await db().from('uploaded_images').update({
+      status: 'approved', embed_code: code, reviewed_by: user.id, reviewed_at: new Date().toISOString(),
+    }).eq('id', img.id);
     toast.success(`Schváleno! Kód: ${code}`);
-    // Notify uploader
     await supabase.from('notifications').insert({
       user_id: img.user_id,
       title: '🖼️ Obrázek schválen',
@@ -107,13 +104,10 @@ export default function ImageModeration({ profiles = [], roles = [] }: Props) {
 
   const rejectImage = async (img: any) => {
     if (!user || !rejectionReason) { toast.error('Vyberte důvod zamítnutí'); return; }
-    await supabase.from('uploaded_images').update({
-      status: 'rejected',
-      rejection_reason: rejectionReason,
-      rejection_details: rejectionDetails || null,
-      reviewed_by: user.id,
-      reviewed_at: new Date().toISOString(),
-    } as any).eq('id', img.id);
+    await db().from('uploaded_images').update({
+      status: 'rejected', rejection_reason: rejectionReason, rejection_details: rejectionDetails || null,
+      reviewed_by: user.id, reviewed_at: new Date().toISOString(),
+    }).eq('id', img.id);
     toast.success('Obrázek zamítnut');
     await supabase.from('notifications').insert({
       user_id: img.user_id,
@@ -130,31 +124,20 @@ export default function ImageModeration({ profiles = [], roles = [] }: Props) {
   };
 
   const updateImageField = async (imgId: string, field: string, value: string) => {
-    await supabase.from('uploaded_images').update({ [field]: value } as any).eq('id', imgId);
+    await db().from('uploaded_images').update({ [field]: value }).eq('id', imgId);
     toast.success('Aktualizováno');
     loadImages();
     setEditField(null);
   };
 
   const markGoogleMatch = async (imgId: string, found: boolean, url?: string) => {
-    await supabase.from('uploaded_images').update({
-      google_match_found: found,
-      google_match_url: url || null,
-    } as any).eq('id', imgId);
+    await db().from('uploaded_images').update({ google_match_found: found, google_match_url: url || null }).eq('id', imgId);
     toast.success(found ? 'Shoda označena' : 'Shoda odstraněna');
     loadImages();
   };
 
-  const statusColors: Record<string, string> = {
-    pending: '#ea580c',
-    approved: '#16a34a',
-    rejected: '#dc2626',
-  };
-  const statusLabels: Record<string, string> = {
-    pending: '⏳ Čeká',
-    approved: '✅ Schváleno',
-    rejected: '❌ Zamítnuto',
-  };
+  const statusColors: Record<string, string> = { pending: 'hsl(var(--chart-4))', approved: 'hsl(var(--chart-2))', rejected: 'hsl(var(--destructive))' };
+  const statusLabels: Record<string, string> = { pending: '⏳ Čeká', approved: '✅ Schváleno', rejected: '❌ Zamítnuto' };
 
   return (
     <div className="grid gap-4">
@@ -164,29 +147,23 @@ export default function ImageModeration({ profiles = [], roles = [] }: Props) {
           {(['pending', 'approved', 'rejected', 'all'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)} className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${filter === f ? 'bg-primary text-primary-foreground shadow-md' : 'bg-muted hover:bg-muted/80'}`}>
               {f === 'pending' ? '⏳ Čekající' : f === 'approved' ? '✅ Schválené' : f === 'rejected' ? '❌ Zamítnuté' : '📋 Vše'}
-              <span className="ml-1 opacity-70">({f === 'all' ? images.length : images.filter(i => i.status === f).length})</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Image grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {images.map(img => (
+        {images.map((img: any) => (
           <div key={img.id} onClick={() => setSelectedImage(img)} className="rounded-2xl border-2 border-border overflow-hidden cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all bg-card group">
             <div className="relative h-36 overflow-hidden bg-muted/30">
               <img src={img.file_url} alt={img.file_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-              {img.google_match_found && (
-                <div className="absolute top-2 left-2 text-xs font-bold px-2 py-1 rounded-lg bg-amber-500 text-white">🔍 Shoda</div>
-              )}
-              {img.is_avatar && (
-                <div className="absolute top-2 right-2 text-xs font-bold px-2 py-1 rounded-lg bg-blue-500 text-white">👤 Avatar</div>
-              )}
+              {img.google_match_found && <div className="absolute top-2 left-2 text-xs font-bold px-2 py-1 rounded-lg bg-accent text-accent-foreground">🔍 Shoda</div>}
+              {img.is_avatar && <div className="absolute top-2 right-2 text-xs font-bold px-2 py-1 rounded-lg bg-secondary text-secondary-foreground">👤 Avatar</div>}
             </div>
             <div className="p-3">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold truncate max-w-[60%]">{img.file_name}</span>
-                <span className="text-xs font-extrabold px-2 py-0.5 rounded-full text-white" style={{ background: statusColors[img.status] || '#6b7280' }}>
+                <span className="text-xs font-extrabold px-2 py-0.5 rounded-full text-primary-foreground" style={{ background: statusColors[img.status] }}>
                   {statusLabels[img.status] || img.status}
                 </span>
               </div>
@@ -198,33 +175,30 @@ export default function ImageModeration({ profiles = [], roles = [] }: Props) {
       </div>
       {images.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Žádné obrázky v této kategorii.</p>}
 
-      {/* Detail modal */}
       {selectedImage && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setSelectedImage(null)}>
           <div className="bg-card rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="relative">
               <img src={selectedImage.file_url} alt={selectedImage.file_name} className="w-full max-h-64 object-contain bg-muted/30 rounded-t-2xl" />
-              <button onClick={() => setSelectedImage(null)} className="absolute top-3 right-3 bg-destructive text-white font-bold w-8 h-8 rounded-full flex items-center justify-center">✕</button>
+              <button onClick={() => setSelectedImage(null)} className="absolute top-3 right-3 bg-destructive text-destructive-foreground font-bold w-8 h-8 rounded-full flex items-center justify-center">✕</button>
             </div>
-
             <div className="p-5 grid gap-4">
               <div className="flex justify-between items-start">
                 <div>
                   <h4 className="text-base font-extrabold mt-0">{selectedImage.file_name}</h4>
                   <p className="text-xs text-muted-foreground">Nahrál: {getUserName(selectedImage.user_id)} • {new Date(selectedImage.created_at).toLocaleString('cs')}</p>
                 </div>
-                <span className="text-xs font-extrabold px-3 py-1 rounded-full text-white" style={{ background: statusColors[selectedImage.status] }}>
+                <span className="text-xs font-extrabold px-3 py-1 rounded-full text-primary-foreground" style={{ background: statusColors[selectedImage.status] }}>
                   {statusLabels[selectedImage.status]}
                 </span>
               </div>
 
               {selectedImage.google_match_found && (
-                <div className="rounded-xl p-3 text-sm" style={{ background: '#fef3c7', borderLeft: '4px solid #f59e0b' }}>
+                <div className="rounded-xl p-3 text-sm bg-accent/20 border-l-4 border-accent">
                   🔍 <strong>Google nalezl shodu!</strong> {selectedImage.google_match_url && <a href={selectedImage.google_match_url} target="_blank" rel="noopener" className="underline ml-1">Zobrazit</a>}
                 </div>
               )}
 
-              {/* Editable properties */}
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {[
                   { key: 'author_name', label: 'Autor', value: selectedImage.author_name },
@@ -250,23 +224,21 @@ export default function ImageModeration({ profiles = [], roles = [] }: Props) {
               </div>
 
               {selectedImage.embed_code && (
-                <div className="rounded-xl p-3 text-sm" style={{ background: '#f0fdf4', borderLeft: '4px solid #16a34a' }}>
+                <div className="rounded-xl p-3 text-sm bg-accent/10 border-l-4 border-accent">
                   <span className="font-bold">Kód pro vložení:</span>
-                  <code className="ml-2 bg-white px-2 py-0.5 rounded font-mono text-xs">{selectedImage.embed_code}</code>
+                  <code className="ml-2 bg-muted px-2 py-0.5 rounded font-mono text-xs">{selectedImage.embed_code}</code>
                 </div>
               )}
 
-              {/* File details */}
               <div className="text-xs text-muted-foreground">
                 {(selectedImage.file_size / 1024).toFixed(0)} KB • {selectedImage.is_avatar ? '👤 Profilový obrázek' : '🖼️ Běžný obrázek'}
               </div>
 
-              {/* Actions */}
               <div className="flex flex-wrap gap-2">
-                <button onClick={() => googleImage(selectedImage.file_url)} className="text-xs font-bold px-3 py-2 rounded-xl bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                <button onClick={() => googleImage(selectedImage.file_url)} className="text-xs font-bold px-3 py-2 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">
                   🔍 Googlovat obrázek
                 </button>
-                <button onClick={() => markGoogleMatch(selectedImage.id, !selectedImage.google_match_found)} className="text-xs font-bold px-3 py-2 rounded-xl bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors">
+                <button onClick={() => markGoogleMatch(selectedImage.id, !selectedImage.google_match_found)} className="text-xs font-bold px-3 py-2 rounded-xl bg-accent text-accent-foreground hover:bg-accent/80 transition-colors">
                   {selectedImage.google_match_found ? '❌ Zrušit shodu' : '✅ Označit shodu'}
                 </button>
                 <a href={selectedImage.file_url} target="_blank" rel="noopener" className="text-xs font-bold px-3 py-2 rounded-xl bg-muted hover:bg-muted/80 transition-colors">
@@ -274,11 +246,9 @@ export default function ImageModeration({ profiles = [], roles = [] }: Props) {
                 </a>
               </div>
 
-              {/* Approve / Reject */}
               {selectedImage.status === 'pending' && (
                 <div className="grid gap-3 mt-2">
                   <button onClick={() => approveImage(selectedImage)} className="btn-alik-primary text-sm w-full py-3">✅ Schválit obrázek</button>
-
                   <div className="border-2 border-destructive/30 rounded-xl p-3">
                     <h5 className="text-xs font-extrabold text-destructive mb-2">Zamítnout:</h5>
                     <select value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} className="border-2 border-destructive/20 rounded-xl py-2 px-3 text-xs outline-none w-full mb-2">
@@ -288,7 +258,7 @@ export default function ImageModeration({ profiles = [], roles = [] }: Props) {
                     {rejectionReason === 'Jiný důvod (upřesněte)' && (
                       <input value={rejectionDetails} onChange={e => setRejectionDetails(e.target.value)} placeholder="Upřesněte důvod..." className="border-2 border-destructive/20 rounded-xl py-2 px-3 text-xs outline-none w-full mb-2" />
                     )}
-                    <button onClick={() => rejectImage(selectedImage)} disabled={!rejectionReason} className="text-xs font-bold px-4 py-2 rounded-xl bg-destructive text-white w-full disabled:opacity-50">
+                    <button onClick={() => rejectImage(selectedImage)} disabled={!rejectionReason} className="text-xs font-bold px-4 py-2 rounded-xl bg-destructive text-destructive-foreground w-full disabled:opacity-50">
                       ❌ Zamítnout
                     </button>
                   </div>
@@ -296,7 +266,7 @@ export default function ImageModeration({ profiles = [], roles = [] }: Props) {
               )}
 
               {selectedImage.status === 'rejected' && selectedImage.rejection_reason && (
-                <div className="rounded-xl p-3 text-sm" style={{ background: '#fef2f2', borderLeft: '4px solid #dc2626' }}>
+                <div className="rounded-xl p-3 text-sm bg-destructive/10 border-l-4 border-destructive">
                   <strong>Důvod zamítnutí:</strong> {selectedImage.rejection_reason}
                   {selectedImage.rejection_details && <p className="text-xs mt-1">{selectedImage.rejection_details}</p>}
                 </div>

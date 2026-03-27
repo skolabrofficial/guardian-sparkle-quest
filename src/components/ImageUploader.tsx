@@ -20,6 +20,9 @@ interface Props {
   onUploaded?: (imageId: string) => void;
 }
 
+// Helper to bypass strict typing for tables not yet in types.ts
+const db = () => supabase as any;
+
 export default function ImageUploader({ isAvatar = false, onUploaded }: Props) {
   const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -49,7 +52,7 @@ export default function ImageUploader({ isAvatar = false, onUploaded }: Props) {
       if (storageErr) throw storageErr;
       const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(path);
 
-      const { data, error } = await supabase.from('uploaded_images').insert({
+      const { data, error } = await db().from('uploaded_images').insert({
         user_id: user.id,
         file_url: publicUrl,
         file_name: file.name,
@@ -60,7 +63,7 @@ export default function ImageUploader({ isAvatar = false, onUploaded }: Props) {
         license_type: license,
         is_avatar: isAvatar,
         status: 'pending',
-      } as any).select().single();
+      }).select().single();
 
       if (error) throw error;
       toast.success('Obrázek nahrán a čeká na schválení');
@@ -89,7 +92,7 @@ export default function ImageUploader({ isAvatar = false, onUploaded }: Props) {
           {preview && (
             <div className="relative rounded-xl overflow-hidden border border-border">
               <img src={preview} alt="Náhled" className="w-full max-h-48 object-contain bg-muted/30" />
-              <button onClick={() => { setFile(null); setPreview(null); }} className="absolute top-2 right-2 text-xs font-bold bg-destructive text-white px-2 py-1 rounded-lg">✕</button>
+              <button onClick={() => { setFile(null); setPreview(null); }} className="absolute top-2 right-2 text-xs font-bold bg-destructive text-destructive-foreground px-2 py-1 rounded-lg">✕</button>
             </div>
           )}
           <div className="text-xs text-muted-foreground">{file.name} — {(file.size / 1024).toFixed(0)} KB</div>
