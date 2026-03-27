@@ -3,6 +3,7 @@ import { Bell, X, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { nameWithRole } from '@/lib/roleUtils';
 
 interface Notification {
   id: string;
@@ -21,7 +22,7 @@ export default function NotificationBell() {
   const [sendTitle, setSendTitle] = useState('');
   const [sendMsg, setSendMsg] = useState('');
   const [sendTo, setSendTo] = useState('');
-  const [profiles, setProfiles] = useState<{ user_id: string; display_name: string }[]>([]);
+  const [profiles, setProfiles] = useState<{ user_id: string; display_name: string; role?: string }[]>([]);
   const ref = useRef<HTMLDivElement>(null);
 
   const unread = notifications.filter(n => !n.is_read).length;
@@ -37,18 +38,13 @@ export default function NotificationBell() {
     if (data) setNotifications(data);
   };
 
-  useEffect(() => {
-    load();
-  }, [user]);
+  useEffect(() => { load(); }, [user]);
 
-  // Realtime subscription
   useEffect(() => {
     if (!user) return;
     const channel = supabase
       .channel('notifications-bell')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
-        load();
-      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => { load(); })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
@@ -75,26 +71,23 @@ export default function NotificationBell() {
   };
 
   const loadProfiles = async () => {
-    const { data } = await supabase.from('profiles').select('user_id, display_name');
-    if (data) setProfiles(data);
+    const [profRes, roleRes] = await Promise.all([
+      supabase.from('profiles').select('user_id, display_name'),
+      supabase.from('user_roles').select('user_id, role'),
+    ]);
+    if (profRes.data) {
+      const roleMap: Record<string, string> = {};
+      roleRes.data?.forEach(r => { roleMap[r.user_id] = r.role; });
+      setProfiles(profRes.data.map(p => ({ ...p, role: roleMap[p.user_id] })));
+    }
   };
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sendTo || !sendTitle) return;
-    const { error } = await supabase.from('notifications').insert({
-      user_id: sendTo,
-      title: sendTitle,
-      message: sendMsg || null,
-    });
+    const { error } = await supabase.from('notifications').insert({ user_id: sendTo, title: sendTitle, message: sendMsg || null });
     if (error) toast.error(error.message);
-    else {
-      toast.success('Notifikace odeslána');
-      setSendTitle('');
-      setSendMsg('');
-      setSendTo('');
-      setShowSend(false);
-    }
+    else { toast.success('Notifikace odeslána'); setSendTitle(''); setSendMsg(''); setSendTo(''); setShowSend(false); }
   };
 
   const canSend = isStaff || isLektor;
@@ -113,7 +106,7 @@ export default function NotificationBell() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-xl border border-border bg-card hover:bg-muted transition-colors cursor-pointer"
+        className="relative p-2 rounded-xl border border-border bg-card hover:bg-muted transition-all duration-200 cursor-pointer hover:shadow-md"
         aria-label="Notifikace"
       >
         <Bell size={20} className="text-foreground" />
@@ -125,9 +118,9 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 w-[340px] max-h-[420px] bg-card rounded-2xl border border-border overflow-hidden z-50 animate-fade-in" style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}>
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <h4 className="font-extrabold text-sm m-0">Notifikace</h4>
+        <div className="absolute right-0 top-12 w-[360px] max-h-[440px] bg-card rounded-2xl border border-border overflow-hidden z-50 animate-fade-in" style={{ boxShadow: '0 20px 50px rgba(0,0,0,0.18)' }}>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-gradient-to-r from-card to-muted/30">
+            <h4 className="font-extrabold text-sm m-0">🔔 Notifikace</h4>
             <div className="flex items-center gap-2">
               {unread > 0 && (
                 <button onClick={markAllRead} className="text-[11px] font-bold text-primary hover:underline cursor-pointer bg-transparent border-none">
@@ -135,11 +128,7 @@ export default function NotificationBell() {
                 </button>
               )}
               {canSend && (
-                <button
-                  onClick={() => { setShowSend(!showSend); if (!showSend) loadProfiles(); }}
-                  className="p-1 rounded-lg hover:bg-muted cursor-pointer bg-transparent border-none"
-                  title="Odeslat notifikaci"
-                >
+                <button onClick={() => { setShowSend(!showSend); if (!showSend) loadProfiles(); }} className="p-1 rounded-lg hover:bg-muted cursor-pointer bg-transparent border-none" title="Odeslat notifikaci">
                   <Send size={14} />
                 </button>
               )}
@@ -150,10 +139,10 @@ export default function NotificationBell() {
           </div>
 
           {showSend && canSend && (
-            <form onSubmit={handleSend} className="px-4 py-3 border-b border-border grid gap-2 bg-muted/50">
+            <form onSubmit={handleSend} className="px-4 py-3 border-b border-border grid gap-2 bg-muted/30">
               <select value={sendTo} onChange={e => setSendTo(e.target.value)} className="border border-border rounded-lg py-1.5 px-2 text-xs outline-none bg-card" required>
                 <option value="">Příjemce…</option>
-                {profiles.map(p => <option key={p.user_id} value={p.user_id}>{p.display_name}</option>)}
+                {profiles.map(p => <option key={p.user_id} value={p.user_id}>{nameWithRole(p.display_name, p.role)}</option>)}
               </select>
               <input placeholder="Titulek" value={sendTitle} onChange={e => setSendTitle(e.target.value)} required className="border border-border rounded-lg py-1.5 px-2 text-xs outline-none bg-card" />
               <input placeholder="Zpráva (volitelná)" value={sendMsg} onChange={e => setSendMsg(e.target.value)} className="border border-border rounded-lg py-1.5 px-2 text-xs outline-none bg-card" />
@@ -161,7 +150,7 @@ export default function NotificationBell() {
             </form>
           )}
 
-          <div className="overflow-y-auto max-h-[300px]">
+          <div className="overflow-y-auto max-h-[320px]">
             {notifications.length === 0 ? (
               <p className="text-center text-muted-foreground text-sm py-8">Žádné notifikace</p>
             ) : (
@@ -169,7 +158,7 @@ export default function NotificationBell() {
                 <div
                   key={n.id}
                   onClick={() => markRead(n.id)}
-                  className={`px-4 py-3 border-b border-border cursor-pointer transition-colors hover:bg-muted/50 ${!n.is_read ? 'bg-blue-50/60' : ''}`}
+                  className={`px-4 py-3 border-b border-border cursor-pointer transition-all duration-200 hover:bg-muted/50 ${!n.is_read ? 'bg-blue-50/60' : ''}`}
                 >
                   <div className="flex justify-between items-start">
                     <strong className="text-sm">{n.title}</strong>
