@@ -553,11 +553,10 @@ export default function Rektorat() {
             <div className="grid gap-2">
               {users.map(u => {
                 const r = roles.find(r => r.user_id === u.user_id);
-                const roleColors: Record<string, string> = { developer: '#991b1b', dohledci: '#b45309', lektor: '#166534', student: '#1e40af' };
                 return (
                   <div key={u.id} className="catalog-item-card items-center">
-                    <strong>{u.display_name}</strong>
-                    <span className="text-xs font-extrabold px-2 py-0.5 rounded-full text-white" style={{ background: roleColors[r?.role || 'student'] || '#6b7280' }}>{r?.role || '—'}</span>
+                    <strong>{nameWithRole(u.display_name, r?.role)}</strong>
+                    <span className="text-xs font-extrabold px-2 py-0.5 rounded-full text-white" style={{ background: ROLE_COLORS[r?.role || 'student'] || '#6b7280' }}>{r?.role || '—'}</span>
                   </div>
                 );
               })}
