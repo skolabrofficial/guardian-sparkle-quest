@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { nameWithRole, getRoleSymbol, ROLE_COLORS } from '@/lib/roleUtils';
 
 type Tab = 'prehled' | 'kurzy' | 'lektori' | 'studenti' | 'fakulty' | 'rozvrh' | 'dotazy' | 'vypisky' | 'oznameni' | 'reporty' | 'audit' | 'nastaveni' | 'notifikace' | 'role' | 'statistiky' | 'rozpocet' | 'smernice' | 'zpravy' | 'zadosti' | 'kvalita' | 'export' | 'import' | 'hromadne' | 'harmonogram' | 'bezpecnost' | 'klubovny' | 'kapacity' | 'mentori' | 'plany' | 'hodnoceni' | 'blokace' | 'forum' | 'emailove-sablony' | 'integrace';
 
@@ -157,9 +158,15 @@ export default function Rektorat() {
     });
   };
 
+  const getUserRole = (userId: string) => {
+    const r = roles.find(r => r.user_id === userId);
+    return r?.role || null;
+  };
+
   const getUserName = (userId: string) => {
     const u = users.find(u => u.user_id === userId);
-    return u?.display_name || userId?.slice(0, 8) || '—';
+    const displayName = u?.display_name || userId?.slice(0, 8) || '—';
+    return nameWithRole(displayName, getUserRole(userId));
   };
 
   const addAnnouncement = async () => {
