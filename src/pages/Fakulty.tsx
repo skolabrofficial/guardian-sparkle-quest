@@ -3,6 +3,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { nameWithRole } from '@/lib/roleUtils';
 
 interface Faculty { id: string; name: string; description: string | null; color: string | null; dean_id: string | null; }
 
@@ -10,6 +11,7 @@ export default function Fakulty() {
   const { user, isStaff, isDeveloper } = useAuth();
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
+  const [userRoles, setUserRoles] = useState<Record<string, string>>({});
   const [lektors, setLektors] = useState<{ user_id: string; display_name: string }[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
@@ -28,8 +30,10 @@ export default function Fakulty() {
       const map: Record<string, string> = {};
       pRes.data.forEach(p => { map[p.user_id] = p.display_name; });
       setProfiles(map);
-      // Lektors = anyone who is lektor, dohledci or developer
       if (rRes.data) {
+        const roleMap: Record<string, string> = {};
+        rRes.data.forEach(r => { roleMap[r.user_id] = r.role; });
+        setUserRoles(roleMap);
         const staffIds = rRes.data.filter(r => ['lektor', 'dohledci', 'developer'].includes(r.role)).map(r => r.user_id);
         setLektors(pRes.data.filter(p => staffIds.includes(p.user_id)));
       }
@@ -65,14 +69,14 @@ export default function Fakulty() {
           </article>
 
           {isStaff && (
-            <div className="panel-card">
+            <div className="panel-card animate-slide-up stagger-1">
               <button className="btn-alik-primary text-sm" onClick={() => setShowForm(!showForm)}>
                 {showForm ? 'Zrušit' : '+ Přidat fakultu'}
               </button>
               {showForm && (
                 <form onSubmit={handleAdd} className="grid gap-2 mt-3">
-                  <input placeholder="Název fakulty" value={name} onChange={e => setName(e.target.value)} required className="border-2 border-blue-200 rounded-xl py-2 px-3 text-sm outline-none" />
-                  <textarea placeholder="Popis" value={desc} onChange={e => setDesc(e.target.value)} className="border-2 border-blue-200 rounded-xl py-2 px-3 text-sm outline-none min-h-[80px]" />
+                  <input placeholder="Název fakulty" value={name} onChange={e => setName(e.target.value)} required className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" />
+                  <textarea placeholder="Popis" value={desc} onChange={e => setDesc(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[80px] focus:border-secondary transition-colors" />
                   <button type="submit" className="btn-alik-accent text-sm">Uložit</button>
                 </form>
               )}
@@ -80,28 +84,28 @@ export default function Fakulty() {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {faculties.map(f => (
-              <article key={f.id} className="panel-card">
+            {faculties.map((f, i) => (
+              <article key={f.id} className={`panel-card hover:shadow-lg transition-all duration-300 animate-slide-up stagger-${i + 1}`}>
                 <h3 className="mt-0 mb-1">{f.name}</h3>
                 {f.description && <p className="text-sm text-muted-foreground mb-2">{f.description}</p>}
                 {f.dean_id && (
                   <p className="text-xs font-bold mb-2" style={{ color: '#8b6914' }}>
-                    🎓 Děkan: {profiles[f.dean_id] || '—'}
+                    🎓 Děkan: {nameWithRole(profiles[f.dean_id] || '—', userRoles[f.dean_id])}
                   </p>
                 )}
                 <div className="flex gap-2 flex-wrap">
                   <button className="btn-alik-outline text-sm">Zobrazit kurzy</button>
                   {isDeveloper && (
-                    <button className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: '#fff8e0', color: '#8b6914' }} onClick={() => { setAssignDeanFacultyId(f.id); setSelectedDean(f.dean_id || ''); }}>
+                    <button className="text-xs font-bold px-2 py-1 rounded-lg bg-muted hover:bg-muted/80 transition-colors" style={{ color: '#8b6914' }} onClick={() => { setAssignDeanFacultyId(f.id); setSelectedDean(f.dean_id || ''); }}>
                       {f.dean_id ? 'Změnit děkana' : 'Přiřadit děkana'}
                     </button>
                   )}
                 </div>
                 {assignDeanFacultyId === f.id && (
-                  <div className="grid gap-2 mt-3 p-2 rounded-lg" style={{ background: '#fffbe8' }}>
-                    <select value={selectedDean} onChange={e => setSelectedDean(e.target.value)} className="border-2 border-yellow-200 rounded-xl py-2 px-3 text-sm outline-none">
+                  <div className="grid gap-2 mt-3 p-2.5 rounded-xl bg-muted/50 animate-fade-in">
+                    <select value={selectedDean} onChange={e => setSelectedDean(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card">
                       <option value="">Vyberte děkana</option>
-                      {lektors.map(l => <option key={l.user_id} value={l.user_id}>{l.display_name}</option>)}
+                      {lektors.map(l => <option key={l.user_id} value={l.user_id}>{nameWithRole(l.display_name, userRoles[l.user_id])}</option>)}
                     </select>
                     <div className="flex gap-2">
                       <button onClick={assignDean} className="btn-alik-primary text-xs">Přiřadit</button>
@@ -116,7 +120,7 @@ export default function Fakulty() {
         </div>
 
         <aside className="grid gap-[18px]">
-          <div className="panel-card">
+          <div className="panel-card animate-slide-up stagger-2">
             <h4 className="mt-0">Tip pro výběr</h4>
             <ul className="pl-4 text-sm"><li>Začni tím, co tě nejvíc baví</li><li>Zkus si kurz na zkoušku</li><li>Kdykoli můžeš přejít jinam</li></ul>
           </div>

@@ -4,6 +4,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { getRoleSymbol, ROLE_LABELS, ROLE_COLORS } from '@/lib/roleUtils';
 import { useNavigate } from 'react-router-dom';
 
 export default function Profil() {
@@ -39,11 +40,7 @@ export default function Profil() {
   const saveProfile = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from('profiles').update({
-      display_name: displayName,
-      bio,
-      avatar_url: avatarUrl,
-    }).eq('user_id', user.id);
+    const { error } = await supabase.from('profiles').update({ display_name: displayName, bio, avatar_url: avatarUrl }).eq('user_id', user.id);
     setSaving(false);
     if (error) toast.error(error.message);
     else toast.success('Profil uložen');
@@ -53,14 +50,11 @@ export default function Profil() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     if (file.size > 2 * 1024 * 1024) { toast.error('Maximální velikost je 2 MB'); return; }
-
     setUploading(true);
     const ext = file.name.split('.').pop();
     const path = `${user.id}/avatar.${ext}`;
-
     const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
     if (error) { toast.error(error.message); setUploading(false); return; }
-
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
     setAvatarUrl(`${publicUrl}?t=${Date.now()}`);
     setUploading(false);
@@ -71,13 +65,6 @@ export default function Profil() {
     if (!user) return;
     setAvatarUrl(null);
     toast.success('Avatar odstraněn (uložte profil)');
-  };
-
-  const roleLabel: Record<string, string> = {
-    developer: 'Vývojář', dohledci: 'Dohledčí', lektor: 'Lektor', student: 'Student',
-  };
-  const roleColors: Record<string, string> = {
-    developer: '#991b1b', dohledci: '#b45309', lektor: '#166534', student: '#1e40af',
   };
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center">Načítání...</div>;
@@ -91,7 +78,7 @@ export default function Profil() {
           {/* Avatar */}
           <div className="flex items-center gap-4 mb-5">
             <div
-              className="w-20 h-20 rounded-2xl border-2 border-border overflow-hidden cursor-pointer flex items-center justify-center"
+              className="w-20 h-20 rounded-2xl border-2 border-border overflow-hidden cursor-pointer flex items-center justify-center transition-transform duration-200 hover:scale-105"
               style={{ background: avatarUrl ? `url(${avatarUrl}) center/cover` : 'linear-gradient(180deg, #8fd3ff, #3f87ff)' }}
               onClick={() => fileRef.current?.click()}
             >
@@ -102,14 +89,14 @@ export default function Profil() {
               <button onClick={() => fileRef.current?.click()} className="btn-alik-outline text-xs" disabled={uploading}>
                 {uploading ? 'Nahrávání...' : '📷 Nahrát avatar'}
               </button>
-              {avatarUrl && <button onClick={removeAvatar} className="text-xs text-red-500 font-bold">Odebrat avatar</button>}
+              {avatarUrl && <button onClick={removeAvatar} className="text-xs text-destructive font-bold">Odebrat avatar</button>}
             </div>
           </div>
 
           {/* Role badge */}
           <div className="mb-4">
-            <span className="text-xs font-extrabold px-3 py-1 rounded-full text-white" style={{ background: roleColors[role || 'student'] }}>
-              {roleLabel[role || 'student']}
+            <span className="text-xs font-extrabold px-3 py-1 rounded-full text-white" style={{ background: ROLE_COLORS[role || 'student'] }}>
+              {ROLE_LABELS[role || 'student']}{getRoleSymbol(role)}
             </span>
           </div>
 
@@ -119,7 +106,7 @@ export default function Profil() {
             <input
               value={displayName}
               onChange={e => setDisplayName(e.target.value)}
-              className="border-2 border-blue-200 rounded-xl py-2.5 px-3 text-base outline-none bg-card focus:border-secondary"
+              className="border-2 border-border rounded-xl py-2.5 px-3 text-base outline-none bg-card focus:border-secondary transition-colors"
               placeholder="Vaše jméno"
             />
           </div>
@@ -130,21 +117,20 @@ export default function Profil() {
               <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Bio (podporuje Markdown + LaTeX)</label>
               <button
                 onClick={() => setPreviewBio(!previewBio)}
-                className="text-xs font-bold px-2 py-1 rounded-lg"
-                style={{ background: previewBio ? '#dcfce7' : '#eef5ff', color: previewBio ? '#166534' : '#1e40af' }}
+                className="text-xs font-bold px-2 py-1 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
               >
                 {previewBio ? '✏ Upravit' : '👁 Náhled'}
               </button>
             </div>
             {previewBio ? (
-              <div className="border-2 border-green-200 rounded-xl p-3 min-h-[120px] bg-card">
+              <div className="border-2 border-accent/30 rounded-xl p-3 min-h-[120px] bg-card">
                 <MarkdownRenderer content={bio} />
               </div>
             ) : (
               <textarea
                 value={bio}
                 onChange={e => setBio(e.target.value)}
-                className="border-2 border-blue-200 rounded-xl py-2.5 px-3 text-sm outline-none bg-card focus:border-secondary min-h-[120px] resize-y font-mono"
+                className="border-2 border-border rounded-xl py-2.5 px-3 text-sm outline-none bg-card focus:border-secondary min-h-[120px] resize-y font-mono transition-colors"
                 placeholder="Napište něco o sobě... Podporuje **Markdown** a $\LaTeX$"
               />
             )}
