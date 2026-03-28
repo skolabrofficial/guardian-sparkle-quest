@@ -1104,25 +1104,31 @@ export default function Rektorat() {
 
   return (
     <AppLayout searchLabel="Rektorát" searchPlaceholder="Hledat v rektorátu..." searchTags={['kurzy', 'uživatelé', 'blokace']}>
-      <main className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-5 items-start">
+      <main className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6 items-start">
         {/* Sidebar */}
-        <aside className="grid gap-1 max-h-[85vh] overflow-y-auto pr-1 sticky top-4">
-          <div className="flex items-center justify-between mb-2 px-2">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Rektorát</h3>
-            <span className="text-xs font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">{allTabs.length}</span>
+        <aside className="panel-card !p-3 sticky top-4 max-h-[85vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h3 className="text-sm font-extrabold text-foreground">🏛 Rektorát</h3>
+            <span className="text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">{allTabs.length}</span>
           </div>
           {tabGroups.map(g => (
-            <div key={g.group} className="mb-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground px-2 py-1">{g.group}</p>
-              {g.items.map(t => (
-                <button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key)}
-                  className={`w-full text-left text-xs py-1.5 px-2.5 rounded-xl font-bold transition-all ${activeTab === t.key ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-muted'}`}
-                >
-                  {t.icon} {t.label}
-                </button>
-              ))}
+            <div key={g.group} className="mb-2">
+              <p className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground px-2 py-1.5 border-b border-border mb-1">{g.group}</p>
+              <div className="grid gap-0.5">
+                {g.items.map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setActiveTab(t.key)}
+                    className={`w-full text-left text-xs py-2 px-3 rounded-xl font-bold transition-all duration-200 ${
+                      activeTab === t.key
+                        ? 'bg-primary text-primary-foreground shadow-lg scale-[1.02]'
+                        : 'hover:bg-muted/80 text-foreground/80 hover:text-foreground'
+                    }`}
+                  >
+                    <span className="mr-1.5">{t.icon}</span>{t.label}
+                  </button>
+                ))}
+              </div>
             </div>
           ))}
         </aside>
