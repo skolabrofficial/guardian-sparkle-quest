@@ -513,65 +513,232 @@ export default function Rektorat() {
 
       case 'kurzy':
         return (
-          <div className="grid gap-3">
-            <h3 className="mt-0 text-lg font-extrabold">📚 Správa kurzů ({courses.length})</h3>
-            {courses.map(c => (
-              <div key={c.id} className="catalog-item-card items-center">
-                <div className="flex-1">
-                  <strong>{c.title}</strong>
-                  <span className="text-xs text-muted-foreground ml-2">{c.day_of_week} {c.time_slot}</span>
-                  {c.lektor_id && <span className="text-xs ml-2 text-secondary-foreground">👨‍🏫 {getUserName(c.lektor_id)}</span>}
-                  <span className="text-xs ml-2 text-muted-foreground">({enrollments.filter(e => e.course_id === c.id).length} st.)</span>
-                </div>
-                <div className="flex gap-1.5">
-                  {isDeveloper && <button className="text-xs font-bold px-2 py-1 rounded-lg bg-accent text-accent-foreground" onClick={() => { setAssignLektorCourseId(c.id); setSelectedLektor(c.lektor_id || ''); }}>👨‍🏫</button>}
-                  <button className="btn-alik-outline text-xs" onClick={() => deleteCourse(c.id)}>🗑</button>
-                </div>
-              </div>
-            ))}
-            {assignLektorCourseId && (
-              <div className="panel-card mt-2 border-l-4 border-accent">
-                <h4 className="mt-0 text-sm">Přiřadit lektora</h4>
-                <select value={selectedLektor} onChange={e => setSelectedLektor(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none w-full">
-                  <option value="">Vyberte lektora</option>
-                  {lektors.map(l => <option key={l.user_id} value={l.user_id}>{l.display_name}</option>)}
-                </select>
-                <div className="flex gap-2 mt-2">
-                  <button onClick={assignLektor} className="btn-alik-primary text-xs">Přiřadit</button>
-                  <button onClick={() => setAssignLektorCourseId(null)} className="btn-alik-outline text-xs">Zrušit</button>
+          <div className="grid gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="mt-0 text-lg font-extrabold">📚 Správa kurzů ({courses.length})</h3>
+              {isDeveloper && <button className="btn-alik-primary text-sm" onClick={() => setShowNewCourse(!showNewCourse)}>{showNewCourse ? '✕ Zrušit' : '+ Nový kurz'}</button>}
+            </div>
+
+            {showNewCourse && (
+              <div className="panel-card border-l-4 border-primary animate-fade-in">
+                <h4 className="mt-0 text-sm mb-3">Nový kurz</h4>
+                <div className="grid gap-2">
+                  <input placeholder="Název kurzu *" value={newCourse.title} onChange={e => setNewCourse({ ...newCourse, title: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-primary transition-colors" />
+                  <textarea placeholder="Popis" value={newCourse.description} onChange={e => setNewCourse({ ...newCourse, description: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[60px] focus:border-primary transition-colors" />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <input placeholder="Den (Po, Út...)" value={newCourse.day_of_week} onChange={e => setNewCourse({ ...newCourse, day_of_week: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-primary transition-colors" />
+                    <input placeholder="Čas (15:00)" value={newCourse.time_slot} onChange={e => setNewCourse({ ...newCourse, time_slot: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-primary transition-colors" />
+                    <input placeholder="Místnost" value={newCourse.room} onChange={e => setNewCourse({ ...newCourse, room: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-primary transition-colors" />
+                    <input placeholder="Budova" value={newCourse.building} onChange={e => setNewCourse({ ...newCourse, building: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-primary transition-colors" />
+                    <input placeholder="Kredity" type="number" value={newCourse.credits} onChange={e => setNewCourse({ ...newCourse, credits: Number(e.target.value) })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-primary transition-colors" />
+                    <select value={newCourse.difficulty} onChange={e => setNewCourse({ ...newCourse, difficulty: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none">
+                      <option value="beginner">Začátečník</option><option value="intermediate">Pokročilý</option><option value="advanced">Expert</option>
+                    </select>
+                    <select value={newCourse.semester} onChange={e => setNewCourse({ ...newCourse, semester: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none">
+                      <option value="zimní">Zimní</option><option value="letní">Letní</option><option value="celoroční">Celoroční</option>
+                    </select>
+                    <select value={newCourse.exam_type} onChange={e => setNewCourse({ ...newCourse, exam_type: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none">
+                      <option value="žádný">Žádný</option><option value="test">Test</option><option value="projekt">Projekt</option><option value="ústní">Ústní</option><option value="písemná">Písemná</option><option value="kombinovaná">Kombinovaná</option>
+                    </select>
+                    <select value={newCourse.language} onChange={e => setNewCourse({ ...newCourse, language: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none">
+                      <option value="čeština">Čeština</option><option value="angličtina">Angličtina</option><option value="slovenština">Slovenština</option>
+                    </select>
+                  </div>
+                  <button onClick={createNewCourse} disabled={!newCourse.title} className="btn-alik-accent text-sm">Vytvořit kurz</button>
                 </div>
               </div>
             )}
+
+            {courses.map(c => {
+              const isEditing = editingCourseId === c.id;
+              const cFaculty = faculties.find(f => f.id === c.faculty_id);
+              const enrolledCount = enrollments.filter(e => e.course_id === c.id).length;
+              return (
+                <div key={c.id} className="panel-card !p-3 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <strong className="text-sm">{c.title}</strong>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {c.day_of_week && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted">{c.day_of_week} {c.time_slot}</span>}
+                        {c.lektor_id && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-accent/20 text-accent-foreground">👨‍🏫 {getUserName(c.lektor_id)}</span>}
+                        {cFaculty && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">🏛 {cFaculty.name}</span>}
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted">{enrolledCount} st.</span>
+                        {c.room && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted">🚪 {c.room}</span>}
+                        {c.credits > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted">🎯 {c.credits} kr.</span>}
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      {isDeveloper && (
+                        <>
+                          <button className="text-xs font-bold px-2 py-1 rounded-lg bg-muted hover:bg-muted/80 transition-colors" title="Upravit" onClick={() => { setEditingCourseId(isEditing ? null : c.id); setCourseEdit(isEditing ? {} : { title: c.title, description: c.description || '', day_of_week: c.day_of_week || '', time_slot: c.time_slot || '', difficulty: c.difficulty || 'beginner', room: c.room || '', building: c.building || '', semester: c.semester || 'zimní', credits: c.credits || 0, exam_type: c.exam_type || 'žádný', language: c.language || 'čeština', prerequisites: c.prerequisites || '', syllabus: c.syllabus || '', capacity_note: c.capacity_note || '', schedule_note: c.schedule_note || '', max_students: c.max_students || 30 }); }}>✏️</button>
+                          <button className="text-xs font-bold px-2 py-1 rounded-lg bg-muted hover:bg-muted/80 transition-colors" title="Přiřadit lektora" onClick={() => { setAssignLektorCourseId(assignLektorCourseId === c.id ? null : c.id); setSelectedLektor(c.lektor_id || ''); }}>👨‍🏫</button>
+                          <button className="text-xs font-bold px-2 py-1 rounded-lg bg-muted hover:bg-muted/80 transition-colors" title="Přiřadit fakultu" onClick={() => { setAssignFacultyCourseId(assignFacultyCourseId === c.id ? null : c.id); setSelectedFacultyForCourse(c.faculty_id || ''); }}>🏛</button>
+                        </>
+                      )}
+                      <button className="text-xs font-bold px-2 py-1 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors" onClick={() => deleteCourse(c.id)}>🗑</button>
+                    </div>
+                  </div>
+
+                  {assignLektorCourseId === c.id && (
+                    <div className="mt-3 p-2.5 rounded-xl bg-muted/50 animate-fade-in grid gap-2">
+                      <label className="text-xs font-bold">Přiřadit lektora</label>
+                      <select value={selectedLektor} onChange={e => setSelectedLektor(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card">
+                        <option value="">Vyberte lektora</option>
+                        {lektors.map(l => <option key={l.user_id} value={l.user_id}>{l.display_name}</option>)}
+                      </select>
+                      <div className="flex gap-2">
+                        <button onClick={assignLektor} className="btn-alik-primary text-xs">Přiřadit</button>
+                        <button onClick={() => setAssignLektorCourseId(null)} className="btn-alik-outline text-xs">Zrušit</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {assignFacultyCourseId === c.id && (
+                    <div className="mt-3 p-2.5 rounded-xl bg-muted/50 animate-fade-in grid gap-2">
+                      <label className="text-xs font-bold">Přiřadit fakultu</label>
+                      <select value={selectedFacultyForCourse} onChange={e => setSelectedFacultyForCourse(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card">
+                        <option value="">Bez fakulty</option>
+                        {faculties.map(f => <option key={f.id} value={f.id}>{f.icon || '🏛'} {f.name}</option>)}
+                      </select>
+                      <div className="flex gap-2">
+                        <button onClick={assignFacultyToCourse} className="btn-alik-primary text-xs">Přiřadit</button>
+                        <button onClick={() => setAssignFacultyCourseId(null)} className="btn-alik-outline text-xs">Zrušit</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isEditing && (
+                    <div className="mt-3 p-3 rounded-xl bg-muted/50 animate-fade-in grid gap-2">
+                      <label className="text-xs font-bold">Upravit kurz</label>
+                      <input placeholder="Název" value={courseEdit.title || ''} onChange={e => setCourseEdit({ ...courseEdit, title: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card focus:border-primary transition-colors" />
+                      <textarea placeholder="Popis" value={courseEdit.description || ''} onChange={e => setCourseEdit({ ...courseEdit, description: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card min-h-[60px] focus:border-primary transition-colors" />
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <input placeholder="Den" value={courseEdit.day_of_week || ''} onChange={e => setCourseEdit({ ...courseEdit, day_of_week: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card" />
+                        <input placeholder="Čas" value={courseEdit.time_slot || ''} onChange={e => setCourseEdit({ ...courseEdit, time_slot: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card" />
+                        <input placeholder="Místnost" value={courseEdit.room || ''} onChange={e => setCourseEdit({ ...courseEdit, room: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card" />
+                        <input placeholder="Budova" value={courseEdit.building || ''} onChange={e => setCourseEdit({ ...courseEdit, building: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card" />
+                        <input placeholder="Kredity" type="number" value={courseEdit.credits || 0} onChange={e => setCourseEdit({ ...courseEdit, credits: Number(e.target.value) })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card" />
+                        <input placeholder="Max studentů" type="number" value={courseEdit.max_students || 30} onChange={e => setCourseEdit({ ...courseEdit, max_students: Number(e.target.value) })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card" />
+                        <select value={courseEdit.difficulty || 'beginner'} onChange={e => setCourseEdit({ ...courseEdit, difficulty: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card">
+                          <option value="beginner">Začátečník</option><option value="intermediate">Pokročilý</option><option value="advanced">Expert</option>
+                        </select>
+                        <select value={courseEdit.semester || 'zimní'} onChange={e => setCourseEdit({ ...courseEdit, semester: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card">
+                          <option value="zimní">Zimní</option><option value="letní">Letní</option><option value="celoroční">Celoroční</option>
+                        </select>
+                        <select value={courseEdit.exam_type || 'žádný'} onChange={e => setCourseEdit({ ...courseEdit, exam_type: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card">
+                          <option value="žádný">Žádný</option><option value="test">Test</option><option value="projekt">Projekt</option><option value="ústní">Ústní</option><option value="písemná">Písemná</option><option value="kombinovaná">Kombinovaná</option>
+                        </select>
+                        <select value={courseEdit.language || 'čeština'} onChange={e => setCourseEdit({ ...courseEdit, language: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card">
+                          <option value="čeština">Čeština</option><option value="angličtina">Angličtina</option><option value="slovenština">Slovenština</option>
+                        </select>
+                      </div>
+                      <input placeholder="Prerekvizity" value={courseEdit.prerequisites || ''} onChange={e => setCourseEdit({ ...courseEdit, prerequisites: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card" />
+                      <textarea placeholder="Sylabus" value={courseEdit.syllabus || ''} onChange={e => setCourseEdit({ ...courseEdit, syllabus: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card min-h-[60px]" />
+                      <input placeholder="Poznámka ke kapacitě" value={courseEdit.capacity_note || ''} onChange={e => setCourseEdit({ ...courseEdit, capacity_note: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card" />
+                      <input placeholder="Poznámka k rozvrhu" value={courseEdit.schedule_note || ''} onChange={e => setCourseEdit({ ...courseEdit, schedule_note: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card" />
+                      <div className="flex gap-2">
+                        <button onClick={saveCourseEdit} className="btn-alik-primary text-xs">💾 Uložit</button>
+                        <button onClick={() => { setEditingCourseId(null); setCourseEdit({}); }} className="btn-alik-outline text-xs">Zrušit</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {courses.length === 0 && <p className="text-muted-foreground text-sm">Žádné kurzy.</p>}
           </div>
         );
 
       case 'fakulty':
         return (
-          <div className="grid gap-3">
-            <h3 className="mt-0 text-lg font-extrabold">🏛 Fakulty ({faculties.length})</h3>
-            {faculties.map(f => (
-              <div key={f.id} className="catalog-item-card items-center">
-                <div className="flex-1">
-                  <strong>{f.name}</strong>
-                  {f.dean_id && <span className="text-xs ml-2 text-secondary-foreground">🎓 {getUserName(f.dean_id)}</span>}
-                  <span className="text-xs ml-2 text-muted-foreground">({courses.filter(c => c.faculty_id === f.id).length} kurzů)</span>
+          <div className="grid gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="mt-0 text-lg font-extrabold">🏛 Fakulty ({faculties.length})</h3>
+              {isDeveloper && <button className="btn-alik-primary text-sm" onClick={() => setShowNewFaculty(!showNewFaculty)}>{showNewFaculty ? '✕ Zrušit' : '+ Nová fakulta'}</button>}
+            </div>
+
+            {showNewFaculty && (
+              <div className="panel-card border-l-4 border-primary animate-fade-in">
+                <h4 className="mt-0 text-sm mb-3">Nová fakulta</h4>
+                <div className="grid gap-2">
+                  <input placeholder="Název fakulty *" value={newFaculty.name} onChange={e => setNewFaculty({ ...newFaculty, name: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-primary transition-colors" />
+                  <textarea placeholder="Popis" value={newFaculty.description} onChange={e => setNewFaculty({ ...newFaculty, description: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[60px] focus:border-primary transition-colors" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input placeholder="Ikona (emoji)" value={newFaculty.icon} onChange={e => setNewFaculty({ ...newFaculty, icon: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
+                    <input type="color" value={newFaculty.color} onChange={e => setNewFaculty({ ...newFaculty, color: e.target.value })} className="border-2 border-border rounded-xl h-10 cursor-pointer" />
+                  </div>
+                  <button onClick={createNewFaculty} disabled={!newFaculty.name} className="btn-alik-accent text-sm">Vytvořit fakultu</button>
                 </div>
-                <div className="flex gap-1.5">
-                  {isDeveloper && <button className="text-xs font-bold px-2 py-1 rounded-lg bg-accent text-accent-foreground" onClick={() => { setAssignDeanFacultyId(f.id); setSelectedDean(f.dean_id || ''); }}>🎓</button>}
-                  <button className="btn-alik-outline text-xs" onClick={() => deleteFaculty(f.id)}>🗑</button>
-                </div>
-              </div>
-            ))}
-            {assignDeanFacultyId && (
-              <div className="panel-card mt-2 border-l-4 border-accent">
-                <h4 className="mt-0 text-sm">Přiřadit děkana</h4>
-                <select value={selectedDean} onChange={e => setSelectedDean(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none w-full">
-                  <option value="">Vyberte uživatele</option>
-                  {lektors.map(l => <option key={l.user_id} value={l.user_id}>{l.display_name}</option>)}
-                </select>
-                <div className="flex gap-2 mt-2"><button onClick={assignDean} className="btn-alik-primary text-xs">Přiřadit</button><button onClick={() => setAssignDeanFacultyId(null)} className="btn-alik-outline text-xs">Zrušit</button></div>
               </div>
             )}
+
+            {faculties.map(f => {
+              const isEditing = editingFacultyId === f.id;
+              const facultyCourses = courses.filter(c => c.faculty_id === f.id);
+              return (
+                <div key={f.id} className="panel-card !p-3 animate-fade-in" style={{ borderLeft: `4px solid ${f.color || 'hsl(var(--primary))'}` }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{f.icon || '🏛'}</span>
+                        <strong className="text-sm">{f.name}</strong>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {f.dean_id && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-accent/20 text-accent-foreground">🎓 {getUserName(f.dean_id)}</span>}
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted">{facultyCourses.length} kurzů</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      {isDeveloper && (
+                        <>
+                          <button className="text-xs font-bold px-2 py-1 rounded-lg bg-muted hover:bg-muted/80 transition-colors" title="Upravit" onClick={() => { setEditingFacultyId(isEditing ? null : f.id); setFacultyEdit(isEditing ? {} : { name: f.name, description: f.description || '', icon: f.icon || '🏛', color: f.color || '#4f7dff', sort_order: f.sort_order || 0 }); }}>✏️</button>
+                          <button className="text-xs font-bold px-2 py-1 rounded-lg bg-muted hover:bg-muted/80 transition-colors" title="Přiřadit děkana" onClick={() => { setAssignDeanFacultyId(assignDeanFacultyId === f.id ? null : f.id); setSelectedDean(f.dean_id || ''); }}>🎓</button>
+                        </>
+                      )}
+                      <button className="text-xs font-bold px-2 py-1 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors" onClick={() => deleteFaculty(f.id)}>🗑</button>
+                    </div>
+                  </div>
+
+                  {assignDeanFacultyId === f.id && (
+                    <div className="mt-3 p-2.5 rounded-xl bg-muted/50 animate-fade-in grid gap-2">
+                      <label className="text-xs font-bold">Přiřadit děkana</label>
+                      <select value={selectedDean} onChange={e => setSelectedDean(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card">
+                        <option value="">Vyberte uživatele</option>
+                        {lektors.map(l => <option key={l.user_id} value={l.user_id}>{l.display_name}</option>)}
+                      </select>
+                      <div className="flex gap-2">
+                        <button onClick={assignDean} className="btn-alik-primary text-xs">Přiřadit</button>
+                        <button onClick={() => setAssignDeanFacultyId(null)} className="btn-alik-outline text-xs">Zrušit</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isEditing && (
+                    <div className="mt-3 p-3 rounded-xl bg-muted/50 animate-fade-in grid gap-2">
+                      <label className="text-xs font-bold">Upravit fakultu</label>
+                      <input placeholder="Název" value={facultyEdit.name || ''} onChange={e => setFacultyEdit({ ...facultyEdit, name: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card focus:border-primary transition-colors" />
+                      <textarea placeholder="Popis" value={facultyEdit.description || ''} onChange={e => setFacultyEdit({ ...facultyEdit, description: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card min-h-[60px] focus:border-primary transition-colors" />
+                      <div className="grid grid-cols-3 gap-2">
+                        <input placeholder="Ikona" value={facultyEdit.icon || ''} onChange={e => setFacultyEdit({ ...facultyEdit, icon: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card" />
+                        <input type="color" value={facultyEdit.color || '#4f7dff'} onChange={e => setFacultyEdit({ ...facultyEdit, color: e.target.value })} className="border-2 border-border rounded-xl h-10 cursor-pointer" />
+                        <input placeholder="Pořadí" type="number" value={facultyEdit.sort_order || 0} onChange={e => setFacultyEdit({ ...facultyEdit, sort_order: Number(e.target.value) })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card" />
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={saveFacultyEdit} className="btn-alik-primary text-xs">💾 Uložit</button>
+                        <button onClick={() => { setEditingFacultyId(null); setFacultyEdit({}); }} className="btn-alik-outline text-xs">Zrušit</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {facultyCourses.length > 0 && (
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      Kurzy: {facultyCourses.map(c => c.title).join(', ')}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {faculties.length === 0 && <p className="text-muted-foreground text-sm">Žádné fakulty.</p>}
           </div>
         );
 
