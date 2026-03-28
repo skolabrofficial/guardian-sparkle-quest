@@ -99,6 +99,7 @@ export default function Rektorat() {
   const [blockSeverity, setBlockSeverity] = useState('standard');
   const [blockPermanent, setBlockPermanent] = useState(false);
   const [blockExpires, setBlockExpires] = useState('');
+  const [blockAreas, setBlockAreas] = useState<string[]>([]);
 
   const [assignLektorCourseId, setAssignLektorCourseId] = useState<string | null>(null);
   const [selectedLektor, setSelectedLektor] = useState('');
@@ -245,7 +246,61 @@ export default function Rektorat() {
     const sevMap: Record<string, string> = { low: 'nízká', standard: 'standardní', high: 'vysoká', critical: 'kritická' };
     const areas = block.affected_areas?.length > 0 ? block.affected_areas.join(', ') : 'veškerý přístup';
     const expiry = block.is_permanent ? 'trvalá (bez konce)' : block.expires_at ? new Date(block.expires_at).toLocaleString('cs-CZ') : 'neurčeno';
-    return `## Zpráva pro správce Alík.cz — Protokol o blokaci\n\n**Číslo protokolu:** BLK-${block.id.slice(0, 8).toUpperCase()}\n**Datum vystavení:** ${new Date().toLocaleString('cs-CZ')}\n\n---\n\n### Informace o blokaci\n\nUživatel **${userName}** byl zablokován uživatelem **${blockerName}** dne ${new Date(block.blocked_at).toLocaleString('cs-CZ')}. Jedná se o **${typeMap[block.block_type] || block.block_type}** se závažností **${sevMap[block.severity] || block.severity}**.\n\n### Důvod blokace\n\n${block.reason}\n\n${block.details ? `### Podrobnosti\n\n${block.details}\n\n` : ''}### Parametry\n\n| Parametr | Hodnota |\n|---|---|\n| Typ | ${typeMap[block.block_type] || block.block_type} |\n| Závažnost | ${sevMap[block.severity] || block.severity} |\n| Trvalá | ${block.is_permanent ? 'Ano' : 'Ne'} |\n| Platnost do | ${expiry} |\n| Dotčené oblasti | ${areas} |\n| Počet varování | ${block.warning_count || 0} |\n| Pořadí blokace | ${block.block_count || 1}. |\n| Eskalováno | ${block.escalated ? 'Ano' : 'Ne'} |\n\n${block.evidence_urls?.length > 0 ? `### Důkazy\n\n${block.evidence_urls.map((u: string, i: number) => `${i + 1}. ${u}`).join('\n')}\n\n` : ''}${block.internal_notes ? `### Interní poznámky\n\n${block.internal_notes}\n\n` : ''}---\n\n*Automaticky vygenerováno systémem Alíkovy Univerzity.*`;
+    // AZJ-style formatting for Alík.cz (using parentheses commands)
+    const lines = [
+      `(nadpis) Protokol o blokaci — Alíkova Univerzita`,
+      ``,
+      `(tučně) Číslo protokolu: BLK-${block.id.slice(0, 8).toUpperCase()}`,
+      `(tučně) Datum vystavení: ${new Date().toLocaleString('cs-CZ')}`,
+      ``,
+      `(oddělovač)`,
+      ``,
+      `(malý nadpis) Informace o blokaci`,
+      ``,
+      `Uživatel (tučně)${userName}(normálně) byl zablokován uživatelem (tučně)${blockerName}(normálně) dne ${new Date(block.blocked_at).toLocaleString('cs-CZ')}. Jedná se o (červeně)(tučně)${typeMap[block.block_type] || block.block_type}(normálně) se závažností (červeně)${sevMap[block.severity] || block.severity}(normálně).`,
+      ``,
+      `(malý nadpis) Důvod blokace`,
+      ``,
+      `(tučně)${block.reason}(normálně)`,
+    ];
+
+    if (block.details) {
+      lines.push('', '(malý nadpis) Podrobnosti', '', block.details);
+    }
+
+    lines.push(
+      '', '(malý nadpis) Parametry', '',
+      '(seznam)',
+      `- Typ: (tučně)${typeMap[block.block_type] || block.block_type}(normálně)`,
+      `- Závažnost: (tučně)${sevMap[block.severity] || block.severity}(normálně)`,
+      `- Trvalá: ${block.is_permanent ? '(červeně)Ano(normálně)' : 'Ne'}`,
+      `- Platnost do: (tučně)${expiry}(normálně)`,
+      `- Dotčené oblasti: ${areas}`,
+      `- Počet varování: ${block.warning_count || 0}`,
+      `- Pořadí blokace: ${block.block_count || 1}.`,
+      `- Eskalováno: ${block.escalated ? '(červeně)Ano(normálně)' : 'Ne'}`,
+      '(konec)',
+    );
+
+    if (block.evidence_urls?.length > 0) {
+      lines.push('', '(malý nadpis) Důkazy', '', '(seznam)');
+      block.evidence_urls.forEach((u: string) => lines.push(`- (odkaz na ${u}) důkaz (konec odkazu)`));
+      lines.push('(konec)');
+    }
+
+    if (block.internal_notes) {
+      lines.push('', '(malý nadpis) Interní poznámky', '', block.internal_notes);
+    }
+
+    lines.push(
+      '', '(oddělovač)', '',
+      '(šedě)(kurzívou)Automaticky vygenerováno systémem Alíkovy Univerzity.(normálně)',
+    );
+
+    // Also generate a Markdown version for local display
+    const mdVersion = `## Zpráva pro správce Alík.cz — Protokol o blokaci\n\n**Číslo protokolu:** BLK-${block.id.slice(0, 8).toUpperCase()}\n**Datum vystavení:** ${new Date().toLocaleString('cs-CZ')}\n\n---\n\n### Informace o blokaci\n\nUživatel **${userName}** byl zablokován uživatelem **${blockerName}** dne ${new Date(block.blocked_at).toLocaleString('cs-CZ')}. Jedná se o **${typeMap[block.block_type] || block.block_type}** se závažností **${sevMap[block.severity] || block.severity}**.\n\n### Důvod blokace\n\n${block.reason}\n\n${block.details ? `### Podrobnosti\n\n${block.details}\n\n` : ''}### Parametry\n\n| Parametr | Hodnota |\n|---|---|\n| Typ | ${typeMap[block.block_type] || block.block_type} |\n| Závažnost | ${sevMap[block.severity] || block.severity} |\n| Trvalá | ${block.is_permanent ? 'Ano' : 'Ne'} |\n| Platnost do | ${expiry} |\n| Dotčené oblasti | ${areas} |\n| Počet varování | ${block.warning_count || 0} |\n| Pořadí blokace | ${block.block_count || 1}. |\n| Eskalováno | ${block.escalated ? 'Ano' : 'Ne'} |\n\n${block.evidence_urls?.length > 0 ? `### Důkazy\n\n${block.evidence_urls.map((u: string, i: number) => `${i + 1}. ${u}`).join('\n')}\n\n` : ''}${block.internal_notes ? `### Interní poznámky\n\n${block.internal_notes}\n\n` : ''}---\n\n*Automaticky vygenerováno systémem Alíkovy Univerzity.*`;
+
+    return `<!-- AZJ verze pro Alík.cz -->\n${lines.join('\n')}\n\n<!-- Markdown verze -->\n${mdVersion}`;
   };
 
   const createBlock = async () => {
@@ -254,6 +309,7 @@ export default function Rektorat() {
       user_id: blockUserId, blocked_by: user.id, reason: blockReason, details: blockDetails || null,
       block_type: blockType, severity: blockSeverity, is_permanent: blockPermanent,
       expires_at: blockExpires ? new Date(blockExpires).toISOString() : null, notification_sent: true,
+      affected_areas: blockType === 'partial' ? blockAreas : [],
     }).select().single();
     if (error) { toast.error(error.message); return; }
     if (data) {
@@ -261,7 +317,7 @@ export default function Rektorat() {
       await supabase.from('block_messages').insert({ block_id: data.id, generated_by: user.id, message_text: msg });
     }
     toast.success('Uživatel zablokován');
-    setBlockUserId(''); setBlockReason(''); setBlockDetails(''); setBlockType('full'); setBlockSeverity('standard'); setBlockPermanent(false); setBlockExpires('');
+    setBlockUserId(''); setBlockReason(''); setBlockDetails(''); setBlockType('full'); setBlockSeverity('standard'); setBlockPermanent(false); setBlockExpires(''); setBlockAreas([]);
     loadAll();
   };
 
@@ -562,6 +618,21 @@ export default function Rektorat() {
                       <option value="low">Nízká</option><option value="standard">Standardní</option><option value="high">Vysoká</option><option value="critical">Kritická</option>
                     </select>
                   </div>
+                  {blockType === 'partial' && (
+                    <div className="grid gap-1">
+                      <label className="text-xs font-bold text-muted-foreground">Blokované sekce:</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {['fakulty', 'kurzy', 'rozvrh', 'studium', 'vypisky', 'doucovani', 'profil'].map(area => (
+                          <label key={area} className="flex items-center gap-1 text-xs">
+                            <input type="checkbox" checked={blockAreas.includes(area)} onChange={e => {
+                              setBlockAreas(prev => e.target.checked ? [...prev, area] : prev.filter(a => a !== area));
+                            }} />
+                            {area}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex gap-2 items-center">
                     <label className="flex items-center gap-1.5 text-sm"><input type="checkbox" checked={blockPermanent} onChange={e => setBlockPermanent(e.target.checked)} /> Trvalá</label>
                     {!blockPermanent && <input type="datetime-local" value={blockExpires} onChange={e => setBlockExpires(e.target.value)} className="border-2 border-destructive/30 rounded-xl py-2 px-3 text-sm outline-none flex-1" />}
@@ -1033,25 +1104,31 @@ export default function Rektorat() {
 
   return (
     <AppLayout searchLabel="Rektorát" searchPlaceholder="Hledat v rektorátu..." searchTags={['kurzy', 'uživatelé', 'blokace']}>
-      <main className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-5 items-start">
+      <main className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6 items-start">
         {/* Sidebar */}
-        <aside className="grid gap-1 max-h-[85vh] overflow-y-auto pr-1 sticky top-4">
-          <div className="flex items-center justify-between mb-2 px-2">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Rektorát</h3>
-            <span className="text-xs font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">{allTabs.length}</span>
+        <aside className="panel-card !p-3 sticky top-4 max-h-[85vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h3 className="text-sm font-extrabold text-foreground">🏛 Rektorát</h3>
+            <span className="text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">{allTabs.length}</span>
           </div>
           {tabGroups.map(g => (
-            <div key={g.group} className="mb-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground px-2 py-1">{g.group}</p>
-              {g.items.map(t => (
-                <button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key)}
-                  className={`w-full text-left text-xs py-1.5 px-2.5 rounded-xl font-bold transition-all ${activeTab === t.key ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-muted'}`}
-                >
-                  {t.icon} {t.label}
-                </button>
-              ))}
+            <div key={g.group} className="mb-2">
+              <p className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground px-2 py-1.5 border-b border-border mb-1">{g.group}</p>
+              <div className="grid gap-0.5">
+                {g.items.map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setActiveTab(t.key)}
+                    className={`w-full text-left text-xs py-2 px-3 rounded-xl font-bold transition-all duration-200 ${
+                      activeTab === t.key
+                        ? 'bg-primary text-primary-foreground shadow-lg scale-[1.02]'
+                        : 'hover:bg-muted/80 text-foreground/80 hover:text-foreground'
+                    }`}
+                  >
+                    <span className="mr-1.5">{t.icon}</span>{t.label}
+                  </button>
+                ))}
+              </div>
             </div>
           ))}
         </aside>

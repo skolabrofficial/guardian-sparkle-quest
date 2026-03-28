@@ -601,6 +601,75 @@ export type Database = {
         }
         Relationships: []
       }
+      uploaded_images: {
+        Row: {
+          author_name: string | null
+          created_at: string
+          embed_code: string | null
+          file_name: string
+          file_size: number | null
+          file_url: string
+          google_match_found: boolean | null
+          google_match_url: string | null
+          id: string
+          is_avatar: boolean | null
+          license_type: string
+          mime_type: string | null
+          rejection_details: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          created_at?: string
+          embed_code?: string | null
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          google_match_found?: boolean | null
+          google_match_url?: string | null
+          id?: string
+          is_avatar?: boolean | null
+          license_type?: string
+          mime_type?: string | null
+          rejection_details?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author_name?: string | null
+          created_at?: string
+          embed_code?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          google_match_found?: boolean | null
+          google_match_url?: string | null
+          id?: string
+          is_avatar?: boolean | null
+          license_type?: string
+          mime_type?: string | null
+          rejection_details?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_blocks: {
         Row: {
           affected_areas: string[] | null

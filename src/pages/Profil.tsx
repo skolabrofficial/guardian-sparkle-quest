@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import ImageUploader from '@/components/ImageUploader';
+import AvatarPicker from '@/components/AvatarPicker';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -39,6 +40,7 @@ export default function Profil() {
   const [previewBio, setPreviewBio] = useState(false);
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/login');
@@ -134,18 +136,24 @@ export default function Profil() {
             <div
               className="w-20 h-20 rounded-2xl border-2 border-border overflow-hidden cursor-pointer flex items-center justify-center transition-transform duration-200 hover:scale-105"
               style={{ background: avatarUrl ? `url(${avatarUrl}) center/cover` : 'linear-gradient(180deg, #8fd3ff, #3f87ff)' }}
-              onClick={() => fileRef.current?.click()}
+              onClick={() => setShowAvatarPicker(true)}
             >
               {!avatarUrl && <span className="text-3xl text-white font-extrabold">{displayName?.[0]?.toUpperCase() || '?'}</span>}
             </div>
             <div className="grid gap-1.5">
-              <input ref={fileRef} type="file" accept="image/*" onChange={uploadAvatar} className="hidden" />
-              <button onClick={() => fileRef.current?.click()} className="btn-alik-outline text-xs" disabled={uploading}>
-                {uploading ? 'Nahrávání...' : '📷 Nahrát avatar'}
+              <button onClick={() => setShowAvatarPicker(true)} className="btn-alik-outline text-xs">
+                🖼️ Vybrat z obrázků
               </button>
               {avatarUrl && <button onClick={removeAvatar} className="text-xs text-destructive font-bold">Odebrat avatar</button>}
             </div>
           </div>
+
+          {showAvatarPicker && (
+            <AvatarPicker
+              onSelect={(url) => { setAvatarUrl(url); toast.success('Avatar vybrán (uložte profil)'); }}
+              onClose={() => setShowAvatarPicker(false)}
+            />
+          )}
 
           {/* Role badge */}
           <div className="mb-4">

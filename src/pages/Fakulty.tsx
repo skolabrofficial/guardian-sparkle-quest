@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -94,7 +95,7 @@ export default function Fakulty() {
                   </p>
                 )}
                 <div className="flex gap-2 flex-wrap">
-                  <button className="btn-alik-outline text-sm">Zobrazit kurzy</button>
+                  <Link to={`/fakulty/${f.id}`} className="btn-alik-outline text-sm no-underline">Zobrazit fakultu</Link>
                   {isDeveloper && (
                     <button className="text-xs font-bold px-2 py-1 rounded-lg bg-muted hover:bg-muted/80 transition-colors" style={{ color: '#8b6914' }} onClick={() => { setAssignDeanFacultyId(f.id); setSelectedDean(f.dean_id || ''); }}>
                       {f.dean_id ? 'Změnit děkana' : 'Přiřadit děkana'}

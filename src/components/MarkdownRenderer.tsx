@@ -1,15 +1,54 @@
+import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import 'katex/dist/katex.min.css';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   content: string;
   className?: string;
 }
 
+const embedCache = new Map<string, string>();
+
+async function resolveEmbedCodes(text: string): Promise<string> {
+  const regex = /\(vlož\s+([A-Za-z0-9]{6,12})\)/g;
+  const matches = [...text.matchAll(regex)];
+  if (matches.length === 0) return text;
+
+  const codes = matches.map(m => m[1]).filter(c => !embedCache.has(c));
+  if (codes.length > 0) {
+    const { data } = await (supabase as any)
+      .from('uploaded_images')
+      .select('embed_code, file_url, file_name')
+      .eq('status', 'approved')
+      .in('embed_code', codes);
+    if (data) {
+      for (const img of data) {
+        if (img.embed_code) embedCache.set(img.embed_code, img.file_url);
+      }
+    }
+  }
+
+  return text.replace(regex, (_match, code) => {
+    const url = embedCache.get(code);
+    if (url) return `![obrázek](${url})`;
+    return `\`(vlož ${code})\``;
+  });
+}
+
 export default function MarkdownRenderer({ content, className = '' }: Props) {
+  const [resolved, setResolved] = useState(content);
+
+  useEffect(() => {
+    if (!content) { setResolved(''); return; }
+    let cancelled = false;
+    resolveEmbedCodes(content).then(r => { if (!cancelled) setResolved(r); });
+    return () => { cancelled = true; };
+  }, [content]);
+
   if (!content) return null;
 
   return (
@@ -51,7 +90,7 @@ export default function MarkdownRenderer({ content, className = '' }: Props) {
           hr: () => <hr className="my-4 border-border" />,
         }}
       >
-        {content}
+        {resolved}
       </ReactMarkdown>
     </div>
   );
