@@ -85,6 +85,24 @@ export default function Rektorat() {
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [stats, setStats] = useState({ courses: 0, faculties: 0, questions: 0, notes: 0, blocks: 0, forumPosts: 0 });
 
+  // Course editing
+  const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
+  const [courseEdit, setCourseEdit] = useState<Record<string, any>>({});
+
+  // Faculty editing
+  const [editingFacultyId, setEditingFacultyId] = useState<string | null>(null);
+  const [facultyEdit, setFacultyEdit] = useState<Record<string, any>>({});
+
+  // Course-faculty assignment
+  const [assignFacultyCourseId, setAssignFacultyCourseId] = useState<string | null>(null);
+  const [selectedFacultyForCourse, setSelectedFacultyForCourse] = useState('');
+
+  // New course/faculty forms
+  const [showNewCourse, setShowNewCourse] = useState(false);
+  const [newCourse, setNewCourse] = useState({ title: '', description: '', day_of_week: '', time_slot: '', difficulty: 'beginner', room: '', building: '', semester: 'zimní', credits: 0, exam_type: 'žádný', language: 'čeština' });
+  const [showNewFaculty, setShowNewFaculty] = useState(false);
+  const [newFaculty, setNewFaculty] = useState({ name: '', description: '', icon: '🏛', color: '#4f7dff' });
+
   // Form states
   const [annTitle, setAnnTitle] = useState('');
   const [annContent, setAnnContent] = useState('');
