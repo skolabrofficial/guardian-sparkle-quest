@@ -99,6 +99,7 @@ export default function Rektorat() {
   const [blockSeverity, setBlockSeverity] = useState('standard');
   const [blockPermanent, setBlockPermanent] = useState(false);
   const [blockExpires, setBlockExpires] = useState('');
+  const [blockAreas, setBlockAreas] = useState<string[]>([]);
 
   const [assignLektorCourseId, setAssignLektorCourseId] = useState<string | null>(null);
   const [selectedLektor, setSelectedLektor] = useState('');
@@ -616,6 +617,21 @@ export default function Rektorat() {
                       <option value="low">Nízká</option><option value="standard">Standardní</option><option value="high">Vysoká</option><option value="critical">Kritická</option>
                     </select>
                   </div>
+                  {blockType === 'partial' && (
+                    <div className="grid gap-1">
+                      <label className="text-xs font-bold text-muted-foreground">Blokované sekce:</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {['fakulty', 'kurzy', 'rozvrh', 'studium', 'vypisky', 'doucovani', 'profil'].map(area => (
+                          <label key={area} className="flex items-center gap-1 text-xs">
+                            <input type="checkbox" checked={blockAreas.includes(area)} onChange={e => {
+                              setBlockAreas(prev => e.target.checked ? [...prev, area] : prev.filter(a => a !== area));
+                            }} />
+                            {area}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex gap-2 items-center">
                     <label className="flex items-center gap-1.5 text-sm"><input type="checkbox" checked={blockPermanent} onChange={e => setBlockPermanent(e.target.checked)} /> Trvalá</label>
                     {!blockPermanent && <input type="datetime-local" value={blockExpires} onChange={e => setBlockExpires(e.target.value)} className="border-2 border-destructive/30 rounded-xl py-2 px-3 text-sm outline-none flex-1" />}
