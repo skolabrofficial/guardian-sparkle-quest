@@ -309,6 +309,7 @@ export default function Rektorat() {
       user_id: blockUserId, blocked_by: user.id, reason: blockReason, details: blockDetails || null,
       block_type: blockType, severity: blockSeverity, is_permanent: blockPermanent,
       expires_at: blockExpires ? new Date(blockExpires).toISOString() : null, notification_sent: true,
+      affected_areas: blockType === 'partial' ? blockAreas : [],
     }).select().single();
     if (error) { toast.error(error.message); return; }
     if (data) {
@@ -316,7 +317,7 @@ export default function Rektorat() {
       await supabase.from('block_messages').insert({ block_id: data.id, generated_by: user.id, message_text: msg });
     }
     toast.success('Uživatel zablokován');
-    setBlockUserId(''); setBlockReason(''); setBlockDetails(''); setBlockType('full'); setBlockSeverity('standard'); setBlockPermanent(false); setBlockExpires('');
+    setBlockUserId(''); setBlockReason(''); setBlockDetails(''); setBlockType('full'); setBlockSeverity('standard'); setBlockPermanent(false); setBlockExpires(''); setBlockAreas([]);
     loadAll();
   };
 
