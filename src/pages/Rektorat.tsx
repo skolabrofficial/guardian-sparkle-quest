@@ -230,6 +230,39 @@ export default function Rektorat() {
 
   const deleteCourse = async (id: string) => { await supabase.from('courses').delete().eq('id', id); toast.success('Kurz smazán'); loadAll(); };
   const deleteFaculty = async (id: string) => { await supabase.from('faculties').delete().eq('id', id); toast.success('Fakulta smazána'); loadAll(); };
+
+  const saveCourseEdit = async () => {
+    if (!editingCourseId) return;
+    const { error } = await supabase.from('courses').update(courseEdit).eq('id', editingCourseId);
+    if (error) toast.error(error.message);
+    else { toast.success('Kurz uložen'); setEditingCourseId(null); setCourseEdit({}); loadAll(); }
+  };
+
+  const saveFacultyEdit = async () => {
+    if (!editingFacultyId) return;
+    const { error } = await supabase.from('faculties').update(facultyEdit).eq('id', editingFacultyId);
+    if (error) toast.error(error.message);
+    else { toast.success('Fakulta uložena'); setEditingFacultyId(null); setFacultyEdit({}); loadAll(); }
+  };
+
+  const assignFacultyToCourse = async () => {
+    if (!assignFacultyCourseId) return;
+    const { error } = await supabase.from('courses').update({ faculty_id: selectedFacultyForCourse || null }).eq('id', assignFacultyCourseId);
+    if (error) toast.error(error.message);
+    else { toast.success('Fakulta přiřazena'); setAssignFacultyCourseId(null); setSelectedFacultyForCourse(''); loadAll(); }
+  };
+
+  const createNewCourse = async () => {
+    const { error } = await supabase.from('courses').insert({ ...newCourse, credits: Number(newCourse.credits) || 0 });
+    if (error) toast.error(error.message);
+    else { toast.success('Kurz vytvořen'); setShowNewCourse(false); setNewCourse({ title: '', description: '', day_of_week: '', time_slot: '', difficulty: 'beginner', room: '', building: '', semester: 'zimní', credits: 0, exam_type: 'žádný', language: 'čeština' }); loadAll(); }
+  };
+
+  const createNewFaculty = async () => {
+    const { error } = await supabase.from('faculties').insert(newFaculty);
+    if (error) toast.error(error.message);
+    else { toast.success('Fakulta vytvořena'); setShowNewFaculty(false); setNewFaculty({ name: '', description: '', icon: '🏛', color: '#4f7dff' }); loadAll(); }
+  };
   const resolveReport = async (id: string) => {
     if (!user) return;
     await supabase.from('reports').update({ status: 'resolved', resolved_by: user.id, resolved_at: new Date().toISOString() }).eq('id', id);
