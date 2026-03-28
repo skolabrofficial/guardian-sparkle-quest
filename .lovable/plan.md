@@ -1,45 +1,26 @@
 
 
-## Plán: Přidat ImageUploader a správu obrázků na stránku profilu
+## Plán: Vložit obsah migrací jako příspěvek do fóra kurzu
 
-### Co se změní
+### Co se udělá
 
-**Soubor: `src/pages/Profil.tsx`**
-
-1. Importovat `ImageUploader` a přidat novou sekci pod stávající profil
-2. Přidat seznam vlastních nahraných obrázků uživatele (načtených z `uploaded_images` tabulky) se statusem (pending/approved/rejected)
-3. U schválených obrázků zobrazit vygenerovaný vložitelný kód `(vlož XXXXXXXX)`
-4. Možnost smazat vlastní obrázky (pending i rejected)
-5. ImageUploader použít i pro avatar (`isAvatar={true}`) — volitelně vedle stávajícího přímého uploadu
-
-**Soubor: `supabase/migrations/` — nová migrace**
-
-- Vytvořit storage bucket `uploads` (veřejný), pokud neexistuje
-- Přidat RLS politiky pro `uploaded_images`: uživatel vidí vlastní, staff vidí vše
-- Přidat DELETE politiku pro vlastní obrázky
-
-### Struktura na stránce profilu
-
-```text
-┌─────────────────────────┐
-│ 👤 Můj profil           │
-│  [avatar, jméno, bio..] │
-│  [uložit]               │
-├─────────────────────────┤
-│ 📤 Nahrát obrázek       │
-│  [ImageUploader]        │
-├─────────────────────────┤
-│ 🖼️ Moje obrázky         │
-│  [grid: náhled, status, │
-│   kód, smazat]          │
-└─────────────────────────┘
-```
+Vložím do tabulky `forum_posts` nový příspěvek s `course_id = '0f1d13b8-0095-4a6a-93ed-e22c38e1dd6f'` obsahující všech 6 migračních souborů formátovaných v Markdownu.
 
 ### Technické detaily
 
-- Obrázky se načtou pomocí `supabase.from('uploaded_images').select('*').eq('user_id', user.id).order('created_at', { ascending: false })`
-- Status badge: pending = žlutá, approved = zelená, rejected = červená s důvodem
-- Embed kód se zobrazí pouze u approved obrázků
-- Refresh seznamu po úspěšném uploadu přes `onUploaded` callback
-- Bucket `uploads` musí být vytvořen migrací (momentálně neexistuje)
+- Použiji **insert tool** pro vložení jednoho řádku do `forum_posts`
+- `author_id` bude ID aktuálně přihlášeného uživatele — potřebuji ho zjistit, nebo použít ID vývojáře z existujících dat
+- Obsah bude formátovaný jako Markdown s SQL bloky pro každou migraci
+- Příspěvek nebude odpovědí (parent_id = null)
+
+### Obsah příspěvku
+
+6 sekcí, každá se jménem migračního souboru jako nadpis a SQL kódem v ````sql` bloku:
+
+1. `20260325175956` — Základní schéma (profily, role, fakulty, kurzy, enrollments, rozvrh, doučování, výpisky, studijní plány, oznámení, audit, nastavení, notifikace, hlášení + RLS + triggery)
+2. `20260325180009` — Oprava audit log INSERT policy
+3. `20260326203214` — Dean ID, answer visibility, forum_posts, user_blocks
+4. `20260326213526` — Avatars bucket, block_messages
+5. `20260327185111` — Realtime pro notifikace
+6. `20260327200500` — Uploaded images + uploads bucket
 
