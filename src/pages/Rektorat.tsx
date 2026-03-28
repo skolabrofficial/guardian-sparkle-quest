@@ -245,7 +245,61 @@ export default function Rektorat() {
     const sevMap: Record<string, string> = { low: 'nízká', standard: 'standardní', high: 'vysoká', critical: 'kritická' };
     const areas = block.affected_areas?.length > 0 ? block.affected_areas.join(', ') : 'veškerý přístup';
     const expiry = block.is_permanent ? 'trvalá (bez konce)' : block.expires_at ? new Date(block.expires_at).toLocaleString('cs-CZ') : 'neurčeno';
-    return `## Zpráva pro správce Alík.cz — Protokol o blokaci\n\n**Číslo protokolu:** BLK-${block.id.slice(0, 8).toUpperCase()}\n**Datum vystavení:** ${new Date().toLocaleString('cs-CZ')}\n\n---\n\n### Informace o blokaci\n\nUživatel **${userName}** byl zablokován uživatelem **${blockerName}** dne ${new Date(block.blocked_at).toLocaleString('cs-CZ')}. Jedná se o **${typeMap[block.block_type] || block.block_type}** se závažností **${sevMap[block.severity] || block.severity}**.\n\n### Důvod blokace\n\n${block.reason}\n\n${block.details ? `### Podrobnosti\n\n${block.details}\n\n` : ''}### Parametry\n\n| Parametr | Hodnota |\n|---|---|\n| Typ | ${typeMap[block.block_type] || block.block_type} |\n| Závažnost | ${sevMap[block.severity] || block.severity} |\n| Trvalá | ${block.is_permanent ? 'Ano' : 'Ne'} |\n| Platnost do | ${expiry} |\n| Dotčené oblasti | ${areas} |\n| Počet varování | ${block.warning_count || 0} |\n| Pořadí blokace | ${block.block_count || 1}. |\n| Eskalováno | ${block.escalated ? 'Ano' : 'Ne'} |\n\n${block.evidence_urls?.length > 0 ? `### Důkazy\n\n${block.evidence_urls.map((u: string, i: number) => `${i + 1}. ${u}`).join('\n')}\n\n` : ''}${block.internal_notes ? `### Interní poznámky\n\n${block.internal_notes}\n\n` : ''}---\n\n*Automaticky vygenerováno systémem Alíkovy Univerzity.*`;
+    // AZJ-style formatting for Alík.cz (using parentheses commands)
+    const lines = [
+      `(nadpis) Protokol o blokaci — Alíkova Univerzita`,
+      ``,
+      `(tučně) Číslo protokolu: BLK-${block.id.slice(0, 8).toUpperCase()}`,
+      `(tučně) Datum vystavení: ${new Date().toLocaleString('cs-CZ')}`,
+      ``,
+      `(oddělovač)`,
+      ``,
+      `(malý nadpis) Informace o blokaci`,
+      ``,
+      `Uživatel (tučně)${userName}(normálně) byl zablokován uživatelem (tučně)${blockerName}(normálně) dne ${new Date(block.blocked_at).toLocaleString('cs-CZ')}. Jedná se o (červeně)(tučně)${typeMap[block.block_type] || block.block_type}(normálně) se závažností (červeně)${sevMap[block.severity] || block.severity}(normálně).`,
+      ``,
+      `(malý nadpis) Důvod blokace`,
+      ``,
+      `(tučně)${block.reason}(normálně)`,
+    ];
+
+    if (block.details) {
+      lines.push('', '(malý nadpis) Podrobnosti', '', block.details);
+    }
+
+    lines.push(
+      '', '(malý nadpis) Parametry', '',
+      '(seznam)',
+      `- Typ: (tučně)${typeMap[block.block_type] || block.block_type}(normálně)`,
+      `- Závažnost: (tučně)${sevMap[block.severity] || block.severity}(normálně)`,
+      `- Trvalá: ${block.is_permanent ? '(červeně)Ano(normálně)' : 'Ne'}`,
+      `- Platnost do: (tučně)${expiry}(normálně)`,
+      `- Dotčené oblasti: ${areas}`,
+      `- Počet varování: ${block.warning_count || 0}`,
+      `- Pořadí blokace: ${block.block_count || 1}.`,
+      `- Eskalováno: ${block.escalated ? '(červeně)Ano(normálně)' : 'Ne'}`,
+      '(konec)',
+    );
+
+    if (block.evidence_urls?.length > 0) {
+      lines.push('', '(malý nadpis) Důkazy', '', '(seznam)');
+      block.evidence_urls.forEach((u: string) => lines.push(`- (odkaz na ${u}) důkaz (konec odkazu)`));
+      lines.push('(konec)');
+    }
+
+    if (block.internal_notes) {
+      lines.push('', '(malý nadpis) Interní poznámky', '', block.internal_notes);
+    }
+
+    lines.push(
+      '', '(oddělovač)', '',
+      '(šedě)(kurzívou)Automaticky vygenerováno systémem Alíkovy Univerzity.(normálně)',
+    );
+
+    // Also generate a Markdown version for local display
+    const mdVersion = `## Zpráva pro správce Alík.cz — Protokol o blokaci\n\n**Číslo protokolu:** BLK-${block.id.slice(0, 8).toUpperCase()}\n**Datum vystavení:** ${new Date().toLocaleString('cs-CZ')}\n\n---\n\n### Informace o blokaci\n\nUživatel **${userName}** byl zablokován uživatelem **${blockerName}** dne ${new Date(block.blocked_at).toLocaleString('cs-CZ')}. Jedná se o **${typeMap[block.block_type] || block.block_type}** se závažností **${sevMap[block.severity] || block.severity}**.\n\n### Důvod blokace\n\n${block.reason}\n\n${block.details ? `### Podrobnosti\n\n${block.details}\n\n` : ''}### Parametry\n\n| Parametr | Hodnota |\n|---|---|\n| Typ | ${typeMap[block.block_type] || block.block_type} |\n| Závažnost | ${sevMap[block.severity] || block.severity} |\n| Trvalá | ${block.is_permanent ? 'Ano' : 'Ne'} |\n| Platnost do | ${expiry} |\n| Dotčené oblasti | ${areas} |\n| Počet varování | ${block.warning_count || 0} |\n| Pořadí blokace | ${block.block_count || 1}. |\n| Eskalováno | ${block.escalated ? 'Ano' : 'Ne'} |\n\n${block.evidence_urls?.length > 0 ? `### Důkazy\n\n${block.evidence_urls.map((u: string, i: number) => `${i + 1}. ${u}`).join('\n')}\n\n` : ''}${block.internal_notes ? `### Interní poznámky\n\n${block.internal_notes}\n\n` : ''}---\n\n*Automaticky vygenerováno systémem Alíkovy Univerzity.*`;
+
+    return `<!-- AZJ verze pro Alík.cz -->\n${lines.join('\n')}\n\n<!-- Markdown verze -->\n${mdVersion}`;
   };
 
   const createBlock = async () => {
