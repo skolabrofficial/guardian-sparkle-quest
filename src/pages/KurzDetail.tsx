@@ -10,10 +10,10 @@ interface Course {
   id: string; title: string; description: string | null; day_of_week: string | null;
   time_slot: string | null; difficulty: string | null; lektor_id: string | null;
   faculty_id: string | null; max_students: number | null;
-  room: string | null; building: string | null; semester: string | null;
-  credits: number | null; prerequisites: string | null; syllabus: string | null;
-  exam_type: string | null; language: string | null; capacity_note: string | null;
-  schedule_note: string | null;
+  room?: string | null; building?: string | null; semester?: string | null;
+  credits?: number | null; prerequisites?: string | null; syllabus?: string | null;
+  exam_type?: string | null; language?: string | null; capacity_note?: string | null;
+  schedule_note?: string | null;
 }
 
 export default function KurzDetail() {
