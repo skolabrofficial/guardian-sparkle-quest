@@ -41,7 +41,6 @@ export default function Profil() {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
-  const [loadingImages, setLoadingImages] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/login');
