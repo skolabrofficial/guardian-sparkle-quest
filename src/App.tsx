@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Fakulty from "./pages/Fakulty";
+import FakultyDetail from "./pages/FakultyDetail";
 import Kurzy from "./pages/Kurzy";
 import KurzDetail from "./pages/KurzDetail";
 import Rozvrh from "./pages/Rozvrh";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/blocked" element={<Blocked />} />
             <Route path="/" element={<BlockGuard><Index /></BlockGuard>} />
             <Route path="/fakulty" element={<BlockGuard><Fakulty /></BlockGuard>} />
+            <Route path="/fakulty/:id" element={<BlockGuard><FakultyDetail /></BlockGuard>} />
             <Route path="/kurzy" element={<BlockGuard><Kurzy /></BlockGuard>} />
             <Route path="/kurzy/:id" element={<BlockGuard><KurzDetail /></BlockGuard>} />
             <Route path="/rozvrh" element={<BlockGuard><Rozvrh /></BlockGuard>} />
