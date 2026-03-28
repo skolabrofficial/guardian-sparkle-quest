@@ -102,12 +102,27 @@ export default function KurzDetail() {
           </div>
           <div className="panel-card animate-slide-up stagger-2">
             <h4 className="mt-0">Informace</h4>
-            <ul className="pl-4 text-sm">
+            <ul className="pl-4 text-sm space-y-1">
               <li>Den: {course.day_of_week || '—'}</li>
               <li>Čas: {course.time_slot || '—'}</li>
               <li>Obtížnost: {course.difficulty || '—'}</li>
               <li>Lektor: {lektorName ? nameWithRole(lektorName, lektorRole) : '—'}</li>
+              {course.room && <li>Místnost: {course.room}</li>}
+              {course.building && <li>Budova: {course.building}</li>}
+              {course.semester && <li>Semestr: {course.semester}</li>}
+              {(course.credits ?? 0) > 0 && <li>Kredity: {course.credits}</li>}
+              {course.exam_type && course.exam_type !== 'žádný' && <li>Zkouška: {course.exam_type}</li>}
+              {course.language && <li>Jazyk: {course.language}</li>}
+              {course.prerequisites && <li>Prerekvizity: {course.prerequisites}</li>}
+              {course.schedule_note && <li>📅 {course.schedule_note}</li>}
+              {course.capacity_note && <li>👥 {course.capacity_note}</li>}
             </ul>
+            {course.syllabus && (
+              <div className="mt-3 border-t border-border pt-2">
+                <h5 className="text-xs font-bold uppercase text-muted-foreground mb-1">Sylabus</h5>
+                <p className="text-xs text-muted-foreground">{course.syllabus}</p>
+              </div>
+            )}
           </div>
         </aside>
       </main>
