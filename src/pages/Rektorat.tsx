@@ -45,6 +45,9 @@ const tabGroups: { group: string; items: { key: Tab; label: string; icon: string
   { group: '🖼️ Média', items: [
     { key: 'obrazky', label: 'Moderace obrázků', icon: '🖼️' },
   ]},
+  { group: '🎨 Vzhled', items: [
+    { key: 'styly-stranek', label: 'Styly stránek', icon: '🎨' },
+  ]},
   { group: '⚙ Systém', items: [
     { key: 'reporty', label: 'Hlášení', icon: '⚠' },
     { key: 'audit', label: 'Audit log', icon: '📋' },
