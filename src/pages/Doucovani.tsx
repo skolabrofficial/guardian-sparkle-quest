@@ -205,9 +205,13 @@ export default function Doucovani() {
                   <div className="flex items-center gap-2 mb-1">
                     <strong className="text-xs">{nameWithRole(mentorProfiles[a.mentor_id] || 'Mentor', mentorRoles[a.mentor_id])}</strong>
                     {a.visibility === 'private_asker' && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff3cd', color: '#856404' }}>🔒 Soukromé</span>}
+                    {(isStaff || isDeveloper) && (
+                      <button onClick={() => deleteAnswer(a.id)} className="text-xs font-bold px-2 py-0.5 rounded-lg hover:brightness-95 transition-all" style={{ background: '#fde8e8', color: '#991b1b' }}>🗑</button>
+                    )}
                   </div>
                   <div className="text-sm w-full"><MarkdownRenderer content={a.answer} /></div>
                   <span className="text-xs text-muted-foreground mt-1">{new Date(a.created_at).toLocaleString('cs')}</span>
+                  <ChangeHistory entityType="tutoring_answer" entityId={a.id} authorId={a.mentor_id} />
                 </div>
               ))}
               {canAnswer && (
