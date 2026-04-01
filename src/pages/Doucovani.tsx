@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { nameWithRole } from '@/lib/roleUtils';
+import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
 
 interface Question { id: string; topic: string; question: string; status: string | null; created_at: string; user_id: string; }
 interface Answer { id: string; answer: string; created_at: string; mentor_id: string; visibility: string; }
