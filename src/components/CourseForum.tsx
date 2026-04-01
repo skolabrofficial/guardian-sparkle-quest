@@ -84,7 +84,11 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
     if (!user || !newContent.trim()) return;
     const { error } = await supabase.from('forum_posts').insert({ course_id: courseId, author_id: user.id, content: newContent });
     if (error) toast.error(error.message);
-    else { toast.success('Příspěvek přidán'); setNewContent(''); load(); }
+    else {
+      toast.success('Příspěvek přidán');
+      setNewContent('');
+      load();
+    }
   };
 
   const handleReply = async (e: React.FormEvent) => {
