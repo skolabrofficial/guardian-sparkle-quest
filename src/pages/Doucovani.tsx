@@ -57,7 +57,33 @@ export default function Doucovani() {
     if (!user) return;
     const { error } = await supabase.from('tutoring_questions').insert({ user_id: user.id, topic, question: questionText, context: context || null });
     if (error) toast.error(error.message);
-    else { toast.success('Dotaz odeslán'); setQuestionText(''); setContext(''); load(); }
+    else {
+      toast.success('Dotaz odeslán');
+      setQuestionText(''); setContext(''); load();
+    }
+  };
+
+  const deleteQuestion = async (q: Question) => {
+    if (!confirm('Opravdu smazat tento dotaz?')) return;
+    const { error } = await supabase.from('tutoring_questions').delete().eq('id', q.id);
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('tutoring_question', q.id, user.id, 'delete', { question: q.question, topic: q.topic });
+      toast.success('Dotaz smazán');
+      if (selectedQ === q.id) { setSelectedQ(null); setAnswers([]); }
+      load();
+    }
+  };
+
+  const deleteAnswer = async (aId: string) => {
+    if (!confirm('Opravdu smazat tuto odpověď?')) return;
+    const { error } = await supabase.from('tutoring_answers').delete().eq('id', aId);
+    if (error) toast.error(error.message);
+    else {
+      if (user && selectedQ) await recordHistory('tutoring_answer', aId, user.id, 'delete', {});
+      toast.success('Odpověď smazána');
+      if (selectedQ) loadAnswers(selectedQ);
+    }
   };
 
   const loadAnswers = async (qId: string) => {
