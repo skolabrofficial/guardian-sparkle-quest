@@ -174,8 +174,10 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
           </div>
         </div>
       ) : (
-        <div className="text-sm my-1"><MarkdownRenderer content={post.content} /></div>
-        <ChangeHistory entityType="forum_post" entityId={post.id} authorId={post.author_id} />
+        <>
+          <div className="text-sm my-1"><MarkdownRenderer content={post.content} /></div>
+          <ChangeHistory entityType="forum_post" entityId={post.id} authorId={post.author_id} />
+        </>
       )}
 
       <div className="flex gap-1.5 flex-wrap mt-2">
