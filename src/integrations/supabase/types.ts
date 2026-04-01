@@ -109,43 +109,73 @@ export type Database = {
       }
       courses: {
         Row: {
+          building: string | null
+          capacity_note: string | null
           created_at: string
+          credits: number | null
           day_of_week: string | null
           description: string | null
           difficulty: string | null
+          exam_type: string | null
           faculty_id: string | null
           id: string
           is_active: boolean | null
+          language: string | null
           lektor_id: string | null
           max_students: number | null
+          prerequisites: string | null
+          room: string | null
+          schedule_note: string | null
+          semester: string | null
+          syllabus: string | null
           time_slot: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          building?: string | null
+          capacity_note?: string | null
           created_at?: string
+          credits?: number | null
           day_of_week?: string | null
           description?: string | null
           difficulty?: string | null
+          exam_type?: string | null
           faculty_id?: string | null
           id?: string
           is_active?: boolean | null
+          language?: string | null
           lektor_id?: string | null
           max_students?: number | null
+          prerequisites?: string | null
+          room?: string | null
+          schedule_note?: string | null
+          semester?: string | null
+          syllabus?: string | null
           time_slot?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          building?: string | null
+          capacity_note?: string | null
           created_at?: string
+          credits?: number | null
           day_of_week?: string | null
           description?: string | null
           difficulty?: string | null
+          exam_type?: string | null
           faculty_id?: string | null
           id?: string
           is_active?: boolean | null
+          language?: string | null
           lektor_id?: string | null
           max_students?: number | null
+          prerequisites?: string | null
+          room?: string | null
+          schedule_note?: string | null
+          semester?: string | null
+          syllabus?: string | null
           time_slot?: string | null
           title?: string
           updated_at?: string
