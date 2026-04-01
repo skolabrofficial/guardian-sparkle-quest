@@ -261,7 +261,10 @@ export default function Rektorat() {
     if (!editingFacultyId) return;
     const { error } = await supabase.from('faculties').update(facultyEdit).eq('id', editingFacultyId);
     if (error) toast.error(error.message);
-    else { toast.success('Fakulta uložena'); setEditingFacultyId(null); setFacultyEdit({}); loadAll(); }
+    else {
+      if (user) await recordHistory('faculty', editingFacultyId, user.id, 'update', facultyEdit);
+      toast.success('Fakulta uložena'); setEditingFacultyId(null); setFacultyEdit({}); loadAll();
+    }
   };
 
   const assignFacultyToCourse = async () => {

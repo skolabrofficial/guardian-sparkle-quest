@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { nameWithRole } from '@/lib/roleUtils';
 import { toast } from 'sonner';
+import ChangeHistory from '@/components/ChangeHistory';
 
 interface Faculty {
   id: string; name: string; description: string | null; color: string | null;

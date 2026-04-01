@@ -125,6 +125,7 @@ export default function KurzDetail() {
               </div>
             )}
           </div>
+          <ChangeHistory entityType="course" entityId={course.id} authorId={course.lektor_id || undefined} />
         </aside>
       </main>
     </AppLayout>
