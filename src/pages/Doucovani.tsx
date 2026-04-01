@@ -180,11 +180,17 @@ export default function Doucovani() {
             <div className="grid gap-2.5">
               {questions.map(q => (
                 <div key={q.id} className="catalog-item-card cursor-pointer hover:shadow-sm transition-all duration-200" onClick={() => loadAnswers(q.id)} style={{ background: selectedQ === q.id ? 'hsl(var(--muted))' : undefined }}>
-                  <div>
+                  <div className="flex-1">
                     <strong>{q.question.slice(0, 60)}{q.question.length > 60 ? '...' : ''}</strong>
                     <span className="block text-xs text-muted-foreground">{nameWithRole(profiles[q.user_id] || 'Uživatel', userRoles[q.user_id])}</span>
+                    <ChangeHistory entityType="tutoring_question" entityId={q.id} authorId={q.user_id} />
                   </div>
-                  <span className="text-xs whitespace-nowrap" style={{ color: 'hsl(var(--ring))' }}>{q.topic} • {q.status === 'answered' ? '✅' : '⏳'}</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-xs whitespace-nowrap" style={{ color: 'hsl(var(--ring))' }}>{q.topic} • {q.status === 'answered' ? '✅' : '⏳'}</span>
+                    {(user?.id === q.user_id || isStaff || isDeveloper) && (
+                      <button onClick={e => { e.stopPropagation(); deleteQuestion(q); }} className="text-xs font-bold px-2 py-0.5 rounded-lg hover:brightness-95 transition-all" style={{ background: '#fde8e8', color: '#991b1b' }}>🗑</button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
