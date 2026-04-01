@@ -5,6 +5,7 @@ import CourseForum from '@/components/CourseForum';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { nameWithRole } from '@/lib/roleUtils';
+import ChangeHistory from '@/components/ChangeHistory';
 
 interface Course {
   id: string; title: string; description: string | null; day_of_week: string | null;
