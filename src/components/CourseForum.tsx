@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { nameWithRole } from '@/lib/roleUtils';
+import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
 
 interface ForumPost {
   id: string;
@@ -83,7 +84,11 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
     if (!user || !newContent.trim()) return;
     const { error } = await supabase.from('forum_posts').insert({ course_id: courseId, author_id: user.id, content: newContent });
     if (error) toast.error(error.message);
-    else { toast.success('Příspěvek přidán'); setNewContent(''); load(); }
+    else {
+      toast.success('Příspěvek přidán');
+      setNewContent('');
+      load();
+    }
   };
 
   const handleReply = async (e: React.FormEvent) => {
@@ -128,7 +133,11 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
   const saveEdit = async () => {
     if (!editingId || !editContent.trim()) return;
     const { error } = await supabase.from('forum_posts').update({ content: editContent }).eq('id', editingId);
-    if (error) toast.error(error.message); else { toast.success('Upraveno'); setEditingId(null); setEditContent(''); load(); }
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', editingId, user.id, 'update', { content: { from: '(předchozí obsah)', to: editContent.slice(0, 100) + '...' } });
+      toast.success('Upraveno'); setEditingId(null); setEditContent(''); load();
+    }
   };
 
   const topPosts = posts.filter(p => !p.parent_id);
@@ -165,7 +174,10 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
           </div>
         </div>
       ) : (
-        <div className="text-sm my-1"><MarkdownRenderer content={post.content} /></div>
+        <>
+          <div className="text-sm my-1"><MarkdownRenderer content={post.content} /></div>
+          <ChangeHistory entityType="forum_post" entityId={post.id} authorId={post.author_id} />
+        </>
       )}
 
       <div className="flex gap-1.5 flex-wrap mt-2">

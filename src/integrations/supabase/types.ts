@@ -222,6 +222,36 @@ export type Database = {
           },
         ]
       }
+      entity_history: {
+        Row: {
+          action: string
+          changes: Json
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          changes?: Json
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          changes?: Json
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       faculties: {
         Row: {
           color: string | null
@@ -352,6 +382,42 @@ export type Database = {
           message?: string | null
           title?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      page_styles: {
+        Row: {
+          class_name: string | null
+          created_at: string
+          css_content: string
+          description: string | null
+          id: string
+          is_active: boolean
+          page_path: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          class_name?: string | null
+          created_at?: string
+          css_content?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          page_path: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          class_name?: string | null
+          created_at?: string
+          css_content?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          page_path?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }

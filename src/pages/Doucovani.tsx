@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { nameWithRole } from '@/lib/roleUtils';
+import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
 
 interface Question { id: string; topic: string; question: string; status: string | null; created_at: string; user_id: string; }
 interface Answer { id: string; answer: string; created_at: string; mentor_id: string; visibility: string; }
@@ -56,7 +57,33 @@ export default function Doucovani() {
     if (!user) return;
     const { error } = await supabase.from('tutoring_questions').insert({ user_id: user.id, topic, question: questionText, context: context || null });
     if (error) toast.error(error.message);
-    else { toast.success('Dotaz odeslán'); setQuestionText(''); setContext(''); load(); }
+    else {
+      toast.success('Dotaz odeslán');
+      setQuestionText(''); setContext(''); load();
+    }
+  };
+
+  const deleteQuestion = async (q: Question) => {
+    if (!confirm('Opravdu smazat tento dotaz?')) return;
+    const { error } = await supabase.from('tutoring_questions').delete().eq('id', q.id);
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('tutoring_question', q.id, user.id, 'delete', { question: q.question, topic: q.topic });
+      toast.success('Dotaz smazán');
+      if (selectedQ === q.id) { setSelectedQ(null); setAnswers([]); }
+      load();
+    }
+  };
+
+  const deleteAnswer = async (aId: string) => {
+    if (!confirm('Opravdu smazat tuto odpověď?')) return;
+    const { error } = await supabase.from('tutoring_answers').delete().eq('id', aId);
+    if (error) toast.error(error.message);
+    else {
+      if (user && selectedQ) await recordHistory('tutoring_answer', aId, user.id, 'delete', {});
+      toast.success('Odpověď smazána');
+      if (selectedQ) loadAnswers(selectedQ);
+    }
   };
 
   const loadAnswers = async (qId: string) => {
@@ -153,11 +180,17 @@ export default function Doucovani() {
             <div className="grid gap-2.5">
               {questions.map(q => (
                 <div key={q.id} className="catalog-item-card cursor-pointer hover:shadow-sm transition-all duration-200" onClick={() => loadAnswers(q.id)} style={{ background: selectedQ === q.id ? 'hsl(var(--muted))' : undefined }}>
-                  <div>
+                  <div className="flex-1">
                     <strong>{q.question.slice(0, 60)}{q.question.length > 60 ? '...' : ''}</strong>
                     <span className="block text-xs text-muted-foreground">{nameWithRole(profiles[q.user_id] || 'Uživatel', userRoles[q.user_id])}</span>
+                    <ChangeHistory entityType="tutoring_question" entityId={q.id} authorId={q.user_id} />
                   </div>
-                  <span className="text-xs whitespace-nowrap" style={{ color: 'hsl(var(--ring))' }}>{q.topic} • {q.status === 'answered' ? '✅' : '⏳'}</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-xs whitespace-nowrap" style={{ color: 'hsl(var(--ring))' }}>{q.topic} • {q.status === 'answered' ? '✅' : '⏳'}</span>
+                    {(user?.id === q.user_id || isStaff || isDeveloper) && (
+                      <button onClick={e => { e.stopPropagation(); deleteQuestion(q); }} className="text-xs font-bold px-2 py-0.5 rounded-lg hover:brightness-95 transition-all" style={{ background: '#fde8e8', color: '#991b1b' }}>🗑</button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -172,9 +205,13 @@ export default function Doucovani() {
                   <div className="flex items-center gap-2 mb-1">
                     <strong className="text-xs">{nameWithRole(mentorProfiles[a.mentor_id] || 'Mentor', mentorRoles[a.mentor_id])}</strong>
                     {a.visibility === 'private_asker' && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff3cd', color: '#856404' }}>🔒 Soukromé</span>}
+                    {(isStaff || isDeveloper) && (
+                      <button onClick={() => deleteAnswer(a.id)} className="text-xs font-bold px-2 py-0.5 rounded-lg hover:brightness-95 transition-all" style={{ background: '#fde8e8', color: '#991b1b' }}>🗑</button>
+                    )}
                   </div>
                   <div className="text-sm w-full"><MarkdownRenderer content={a.answer} /></div>
                   <span className="text-xs text-muted-foreground mt-1">{new Date(a.created_at).toLocaleString('cs')}</span>
+                  <ChangeHistory entityType="tutoring_answer" entityId={a.id} authorId={a.mentor_id} />
                 </div>
               ))}
               {canAnswer && (
