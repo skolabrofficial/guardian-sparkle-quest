@@ -160,6 +160,7 @@ export default function FakultyDetail() {
               <li>Kurzů: {courses.length}</li>
               <li>Děkan: {faculty.dean_id ? nameWithRole(profiles[faculty.dean_id] || '—', userRoles[faculty.dean_id]) : '—'}</li>
             </ul>
+            <ChangeHistory entityType="faculty" entityId={faculty.id} authorId={faculty.dean_id || undefined} />
           </div>
         </aside>
       </main>
