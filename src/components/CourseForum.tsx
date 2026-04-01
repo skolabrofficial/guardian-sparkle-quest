@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { nameWithRole } from '@/lib/roleUtils';
+import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
 
 interface ForumPost {
   id: string;
