@@ -107,6 +107,60 @@ export type Database = {
         }
         Relationships: []
       }
+      content_blocks: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          custom_css: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          link_text: string | null
+          link_url: string | null
+          page_path: string
+          position: string
+          sort_order: number
+          style_preset: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          custom_css?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_text?: string | null
+          link_url?: string | null
+          page_path: string
+          position?: string
+          sort_order?: number
+          style_preset?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          custom_css?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_text?: string | null
+          link_url?: string | null
+          page_path?: string
+          position?: string
+          sort_order?: number
+          style_preset?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           building: string | null
