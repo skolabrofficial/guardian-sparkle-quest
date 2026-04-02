@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { nameWithRole, getRoleSymbol, ROLE_COLORS, ROLE_LABELS } from '@/lib/roleUtils';
 import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
 
-type Tab = 'prehled' | 'kurzy' | 'lektori' | 'studenti' | 'fakulty' | 'rozvrh' | 'dotazy' | 'vypisky' | 'oznameni' | 'reporty' | 'audit' | 'nastaveni' | 'notifikace' | 'role' | 'statistiky' | 'rozpocet' | 'smernice' | 'zpravy' | 'zadosti' | 'kvalita' | 'export' | 'import' | 'hromadne' | 'harmonogram' | 'bezpecnost' | 'klubovny' | 'kapacity' | 'mentori' | 'plany' | 'hodnoceni' | 'blokace' | 'forum' | 'emailove-sablony' | 'integrace' | 'obrazky' | 'odeslat-notifikaci' | 'styly-stranek';
+type Tab = 'prehled' | 'kurzy' | 'lektori' | 'studenti' | 'fakulty' | 'rozvrh' | 'dotazy' | 'vypisky' | 'oznameni' | 'reporty' | 'audit' | 'nastaveni' | 'notifikace' | 'role' | 'statistiky' | 'rozpocet' | 'smernice' | 'zpravy' | 'zadosti' | 'kvalita' | 'export' | 'import' | 'hromadne' | 'harmonogram' | 'bezpecnost' | 'klubovny' | 'kapacity' | 'mentori' | 'plany' | 'hodnoceni' | 'blokace' | 'forum' | 'emailove-sablony' | 'integrace' | 'obrazky' | 'odeslat-notifikaci' | 'styly-stranek' | 'obsahove-boxy';
 
 const tabGroups: { group: string; items: { key: Tab; label: string; icon: string }[] }[] = [
   { group: '📊 Přehled', items: [
@@ -47,6 +47,7 @@ const tabGroups: { group: string; items: { key: Tab; label: string; icon: string
     { key: 'obrazky', label: 'Moderace obrázků', icon: '🖼️' },
   ]},
   { group: '🎨 Vzhled', items: [
+    { key: 'obsahove-boxy', label: 'Obsahové boxy', icon: '📦' },
     { key: 'styly-stranek', label: 'Styly stránek', icon: '🎨' },
   ]},
   { group: '⚙ Systém', items: [
@@ -166,6 +167,12 @@ export default function Rektorat() {
   const [editingStyleId, setEditingStyleId] = useState<string | null>(null);
   const [editStyleCSS, setEditStyleCSS] = useState('');
 
+  // Content blocks
+  const [contentBlocks, setContentBlocks] = useState<any[]>([]);
+  const [newBlock, setNewBlock] = useState({ page_path: '/', title: '', content: '', style_preset: 'announcement', position: 'top', link_url: '', link_text: '', image_url: '', custom_css: '' });
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
+  const [blockEdit, setBlockEdit] = useState<Record<string, any>>({});
+
   useEffect(() => {
     if (!authLoading && !isStaff && !isDeveloper && !isLektor) navigate('/');
   }, [authLoading, isStaff, isDeveloper, isLektor]);
@@ -213,6 +220,8 @@ export default function Rektorat() {
     // Load page styles separately
     const psRes = await supabase.from('page_styles').select('*').order('page_path');
     if (psRes.data) setPageStyles(psRes.data);
+    const cbRes = await supabase.from('content_blocks').select('*').order('sort_order');
+    if (cbRes.data) setContentBlocks(cbRes.data);
     setStats({
       courses: c.data?.length || 0,
       faculties: f.data?.length || 0,
@@ -1450,6 +1459,163 @@ export default function Rektorat() {
             ))}
           </div>
         );
+
+      case 'obsahove-boxy': {
+        const PRESET_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
+          announcement: { label: 'Oznámení', emoji: '📢', color: '#8b6914' },
+          contest: { label: 'Soutěž', emoji: '🏆', color: '#b8860b' },
+          joke: { label: 'Vtip', emoji: '😄', color: '#7c3aed' },
+          article: { label: 'Článek', emoji: '📰', color: '#3d6b00' },
+          promo: { label: 'Promo', emoji: '🔵', color: '#1a5aa0' },
+          warning: { label: 'Varování', emoji: '⚠️', color: '#991b1b' },
+          custom: { label: 'Vlastní', emoji: '🎨', color: '#666' },
+        };
+        const PAGES = ['/', '/kurzy', '/fakulty', '/rozvrh', '/studium', '/vypisky', '/doucovani', '/profil', '*'];
+        return (
+          <div className="grid gap-4">
+            <div>
+              <h3 className="mt-0 text-lg font-extrabold">📦 Obsahové boxy</h3>
+              <p className="text-sm text-muted-foreground">Připněte stylizované boxíky s obsahem na libovolnou stránku. Inspirováno stylem Alíka (soutěže, oznámení, vtipy, články).</p>
+            </div>
+
+            {/* Preview of preset styles */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {Object.entries(PRESET_LABELS).map(([key, val]) => (
+                <div key={key} className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold" style={{ background: key === 'contest' ? '#fffbe0' : key === 'joke' ? '#f7e8fe' : key === 'article' ? '#eefacc' : key === 'promo' ? '#e8f0ff' : key === 'warning' ? '#fde8e8' : '#fff7cc', color: val.color }}>
+                  <span>{val.emoji}</span> {val.label}
+                </div>
+              ))}
+            </div>
+
+            {/* New block form */}
+            <div className="panel-card border-l-4 border-primary">
+              <h4 className="mt-0 mb-2 text-sm font-extrabold">➕ Přidat nový box</h4>
+              <div className="grid gap-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <select value={newBlock.page_path} onChange={e => setNewBlock({ ...newBlock, page_path: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card focus:border-secondary transition-colors">
+                    {PAGES.map(p => <option key={p} value={p}>{p === '*' ? 'Všechny stránky' : p}</option>)}
+                  </select>
+                  <select value={newBlock.style_preset} onChange={e => setNewBlock({ ...newBlock, style_preset: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card focus:border-secondary transition-colors">
+                    {Object.entries(PRESET_LABELS).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}
+                  </select>
+                  <select value={newBlock.position} onChange={e => setNewBlock({ ...newBlock, position: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card focus:border-secondary transition-colors">
+                    <option value="top">⬆ Nahoře</option>
+                    <option value="bottom">⬇ Dole</option>
+                    <option value="sidebar">📎 Sidebar</option>
+                  </select>
+                </div>
+                <input placeholder="Nadpis boxu" value={newBlock.title} onChange={e => setNewBlock({ ...newBlock, title: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" />
+                <textarea placeholder="Obsah (Markdown)..." value={newBlock.content} onChange={e => setNewBlock({ ...newBlock, content: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[80px] font-mono focus:border-secondary transition-colors" />
+                <div className="grid grid-cols-2 gap-2">
+                  <input placeholder="URL obrázku (volitelné)" value={newBlock.image_url} onChange={e => setNewBlock({ ...newBlock, image_url: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" />
+                  <input placeholder="URL odkazu (volitelné)" value={newBlock.link_url} onChange={e => setNewBlock({ ...newBlock, link_url: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" />
+                </div>
+                {newBlock.link_url && (
+                  <input placeholder="Text odkazu (např. Více →)" value={newBlock.link_text} onChange={e => setNewBlock({ ...newBlock, link_text: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" />
+                )}
+                {newBlock.style_preset === 'custom' && (
+                  <textarea placeholder="Vlastní CSS" value={newBlock.custom_css} onChange={e => setNewBlock({ ...newBlock, custom_css: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[60px] font-mono focus:border-secondary transition-colors" />
+                )}
+                <button onClick={async () => {
+                  if (!newBlock.title || !user) return;
+                  const { error } = await supabase.from('content_blocks').insert({
+                    ...newBlock,
+                    link_url: newBlock.link_url || null,
+                    link_text: newBlock.link_text || null,
+                    image_url: newBlock.image_url || null,
+                    custom_css: newBlock.custom_css || null,
+                    created_by: user.id,
+                  });
+                  if (error) toast.error(error.message);
+                  else {
+                    await recordHistory('content_block', 'new', user.id, 'create', { title: newBlock.title, page: newBlock.page_path });
+                    toast.success('Box přidán');
+                    setNewBlock({ page_path: '/', title: '', content: '', style_preset: 'announcement', position: 'top', link_url: '', link_text: '', image_url: '', custom_css: '' });
+                    loadAll();
+                  }
+                }} className="btn-alik-primary text-xs w-fit">📦 Přidat box</button>
+              </div>
+            </div>
+
+            {/* Existing blocks */}
+            <h4 className="mt-0 text-sm font-extrabold">📋 Existující boxy ({contentBlocks.length})</h4>
+            {contentBlocks.map((cb: any) => {
+              const preset = PRESET_LABELS[cb.style_preset] || PRESET_LABELS.custom;
+              const isEditing = editingBlockId === cb.id;
+              return (
+                <div key={cb.id} className="catalog-item-card flex-col gap-2" style={{ borderLeft: `4px solid ${cb.is_active ? preset.color : '#ccc'}`, opacity: cb.is_active ? 1 : 0.6 }}>
+                  <div className="flex items-center justify-between w-full gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-lg">{preset.emoji}</span>
+                      <strong className="text-sm">{cb.title || '(bez názvu)'}</strong>
+                      <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">{cb.page_path}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: preset.color + '20', color: preset.color }}>{preset.label}</span>
+                      <span className="text-xs text-muted-foreground">{cb.position === 'top' ? '⬆' : cb.position === 'bottom' ? '⬇' : '📎'}</span>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <button onClick={async () => {
+                        await supabase.from('content_blocks').update({ is_active: !cb.is_active }).eq('id', cb.id);
+                        if (user) await recordHistory('content_block', cb.id, user.id, cb.is_active ? 'unpublish' : 'publish', { title: cb.title });
+                        loadAll();
+                      }} className="text-xs font-bold px-2 py-1 rounded-lg transition-all hover:brightness-95" style={{ background: cb.is_active ? '#e8fde8' : '#fde8e8', color: cb.is_active ? '#166534' : '#991b1b' }}>
+                        {cb.is_active ? '✅' : '❌'}
+                      </button>
+                      <button onClick={() => {
+                        if (isEditing) { setEditingBlockId(null); } else { setEditingBlockId(cb.id); setBlockEdit({ title: cb.title, content: cb.content, style_preset: cb.style_preset, link_url: cb.link_url || '', link_text: cb.link_text || '', image_url: cb.image_url || '', custom_css: cb.custom_css || '', position: cb.position, page_path: cb.page_path }); }
+                      }} className="text-xs font-bold px-2 py-1 rounded-lg hover:brightness-95 transition-all" style={{ background: '#fef3c7', color: '#92400e' }}>✏</button>
+                      <button onClick={async () => {
+                        if (!confirm('Smazat tento box?')) return;
+                        await supabase.from('content_blocks').delete().eq('id', cb.id);
+                        if (user) await recordHistory('content_block', cb.id, user.id, 'delete', { title: cb.title });
+                        toast.success('Box smazán'); loadAll();
+                      }} className="text-xs font-bold px-2 py-1 rounded-lg hover:brightness-95 transition-all" style={{ background: '#fde8e8', color: '#991b1b' }}>🗑</button>
+                    </div>
+                  </div>
+                  {cb.content && !isEditing && (
+                    <p className="text-xs text-muted-foreground w-full truncate">{cb.content.slice(0, 100)}{cb.content.length > 100 ? '...' : ''}</p>
+                  )}
+                  {isEditing && (
+                    <div className="w-full grid gap-2 mt-2 animate-fade-in">
+                      <div className="grid grid-cols-3 gap-2">
+                        <select value={blockEdit.page_path} onChange={e => setBlockEdit({ ...blockEdit, page_path: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card">
+                          {PAGES.map(p => <option key={p} value={p}>{p === '*' ? 'Všechny stránky' : p}</option>)}
+                        </select>
+                        <select value={blockEdit.style_preset} onChange={e => setBlockEdit({ ...blockEdit, style_preset: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card">
+                          {Object.entries(PRESET_LABELS).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}
+                        </select>
+                        <select value={blockEdit.position} onChange={e => setBlockEdit({ ...blockEdit, position: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card">
+                          <option value="top">⬆ Nahoře</option><option value="bottom">⬇ Dole</option><option value="sidebar">📎 Sidebar</option>
+                        </select>
+                      </div>
+                      <input value={blockEdit.title} onChange={e => setBlockEdit({ ...blockEdit, title: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" placeholder="Nadpis" />
+                      <textarea value={blockEdit.content} onChange={e => setBlockEdit({ ...blockEdit, content: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[60px] font-mono" placeholder="Obsah (Markdown)" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <input value={blockEdit.image_url} onChange={e => setBlockEdit({ ...blockEdit, image_url: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" placeholder="URL obrázku" />
+                        <input value={blockEdit.link_url} onChange={e => setBlockEdit({ ...blockEdit, link_url: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" placeholder="URL odkazu" />
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={async () => {
+                          await supabase.from('content_blocks').update({
+                            ...blockEdit,
+                            link_url: blockEdit.link_url || null,
+                            link_text: blockEdit.link_text || null,
+                            image_url: blockEdit.image_url || null,
+                            custom_css: blockEdit.custom_css || null,
+                          }).eq('id', cb.id);
+                          if (user) await recordHistory('content_block', cb.id, user.id, 'update', { title: blockEdit.title });
+                          toast.success('Box uložen'); setEditingBlockId(null); loadAll();
+                        }} className="btn-alik-primary text-xs">💾 Uložit</button>
+                        <button onClick={() => setEditingBlockId(null)} className="btn-alik-outline text-xs">Zrušit</button>
+                      </div>
+                    </div>
+                  )}
+                  <ChangeHistory entityType="content_block" entityId={cb.id} />
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
 
       default:
         return <div className="panel-card"><h3 className="mt-0">{allTabs.find(t => t.key === activeTab)?.icon} {allTabs.find(t => t.key === activeTab)?.label}</h3><p className="text-muted-foreground">Modul je aktivní.</p></div>;

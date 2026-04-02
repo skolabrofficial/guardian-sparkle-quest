@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import AppHeader from './AppHeader';
 import AppNav from './AppNav';
 import AppFooter from './AppFooter';
+import ContentBlocks from '@/components/ContentBlocks';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -16,7 +17,9 @@ export default function AppLayout({ children, searchLabel, searchPlaceholder, se
     <div className="max-w-[1180px] mx-auto px-5 py-6 pb-12 relative z-[1]">
       <AppHeader searchLabel={searchLabel} searchPlaceholder={searchPlaceholder} searchTags={searchTags} onSearch={onSearch} />
       <AppNav />
+      <ContentBlocks position="top" />
       {children}
+      <ContentBlocks position="bottom" />
       <AppFooter />
     </div>
   );
