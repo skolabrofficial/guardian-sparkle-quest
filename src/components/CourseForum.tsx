@@ -91,6 +91,17 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
     }
   };
 
+  const handleReplyWithHistory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !replyTo || !replyContent.trim()) return;
+    const { data, error } = await supabase.from('forum_posts').insert({ course_id: courseId, author_id: user.id, content: replyContent, parent_id: replyTo }).select('id').single();
+    if (error) toast.error(error.message);
+    else {
+      if (data) await recordHistory('forum_post', replyTo, user.id, 'answer', { reply_id: data.id });
+      toast.success('Odpověď přidána'); setReplyContent(''); setReplyTo(null); load();
+    }
+  };
+
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !replyTo || !replyContent.trim()) return;
