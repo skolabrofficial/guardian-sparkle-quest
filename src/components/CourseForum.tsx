@@ -100,34 +100,62 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
   };
 
   const labelPost = async (postId: string, label: string | null) => {
+    const post = posts.find(p => p.id === postId);
     const { error } = await supabase.from('forum_posts').update({ label }).eq('id', postId);
-    if (error) toast.error(error.message); else load();
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', postId, user.id, 'label', { label: { from: post?.label || '—', to: label || '—' } });
+      load();
+    }
   };
 
   const togglePin = async (post: ForumPost) => {
-    const { error } = await supabase.from('forum_posts').update({ is_pinned: !post.is_pinned }).eq('id', post.id);
-    if (error) toast.error(error.message); else load();
+    const newVal = !post.is_pinned;
+    const { error } = await supabase.from('forum_posts').update({ is_pinned: newVal }).eq('id', post.id);
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', post.id, user.id, 'pin', { is_pinned: { from: post.is_pinned, to: newVal } });
+      load();
+    }
   };
 
   const toggleLock = async (post: ForumPost) => {
-    const { error } = await supabase.from('forum_posts').update({ is_locked: !post.is_locked }).eq('id', post.id);
-    if (error) toast.error(error.message); else load();
+    const newVal = !post.is_locked;
+    const { error } = await supabase.from('forum_posts').update({ is_locked: newVal }).eq('id', post.id);
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', post.id, user.id, 'lock', { is_locked: { from: post.is_locked, to: newVal } });
+      load();
+    }
   };
 
   const deletePost = async (postId: string) => {
     const { error } = await supabase.from('forum_posts').update({ is_deleted: true }).eq('id', postId);
-    if (error) toast.error(error.message); else { toast.success('Příspěvek smazán'); load(); }
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', postId, user.id, 'delete', {});
+      toast.success('Příspěvek smazán'); load();
+    }
   };
 
   const restorePost = async (postId: string) => {
     const { error } = await supabase.from('forum_posts').update({ is_deleted: false }).eq('id', postId);
-    if (error) toast.error(error.message); else { toast.success('Příspěvek obnoven'); load(); }
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', postId, user.id, 'publish', { action: 'Obnovení příspěvku' });
+      toast.success('Příspěvek obnoven'); load();
+    }
   };
 
   const movePost = async () => {
     if (!movePostId || !moveTargetCourse) return;
+    const targetName = allCourses.find(c => c.id === moveTargetCourse)?.title || moveTargetCourse;
     const { error } = await supabase.from('forum_posts').update({ course_id: moveTargetCourse, moved_from_course_id: courseId }).eq('id', movePostId);
-    if (error) toast.error(error.message); else { toast.success('Příspěvek přesunut'); setMovePostId(null); setMoveTargetCourse(''); load(); }
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', movePostId, user.id, 'move', { from_course: courseName, to_course: targetName });
+      toast.success('Příspěvek přesunut'); setMovePostId(null); setMoveTargetCourse(''); load();
+    }
   };
 
   const saveEdit = async () => {
