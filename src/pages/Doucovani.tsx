@@ -128,6 +128,7 @@ export default function Doucovani() {
     if (error) toast.error(error.message);
     else {
       toast.success(answerVisibility === 'private_asker' ? 'Odpověď odeslána jen tazateli' : 'Odpověď zveřejněna');
+      if (user) await recordHistory('tutoring_question', selectedQ, user.id, 'answer', { visibility: answerVisibility });
       setAnswerText(''); setAnswerVisibility('public_all');
       loadAnswers(selectedQ);
       await supabase.from('tutoring_questions').update({ status: 'answered' }).eq('id', selectedQ);
