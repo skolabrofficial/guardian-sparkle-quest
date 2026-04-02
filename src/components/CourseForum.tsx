@@ -257,7 +257,7 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
       )}
 
       {replyTo === post.id && (
-        <form onSubmit={handleReply} className="grid gap-2 mt-2 animate-fade-in">
+        <form onSubmit={handleReplyWithHistory} className="grid gap-2 mt-2 animate-fade-in">
           <textarea value={replyContent} onChange={e => setReplyContent(e.target.value)} placeholder="Vaše odpověď..." required className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[50px] focus:border-secondary transition-colors" />
           <div className="flex gap-2">
             <button type="submit" className="btn-alik-primary text-xs">Odpovědět</button>
