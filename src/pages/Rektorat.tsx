@@ -220,6 +220,8 @@ export default function Rektorat() {
     // Load page styles separately
     const psRes = await supabase.from('page_styles').select('*').order('page_path');
     if (psRes.data) setPageStyles(psRes.data);
+    const cbRes = await supabase.from('content_blocks').select('*').order('sort_order');
+    if (cbRes.data) setContentBlocks(cbRes.data);
     setStats({
       courses: c.data?.length || 0,
       faculties: f.data?.length || 0,
