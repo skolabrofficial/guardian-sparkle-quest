@@ -167,6 +167,12 @@ export default function Rektorat() {
   const [editingStyleId, setEditingStyleId] = useState<string | null>(null);
   const [editStyleCSS, setEditStyleCSS] = useState('');
 
+  // Content blocks
+  const [contentBlocks, setContentBlocks] = useState<any[]>([]);
+  const [newBlock, setNewBlock] = useState({ page_path: '/', title: '', content: '', style_preset: 'announcement', position: 'top', link_url: '', link_text: '', image_url: '', custom_css: '' });
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
+  const [blockEdit, setBlockEdit] = useState<Record<string, any>>({});
+
   useEffect(() => {
     if (!authLoading && !isStaff && !isDeveloper && !isLektor) navigate('/');
   }, [authLoading, isStaff, isDeveloper, isLektor]);
