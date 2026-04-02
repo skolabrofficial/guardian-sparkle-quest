@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { nameWithRole, getRoleSymbol, ROLE_COLORS, ROLE_LABELS } from '@/lib/roleUtils';
-import { recordHistory } from '@/components/ChangeHistory';
+import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
 
 type Tab = 'prehled' | 'kurzy' | 'lektori' | 'studenti' | 'fakulty' | 'rozvrh' | 'dotazy' | 'vypisky' | 'oznameni' | 'reporty' | 'audit' | 'nastaveni' | 'notifikace' | 'role' | 'statistiky' | 'rozpocet' | 'smernice' | 'zpravy' | 'zadosti' | 'kvalita' | 'export' | 'import' | 'hromadne' | 'harmonogram' | 'bezpecnost' | 'klubovny' | 'kapacity' | 'mentori' | 'plany' | 'hodnoceni' | 'blokace' | 'forum' | 'emailove-sablony' | 'integrace' | 'obrazky' | 'odeslat-notifikaci' | 'styly-stranek';
 
@@ -1337,61 +1337,115 @@ export default function Rektorat() {
 
       case 'styly-stranek':
         return (
-          <div className="grid gap-3">
-            <h3 className="mt-0 text-lg font-extrabold">🎨 Styly stránek</h3>
-            <p className="text-xs text-muted-foreground">Přidejte vlastní CSS styly na libovolnou stránku. Cesta může končit * pro wildcard.</p>
+          <div className="grid gap-4">
+            <div>
+              <h3 className="mt-0 text-lg font-extrabold">🎨 Napoutávání obsahu &amp; Styly stránek</h3>
+              <p className="text-sm text-muted-foreground mb-1">Přiřaďte vlastní CSS styly na libovolnou stránku (inspirováno stylem <strong>Alíka</strong>). CSS třída se přidá na <code>&lt;body&gt;</code>, takže můžete stylovat celou stránku.</p>
+              <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                <span className="px-2 py-1 rounded-full font-bold" style={{ background: '#e8fde8', color: '#166534' }}>✅ Wildcard cesty (/kurzy/*)</span>
+                <span className="px-2 py-1 rounded-full font-bold" style={{ background: '#fff7ed', color: '#9a3412' }}>🎯 Body class injection</span>
+                <span className="px-2 py-1 rounded-full font-bold" style={{ background: '#f0f4ff', color: '#3b52a0' }}>🔄 Live přepínání</span>
+              </div>
+            </div>
+
+            {/* Example snippets */}
+            <details className="panel-card border-l-4 border-accent cursor-pointer">
+              <summary className="font-bold text-sm">📖 Příklady CSS (styl Alíka)</summary>
+              <div className="mt-2 grid gap-2 text-xs font-mono">
+                <div className="bg-muted/50 p-2 rounded-lg">
+                  <p className="font-bold text-foreground mb-1">Zelené pozadí titulky:</p>
+                  <code>{`.titulka .content { background: linear-gradient(180deg, rgba(230,246,174,1), rgba(255,255,255,0.85)); }`}</code>
+                </div>
+                <div className="bg-muted/50 p-2 rounded-lg">
+                  <p className="font-bold text-foreground mb-1">Fialový blok (vtipy):</p>
+                  <code>{`.vtip-obal { background-color: #F7E8FE; box-shadow: 0 0 0.75em rgba(187,68,238,0.2); }`}</code>
+                </div>
+                <div className="bg-muted/50 p-2 rounded-lg">
+                  <p className="font-bold text-foreground mb-1">Kalendář blok:</p>
+                  <code>{`.minikalendar { background: #FEC; border-spacing: 0; }`}</code>
+                </div>
+              </div>
+            </details>
+
+            {/* New style form */}
             <div className="panel-card border-l-4 border-primary">
+              <h4 className="mt-0 mb-2 text-sm font-extrabold">➕ Přidat nový styl</h4>
               <div className="grid gap-2">
                 <div className="grid grid-cols-2 gap-2">
-                  <input placeholder="Cesta stránky (např. /kurzy)" value={newStylePath} onChange={e => setNewStylePath(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
-                  <input placeholder="CSS třída (volitelné)" value={newStyleClass} onChange={e => setNewStyleClass(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
+                  <input placeholder="Cesta stránky (např. /kurzy)" value={newStylePath} onChange={e => setNewStylePath(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" />
+                  <input placeholder="CSS třída pro body (volitelné)" value={newStyleClass} onChange={e => setNewStyleClass(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" />
                 </div>
-                <input placeholder="Popis (volitelné)" value={newStyleDesc} onChange={e => setNewStyleDesc(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
-                <textarea placeholder="CSS obsah" value={newStyleCSS} onChange={e => setNewStyleCSS(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[120px] font-mono" />
+                <input placeholder="Popis stylu (volitelné)" value={newStyleDesc} onChange={e => setNewStyleDesc(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" />
+                <textarea placeholder={`/* Váš CSS sem */\n.moje-trida .panel-card {\n  background: #ffe;\n  border-radius: 1em;\n}`} value={newStyleCSS} onChange={e => setNewStyleCSS(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[140px] font-mono focus:border-secondary transition-colors" />
+                {newStyleCSS && (
+                  <details className="animate-fade-in">
+                    <summary className="text-xs font-bold cursor-pointer text-muted-foreground">👁 Náhled CSS</summary>
+                    <div className="mt-2 p-3 rounded-xl border border-dashed border-border bg-muted/30">
+                      <style dangerouslySetInnerHTML={{ __html: `.preview-scope { ${newStyleCSS.slice(0, 2000)} }` }} />
+                      <div className="preview-scope">
+                        <div className="panel-card !p-3">
+                          <h4 className="mt-0 text-sm">Ukázkový panel</h4>
+                          <p className="text-xs text-muted-foreground">Takto bude vypadat obsah se stylem.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+                )}
                 <button onClick={async () => {
                   if (!newStylePath || !newStyleCSS || !user) return;
                   const { error } = await supabase.from('page_styles').insert({ page_path: newStylePath, css_content: newStyleCSS, class_name: newStyleClass || null, description: newStyleDesc || null, updated_by: user.id });
                   if (error) toast.error(error.message);
-                  else { toast.success('Styl přidán'); setNewStylePath(''); setNewStyleClass(''); setNewStyleCSS(''); setNewStyleDesc(''); loadAll(); }
-                }} className="btn-alik-primary text-xs w-fit">Přidat styl</button>
+                  else {
+                    await recordHistory('page_style', 'new', user.id, 'create', { path: newStylePath, class_name: newStyleClass || '—' });
+                    toast.success('Styl přidán'); setNewStylePath(''); setNewStyleClass(''); setNewStyleCSS(''); setNewStyleDesc(''); loadAll();
+                  }
+                }} className="btn-alik-primary text-xs w-fit">🎨 Přidat styl</button>
               </div>
             </div>
+
+            {/* List existing styles */}
+            <h4 className="mt-0 text-sm font-extrabold">📋 Existující styly ({pageStyles.length})</h4>
             {pageStyles.map((ps: any) => (
-              <div key={ps.id} className="catalog-item-card flex-col gap-2">
+              <div key={ps.id} className="catalog-item-card flex-col gap-2" style={{ borderLeft: `4px solid ${ps.is_active ? '#22c55e' : '#ef4444'}` }}>
                 <div className="flex items-center justify-between w-full">
-                  <div>
-                    <strong className="text-sm">{ps.page_path}</strong>
-                    {ps.class_name && <span className="ml-2 text-xs font-mono bg-muted px-1.5 py-0.5 rounded">.{ps.class_name}</span>}
-                    {ps.description && <span className="ml-2 text-xs text-muted-foreground">{ps.description}</span>}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <strong className="text-sm font-mono">{ps.page_path}</strong>
+                    {ps.class_name && <span className="text-xs font-mono bg-accent/10 text-accent px-1.5 py-0.5 rounded">.{ps.class_name}</span>}
+                    {ps.description && <span className="text-xs text-muted-foreground italic">— {ps.description}</span>}
                   </div>
                   <div className="flex gap-1.5">
                     <button onClick={async () => {
                       await supabase.from('page_styles').update({ is_active: !ps.is_active }).eq('id', ps.id);
+                      if (user) await recordHistory('page_style', ps.id, user.id, ps.is_active ? 'unpublish' : 'publish', { path: ps.page_path });
                       loadAll();
-                    }} className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: ps.is_active ? '#e8fde8' : '#fde8e8', color: ps.is_active ? '#166534' : '#991b1b' }}>
+                    }} className="text-xs font-bold px-2 py-1 rounded-lg transition-all hover:brightness-95" style={{ background: ps.is_active ? '#e8fde8' : '#fde8e8', color: ps.is_active ? '#166534' : '#991b1b' }}>
                       {ps.is_active ? '✅ Aktivní' : '❌ Neaktivní'}
                     </button>
-                    <button onClick={() => { setEditingStyleId(ps.id); setEditStyleCSS(ps.css_content); }} className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: '#fef3c7', color: '#92400e' }}>✏</button>
+                    <button onClick={() => { setEditingStyleId(ps.id); setEditStyleCSS(ps.css_content); }} className="text-xs font-bold px-2 py-1 rounded-lg hover:brightness-95 transition-all" style={{ background: '#fef3c7', color: '#92400e' }}>✏</button>
                     <button onClick={async () => {
+                      if (!confirm('Opravdu smazat tento styl?')) return;
                       await supabase.from('page_styles').delete().eq('id', ps.id);
+                      if (user) await recordHistory('page_style', ps.id, user.id, 'delete', { path: ps.page_path });
                       toast.success('Styl smazán'); loadAll();
-                    }} className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: '#fde8e8', color: '#991b1b' }}>🗑</button>
+                    }} className="text-xs font-bold px-2 py-1 rounded-lg hover:brightness-95 transition-all" style={{ background: '#fde8e8', color: '#991b1b' }}>🗑</button>
                   </div>
                 </div>
                 {editingStyleId === ps.id ? (
                   <div className="w-full grid gap-2 mt-2 animate-fade-in">
-                    <textarea value={editStyleCSS} onChange={e => setEditStyleCSS(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[120px] font-mono w-full" />
+                    <textarea value={editStyleCSS} onChange={e => setEditStyleCSS(e.target.value)} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[140px] font-mono w-full focus:border-secondary transition-colors" />
                     <div className="flex gap-2">
                       <button onClick={async () => {
                         await supabase.from('page_styles').update({ css_content: editStyleCSS, updated_by: user?.id }).eq('id', ps.id);
+                        if (user) await recordHistory('page_style', ps.id, user.id, 'update', { path: ps.page_path });
                         toast.success('Styl uložen'); setEditingStyleId(null); loadAll();
-                      }} className="btn-alik-primary text-xs">Uložit</button>
+                      }} className="btn-alik-primary text-xs">💾 Uložit</button>
                       <button onClick={() => setEditingStyleId(null)} className="btn-alik-outline text-xs">Zrušit</button>
                     </div>
                   </div>
                 ) : (
-                  <pre className="text-xs font-mono bg-muted/50 p-2 rounded-lg w-full overflow-x-auto mt-1 max-h-[80px] overflow-y-auto">{ps.css_content.slice(0, 300)}{ps.css_content.length > 300 ? '...' : ''}</pre>
+                  <pre className="text-xs font-mono bg-muted/50 p-2 rounded-lg w-full overflow-x-auto mt-1 max-h-[100px] overflow-y-auto whitespace-pre-wrap">{ps.css_content.slice(0, 400)}{ps.css_content.length > 400 ? '...' : ''}</pre>
                 )}
+                <ChangeHistory entityType="page_style" entityId={ps.id} />
               </div>
             ))}
           </div>

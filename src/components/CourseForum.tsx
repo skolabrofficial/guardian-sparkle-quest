@@ -91,43 +91,76 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
     }
   };
 
-  const handleReply = async (e: React.FormEvent) => {
+  const handleReplyWithHistory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !replyTo || !replyContent.trim()) return;
-    const { error } = await supabase.from('forum_posts').insert({ course_id: courseId, author_id: user.id, content: replyContent, parent_id: replyTo });
+    const { data, error } = await supabase.from('forum_posts').insert({ course_id: courseId, author_id: user.id, content: replyContent, parent_id: replyTo }).select('id').single();
     if (error) toast.error(error.message);
-    else { toast.success('Odpověď přidána'); setReplyContent(''); setReplyTo(null); load(); }
+    else {
+      if (data) await recordHistory('forum_post', replyTo, user.id, 'answer', { reply_id: data.id });
+      toast.success('Odpověď přidána'); setReplyContent(''); setReplyTo(null); load();
+    }
   };
 
+  // handleReply is now handleReplyWithHistory above
+
   const labelPost = async (postId: string, label: string | null) => {
+    const post = posts.find(p => p.id === postId);
     const { error } = await supabase.from('forum_posts').update({ label }).eq('id', postId);
-    if (error) toast.error(error.message); else load();
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', postId, user.id, 'label', { label: { from: post?.label || '—', to: label || '—' } });
+      load();
+    }
   };
 
   const togglePin = async (post: ForumPost) => {
-    const { error } = await supabase.from('forum_posts').update({ is_pinned: !post.is_pinned }).eq('id', post.id);
-    if (error) toast.error(error.message); else load();
+    const newVal = !post.is_pinned;
+    const { error } = await supabase.from('forum_posts').update({ is_pinned: newVal }).eq('id', post.id);
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', post.id, user.id, 'pin', { is_pinned: { from: post.is_pinned, to: newVal } });
+      load();
+    }
   };
 
   const toggleLock = async (post: ForumPost) => {
-    const { error } = await supabase.from('forum_posts').update({ is_locked: !post.is_locked }).eq('id', post.id);
-    if (error) toast.error(error.message); else load();
+    const newVal = !post.is_locked;
+    const { error } = await supabase.from('forum_posts').update({ is_locked: newVal }).eq('id', post.id);
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', post.id, user.id, 'lock', { is_locked: { from: post.is_locked, to: newVal } });
+      load();
+    }
   };
 
   const deletePost = async (postId: string) => {
     const { error } = await supabase.from('forum_posts').update({ is_deleted: true }).eq('id', postId);
-    if (error) toast.error(error.message); else { toast.success('Příspěvek smazán'); load(); }
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', postId, user.id, 'delete', {});
+      toast.success('Příspěvek smazán'); load();
+    }
   };
 
   const restorePost = async (postId: string) => {
     const { error } = await supabase.from('forum_posts').update({ is_deleted: false }).eq('id', postId);
-    if (error) toast.error(error.message); else { toast.success('Příspěvek obnoven'); load(); }
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', postId, user.id, 'publish', { action: 'Obnovení příspěvku' });
+      toast.success('Příspěvek obnoven'); load();
+    }
   };
 
   const movePost = async () => {
     if (!movePostId || !moveTargetCourse) return;
+    const targetName = allCourses.find(c => c.id === moveTargetCourse)?.title || moveTargetCourse;
     const { error } = await supabase.from('forum_posts').update({ course_id: moveTargetCourse, moved_from_course_id: courseId }).eq('id', movePostId);
-    if (error) toast.error(error.message); else { toast.success('Příspěvek přesunut'); setMovePostId(null); setMoveTargetCourse(''); load(); }
+    if (error) toast.error(error.message);
+    else {
+      if (user) await recordHistory('forum_post', movePostId, user.id, 'move', { from_course: courseName, to_course: targetName });
+      toast.success('Příspěvek přesunut'); setMovePostId(null); setMoveTargetCourse(''); load();
+    }
   };
 
   const saveEdit = async () => {
@@ -224,7 +257,7 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
       )}
 
       {replyTo === post.id && (
-        <form onSubmit={handleReply} className="grid gap-2 mt-2 animate-fade-in">
+        <form onSubmit={handleReplyWithHistory} className="grid gap-2 mt-2 animate-fade-in">
           <textarea value={replyContent} onChange={e => setReplyContent(e.target.value)} placeholder="Vaše odpověď..." required className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[50px] focus:border-secondary transition-colors" />
           <div className="flex gap-2">
             <button type="submit" className="btn-alik-primary text-xs">Odpovědět</button>
