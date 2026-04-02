@@ -47,6 +47,7 @@ const tabGroups: { group: string; items: { key: Tab; label: string; icon: string
     { key: 'obrazky', label: 'Moderace obrázků', icon: '🖼️' },
   ]},
   { group: '🎨 Vzhled', items: [
+    { key: 'obsahove-boxy', label: 'Obsahové boxy', icon: '📦' },
     { key: 'styly-stranek', label: 'Styly stránek', icon: '🎨' },
   ]},
   { group: '⚙ Systém', items: [
