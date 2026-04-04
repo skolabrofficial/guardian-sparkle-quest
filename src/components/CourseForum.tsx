@@ -43,6 +43,7 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
   const [editContent, setEditContent] = useState('');
   const [movePostId, setMovePostId] = useState<string | null>(null);
   const [moveTargetCourse, setMoveTargetCourse] = useState('');
+  const { checkText } = useProfanityFilter();
 
   const isDean = user?.id === facultyDeanId;
   const canMark = isLektor || isStaff || isDeveloper;
