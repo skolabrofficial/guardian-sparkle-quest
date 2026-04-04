@@ -57,6 +57,13 @@ export default function Doucovani() {
   const handleSubmitQ = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    const textToCheck = `${questionText} ${context}`;
+    const { clean, foundWords } = checkText(textToCheck);
+    if (!clean) {
+      toast.error(`Dotaz obsahuje zakázaná slova: ${foundWords.join(', ')}`);
+      recordProfanityViolation(user.id, foundWords, 'tutoring_question');
+      return;
+    }
     const { error } = await supabase.from('tutoring_questions').insert({ user_id: user.id, topic, question: questionText, context: context || null });
     if (error) toast.error(error.message);
     else {
