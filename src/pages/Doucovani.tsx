@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { nameWithRole } from '@/lib/roleUtils';
 import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
+import { useProfanityFilter, recordProfanityViolation } from '@/hooks/useProfanityFilter';
 
 interface Question { id: string; topic: string; question: string; status: string | null; created_at: string; user_id: string; }
 interface Answer { id: string; answer: string; created_at: string; mentor_id: string; visibility: string; }
@@ -26,6 +27,7 @@ export default function Doucovani() {
   const [mentorRoles, setMentorRoles] = useState<Record<string, string>>({});
 
   const canAnswer = isLektor || isStaff || isDeveloper;
+  const { checkText } = useProfanityFilter();
 
   const load = async () => {
     const { data } = await supabase.from('tutoring_questions').select('*').order('created_at', { ascending: false });
@@ -55,6 +57,13 @@ export default function Doucovani() {
   const handleSubmitQ = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    const textToCheck = `${questionText} ${context}`;
+    const { clean, foundWords } = checkText(textToCheck);
+    if (!clean) {
+      toast.error(`Dotaz obsahuje zakázaná slova: ${foundWords.join(', ')}`);
+      recordProfanityViolation(user.id, foundWords, 'tutoring_question');
+      return;
+    }
     const { error } = await supabase.from('tutoring_questions').insert({ user_id: user.id, topic, question: questionText, context: context || null });
     if (error) toast.error(error.message);
     else {
@@ -122,6 +131,12 @@ export default function Doucovani() {
   const handleSubmitA = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !selectedQ) return;
+    const { clean, foundWords } = checkText(answerText);
+    if (!clean) {
+      toast.error(`Odpověď obsahuje zakázaná slova: ${foundWords.join(', ')}`);
+      recordProfanityViolation(user.id, foundWords, 'tutoring_answer');
+      return;
+    }
     const { error } = await supabase.from('tutoring_answers').insert({
       question_id: selectedQ, mentor_id: user.id, answer: answerText, visibility: answerVisibility,
     });

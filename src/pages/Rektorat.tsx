@@ -9,8 +9,9 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { nameWithRole, getRoleSymbol, ROLE_COLORS, ROLE_LABELS } from '@/lib/roleUtils';
 import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
+import { invalidateProfanityCache } from '@/hooks/useProfanityFilter';
 
-type Tab = 'prehled' | 'kurzy' | 'lektori' | 'studenti' | 'fakulty' | 'rozvrh' | 'dotazy' | 'vypisky' | 'oznameni' | 'reporty' | 'audit' | 'nastaveni' | 'notifikace' | 'role' | 'statistiky' | 'rozpocet' | 'smernice' | 'zpravy' | 'zadosti' | 'kvalita' | 'export' | 'import' | 'hromadne' | 'harmonogram' | 'bezpecnost' | 'klubovny' | 'kapacity' | 'mentori' | 'plany' | 'hodnoceni' | 'blokace' | 'forum' | 'emailove-sablony' | 'integrace' | 'obrazky' | 'odeslat-notifikaci' | 'styly-stranek' | 'obsahove-boxy';
+type Tab = 'prehled' | 'kurzy' | 'lektori' | 'studenti' | 'fakulty' | 'rozvrh' | 'dotazy' | 'vypisky' | 'oznameni' | 'reporty' | 'audit' | 'nastaveni' | 'notifikace' | 'role' | 'statistiky' | 'rozpocet' | 'smernice' | 'zpravy' | 'zadosti' | 'kvalita' | 'export' | 'import' | 'hromadne' | 'harmonogram' | 'bezpecnost' | 'klubovny' | 'kapacity' | 'mentori' | 'plany' | 'hodnoceni' | 'blokace' | 'forum' | 'emailove-sablony' | 'integrace' | 'obrazky' | 'odeslat-notifikaci' | 'styly-stranek' | 'obsahove-boxy' | 'filtr-slov';
 
 const tabGroups: { group: string; items: { key: Tab; label: string; icon: string }[] }[] = [
   { group: '📊 Přehled', items: [
@@ -53,6 +54,7 @@ const tabGroups: { group: string; items: { key: Tab; label: string; icon: string
   { group: '⚙ Systém', items: [
     { key: 'reporty', label: 'Hlášení', icon: '⚠' },
     { key: 'audit', label: 'Audit log', icon: '📋' },
+    { key: 'filtr-slov', label: 'Filtr slov', icon: '🤬' },
     { key: 'bezpecnost', label: 'Bezpečnost', icon: '🛡' },
     { key: 'rozpocet', label: 'Rozpočet', icon: '💰' },
     { key: 'smernice', label: 'Směrnice', icon: '📜' },
@@ -1613,6 +1615,149 @@ export default function Rektorat() {
                 </div>
               );
             })}
+          </div>
+        );
+      }
+
+      case 'filtr-slov': {
+        const wordsRow = settingsData.find((s: any) => s.key === 'profanity_words');
+        const blockRow = settingsData.find((s: any) => s.key === 'profanity_autoblock');
+        const currentWords: string[] = (wordsRow?.value as any)?.words ?? [];
+        const autoBlock = (blockRow?.value as any) ?? { enabled: false, type: 'warning', reason: 'Automatická blokace za použití zakázaných slov', threshold: 3, duration: 24 };
+
+        const saveWords = async (words: string[]) => {
+          const val = { words };
+          if (wordsRow) {
+            await supabase.from('system_settings').update({ value: val as any, updated_by: user?.id }).eq('id', wordsRow.id);
+          } else {
+            await supabase.from('system_settings').insert({ key: 'profanity_words', value: val as any, updated_by: user?.id });
+          }
+          invalidateProfanityCache();
+          loadAll();
+          toast.success('Seznam slov uložen');
+        };
+
+        const saveAutoBlock = async (ab: any) => {
+          if (blockRow) {
+            await supabase.from('system_settings').update({ value: ab as any, updated_by: user?.id }).eq('id', blockRow.id);
+          } else {
+            await supabase.from('system_settings').insert({ key: 'profanity_autoblock', value: ab as any, updated_by: user?.id });
+          }
+          invalidateProfanityCache();
+          loadAll();
+          toast.success('Nastavení autoblokace uloženo');
+        };
+
+        return (
+          <div className="grid gap-4">
+            <h3 className="mt-0 text-lg font-extrabold">🤬 Filtr sprostých slov</h3>
+            <p className="text-sm text-muted-foreground">Zakázaná slova se kontrolují ve všech textových polích (fórum, doučování, oznámení, profil atd.). Při nalezení se příspěvek nepošle a zobrazí se varování.</p>
+
+            {/* Word list */}
+            <div className="panel-card border-l-4 border-destructive">
+              <h4 className="mt-0 mb-2 text-sm font-extrabold">📝 Zakázaná slova</h4>
+              <p className="text-xs text-muted-foreground mb-2">Jedno slovo / fráze na řádek. Filtr ignoruje diakritiku a velikost písmen.</p>
+              <textarea
+                defaultValue={currentWords.join('\n')}
+                id="profanity-words-input"
+                className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none w-full min-h-[120px] font-mono focus:border-destructive transition-colors"
+                placeholder={"blbec\nidiote\nsprosté slovo"}
+              />
+              <button
+                onClick={() => {
+                  const el = document.getElementById('profanity-words-input') as HTMLTextAreaElement;
+                  const words = el.value.split('\n').map(w => w.trim()).filter(Boolean);
+                  saveWords(words);
+                }}
+                className="btn-alik-primary text-xs mt-2"
+              >💾 Uložit seznam slov</button>
+              <p className="text-xs text-muted-foreground mt-1">Aktuálně: <strong>{currentWords.length}</strong> slov</p>
+            </div>
+
+            {/* Auto-block settings */}
+            <div className="panel-card border-l-4 border-amber-500">
+              <h4 className="mt-0 mb-2 text-sm font-extrabold">⚡ Automatická blokace</h4>
+              <p className="text-xs text-muted-foreground mb-3">Po dosažení zadaného počtu porušení za 24 hodin se uživatel automaticky zablokuje.</p>
+              <div className="grid gap-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={autoBlock.enabled}
+                    onChange={e => saveAutoBlock({ ...autoBlock, enabled: e.target.checked })}
+                    className="w-4 h-4 accent-primary"
+                  />
+                  <span className="text-sm font-bold">Automatická blokace zapnuta</span>
+                </label>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground block mb-1">Typ blokace</label>
+                    <select
+                      value={autoBlock.type}
+                      onChange={e => saveAutoBlock({ ...autoBlock, type: e.target.value })}
+                      className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none w-full bg-card"
+                    >
+                      <option value="warning">⚠️ Varování</option>
+                      <option value="partial">🚧 Částečná</option>
+                      <option value="full">🚫 Úplná</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground block mb-1">Práh (porušení/24h)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={autoBlock.threshold}
+                      onChange={e => saveAutoBlock({ ...autoBlock, threshold: parseInt(e.target.value) || 3 })}
+                      className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none w-full"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground block mb-1">Doba blokace (hodiny, 0 = trvalá)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={autoBlock.duration}
+                      onChange={e => saveAutoBlock({ ...autoBlock, duration: parseInt(e.target.value) || 0 })}
+                      className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground block mb-1">Důvod blokace</label>
+                    <input
+                      value={autoBlock.reason}
+                      onChange={e => saveAutoBlock({ ...autoBlock, reason: e.target.value })}
+                      className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent violations from audit log */}
+            <div className="panel-card">
+              <h4 className="mt-0 mb-2 text-sm font-extrabold">📋 Poslední porušení</h4>
+              {auditLogs.filter((a: any) => a.action === 'profanity_violation').length === 0 ? (
+                <p className="text-xs text-muted-foreground">Žádná porušení.</p>
+              ) : (
+                <div className="grid gap-1 max-h-[200px] overflow-y-auto">
+                  {auditLogs.filter((a: any) => a.action === 'profanity_violation').slice(0, 20).map((a: any) => {
+                    const u = users.find((u: any) => u.user_id === a.user_id);
+                    return (
+                      <div key={a.id} className="catalog-item-card items-center">
+                        <span className="text-xs font-bold">{u?.display_name || 'Neznámý'}</span>
+                        <span className="text-xs text-destructive font-mono">{((a.details as any)?.words ?? []).join(', ')}</span>
+                        <span className="text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleString('cs')}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         );
       }

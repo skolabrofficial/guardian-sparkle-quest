@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { nameWithRole } from '@/lib/roleUtils';
 import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
+import { useProfanityFilter, recordProfanityViolation } from '@/hooks/useProfanityFilter';
 
 interface ForumPost {
   id: string;
@@ -42,6 +43,7 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
   const [editContent, setEditContent] = useState('');
   const [movePostId, setMovePostId] = useState<string | null>(null);
   const [moveTargetCourse, setMoveTargetCourse] = useState('');
+  const { checkText } = useProfanityFilter();
 
   const isDean = user?.id === facultyDeanId;
   const canMark = isLektor || isStaff || isDeveloper;
@@ -82,6 +84,12 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
   const handlePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !newContent.trim()) return;
+    const { clean, foundWords } = checkText(newContent);
+    if (!clean) {
+      toast.error(`Příspěvek obsahuje zakázaná slova: ${foundWords.join(', ')}`);
+      recordProfanityViolation(user.id, foundWords, 'forum_post');
+      return;
+    }
     const { error } = await supabase.from('forum_posts').insert({ course_id: courseId, author_id: user.id, content: newContent });
     if (error) toast.error(error.message);
     else {
@@ -94,6 +102,12 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
   const handleReplyWithHistory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !replyTo || !replyContent.trim()) return;
+    const { clean, foundWords } = checkText(replyContent);
+    if (!clean) {
+      toast.error(`Odpověď obsahuje zakázaná slova: ${foundWords.join(', ')}`);
+      recordProfanityViolation(user.id, foundWords, 'forum_reply');
+      return;
+    }
     const { data, error } = await supabase.from('forum_posts').insert({ course_id: courseId, author_id: user.id, content: replyContent, parent_id: replyTo }).select('id').single();
     if (error) toast.error(error.message);
     else {
