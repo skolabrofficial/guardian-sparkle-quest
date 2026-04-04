@@ -131,6 +131,12 @@ export default function Doucovani() {
   const handleSubmitA = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !selectedQ) return;
+    const { clean, foundWords } = checkText(answerText);
+    if (!clean) {
+      toast.error(`Odpověď obsahuje zakázaná slova: ${foundWords.join(', ')}`);
+      recordProfanityViolation(user.id, foundWords, 'tutoring_answer');
+      return;
+    }
     const { error } = await supabase.from('tutoring_answers').insert({
       question_id: selectedQ, mentor_id: user.id, answer: answerText, visibility: answerVisibility,
     });
