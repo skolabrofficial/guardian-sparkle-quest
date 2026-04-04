@@ -84,6 +84,12 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
   const handlePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !newContent.trim()) return;
+    const { clean, foundWords } = checkText(newContent);
+    if (!clean) {
+      toast.error(`Příspěvek obsahuje zakázaná slova: ${foundWords.join(', ')}`);
+      recordProfanityViolation(user.id, foundWords, 'forum_post');
+      return;
+    }
     const { error } = await supabase.from('forum_posts').insert({ course_id: courseId, author_id: user.id, content: newContent });
     if (error) toast.error(error.message);
     else {
