@@ -27,6 +27,7 @@ export default function Doucovani() {
   const [mentorRoles, setMentorRoles] = useState<Record<string, string>>({});
 
   const canAnswer = isLektor || isStaff || isDeveloper;
+  const { checkText } = useProfanityFilter();
 
   const load = async () => {
     const { data } = await supabase.from('tutoring_questions').select('*').order('created_at', { ascending: false });
