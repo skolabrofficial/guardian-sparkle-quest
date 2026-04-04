@@ -102,6 +102,12 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
   const handleReplyWithHistory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !replyTo || !replyContent.trim()) return;
+    const { clean, foundWords } = checkText(replyContent);
+    if (!clean) {
+      toast.error(`Odpověď obsahuje zakázaná slova: ${foundWords.join(', ')}`);
+      recordProfanityViolation(user.id, foundWords, 'forum_reply');
+      return;
+    }
     const { data, error } = await supabase.from('forum_posts').insert({ course_id: courseId, author_id: user.id, content: replyContent, parent_id: replyTo }).select('id').single();
     if (error) toast.error(error.message);
     else {
