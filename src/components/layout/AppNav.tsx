@@ -16,14 +16,14 @@ export default function AppNav() {
   const { isStaff, isDeveloper } = useAuth();
 
   return (
-    <nav className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 my-6 mx-1.5">
+    <nav className="flex flex-wrap justify-center gap-3 my-6 mx-1.5">
       {navItems
         .filter((item) => !item.staffOnly || isStaff || isDeveloper)
         .map((item, i) => (
           <Link
             key={item.href}
             to={item.href}
-            className={`sign-card ${item.color} ${location.pathname === item.href ? 'active' : ''} animate-slide-up stagger-${i + 1}`}
+            className={`sign-card sign-card-nav ${item.color} ${location.pathname === item.href ? 'active' : ''} animate-slide-up stagger-${i + 1}`}
           >
             {item.label}
           </Link>

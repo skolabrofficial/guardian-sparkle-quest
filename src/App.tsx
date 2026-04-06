@@ -20,6 +20,7 @@ import Doucovani from "./pages/Doucovani";
 import Rektorat from "./pages/Rektorat";
 import Profil from "./pages/Profil";
 import Blocked from "./pages/Blocked";
+import Povereni from "./pages/Povereni";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/doucovani" element={<BlockGuard><Doucovani /></BlockGuard>} />
             <Route path="/rektorat" element={<BlockGuard><Rektorat /></BlockGuard>} />
             <Route path="/profil" element={<BlockGuard><Profil /></BlockGuard>} />
+            <Route path="/povereni" element={<BlockGuard><Povereni /></BlockGuard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

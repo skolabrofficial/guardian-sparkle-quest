@@ -1,8 +1,9 @@
 // Role symbols displayed after display names for non-student users
+// Using Unicode combining/special characters that can't be easily typed
 export const ROLE_SYMBOLS: Record<string, string> = {
-  developer: ' ⚙️',
-  dohledci: ' 👑',
-  lektor: ' 📖',
+  developer: '⚙',    // gear - will be rendered as styled superscript
+  dohledci: '♛',     // crown
+  lektor: '✦',       // star
 };
 
 export const ROLE_LABELS: Record<string, string> = {
@@ -38,5 +39,13 @@ export function getRoleSymbol(role?: string | null): string {
  * Returns display name + role symbol
  */
 export function nameWithRole(name: string, role?: string | null): string {
-  return `${name}${getRoleSymbol(role)}`;
+  return `${name}${getRoleSymbol(role) ? ` ${getRoleSymbol(role)}` : ''}`;
+}
+
+/**
+ * Returns role color for the symbol
+ */
+export function getRoleColor(role?: string | null): string {
+  if (!role) return '';
+  return ROLE_COLORS[role] || '';
 }
