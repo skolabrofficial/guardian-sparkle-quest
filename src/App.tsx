@@ -20,6 +20,7 @@ import Doucovani from "./pages/Doucovani";
 import Rektorat from "./pages/Rektorat";
 import Profil from "./pages/Profil";
 import Blocked from "./pages/Blocked";
+import Povereni from "./pages/Povereni";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
