@@ -579,6 +579,45 @@ export type Database = {
           },
         ]
       }
+      staff_page_settings: {
+        Row: {
+          alik_username: string | null
+          custom_note: string | null
+          id: string
+          is_visible: boolean | null
+          show_answers_link: boolean | null
+          show_mail_link: boolean | null
+          show_profile_link: boolean | null
+          sort_order: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alik_username?: string | null
+          custom_note?: string | null
+          id?: string
+          is_visible?: boolean | null
+          show_answers_link?: boolean | null
+          show_mail_link?: boolean | null
+          show_profile_link?: boolean | null
+          sort_order?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alik_username?: string | null
+          custom_note?: string | null
+          id?: string
+          is_visible?: boolean | null
+          show_answers_link?: boolean | null
+          show_mail_link?: boolean | null
+          show_profile_link?: boolean | null
+          sort_order?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       study_notes: {
         Row: {
           content: string | null
