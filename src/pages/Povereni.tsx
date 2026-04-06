@@ -3,7 +3,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import RoleBadge from '@/components/RoleBadge';
-import { ROLE_LABELS, ROLE_COLORS } from '@/lib/roleUtils';
+import { ROLE_LABELS } from '@/lib/roleUtils';
 import { toast } from 'sonner';
 
 interface StaffMember {
@@ -23,6 +23,24 @@ interface StaffMember {
 
 const db = () => supabase as any;
 
+const ROLE_SECTION_INFO: Record<string, { title: string; description: string; symbol: string }> = {
+  developer: {
+    title: 'Vývojáři',
+    description: 'Vývojáři vytvářejí a spravují celou platformu Alíkovy univerzity. Řeší technické záležitosti a mají nejvyšší oprávnění.',
+    symbol: '⚙',
+  },
+  dohledci: {
+    title: 'Dohledčí',
+    description: 'Dohledčí jsou pomocníci, kteří dohlížejí na bezpečnost, schvalují obrázky, moderují příspěvky a odpovídají na dotazy v doučování.',
+    symbol: '♛',
+  },
+  lektor: {
+    title: 'Lektoři',
+    description: 'Lektoři vedou jednotlivé kurzy, odpovídají na dotazy studentů a starají se o obsah výuky.',
+    symbol: '✦',
+  },
+};
+
 export default function Povereni() {
   const { user, isDeveloper } = useAuth();
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -32,7 +50,6 @@ export default function Povereni() {
 
   const load = async () => {
     setLoading(true);
-    // Get all non-student roles
     const { data: roles } = await supabase.from('user_roles').select('user_id, role').neq('role', 'student');
     if (!roles?.length) { setStaff([]); setLoading(false); return; }
 
@@ -61,10 +78,7 @@ export default function Povereni() {
       };
     });
 
-    // Sort: developer first, then dohledci, then lektor, then by sort_order
-    const roleOrder: Record<string, number> = { developer: 0, dohledci: 1, lektor: 2 };
-    merged.sort((a, b) => (roleOrder[a.role] ?? 9) - (roleOrder[b.role] ?? 9) || a.sort_order - b.sort_order);
-
+    merged.sort((a, b) => a.sort_order - b.sort_order);
     setStaff(merged);
     setLoading(false);
   };
@@ -82,7 +96,6 @@ export default function Povereni() {
       is_visible: editForm.is_visible ?? member.is_visible,
       sort_order: editForm.sort_order ?? member.sort_order,
     };
-
     if (member.settings_id) {
       await db().from('staff_page_settings').update(data).eq('id', member.settings_id);
     } else {
@@ -95,159 +108,133 @@ export default function Povereni() {
   };
 
   const visibleStaff = isDeveloper ? staff : staff.filter(s => s.is_visible);
+  const roleGroups = ['developer', 'dohledci', 'lektor'] as const;
 
   return (
     <AppLayout>
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-2xl font-extrabold mb-1">Pověřené osoby</h2>
-        <p className="text-sm text-muted-foreground mb-6">Seznam lidí, kteří se starají o chod Alíkovy univerzity.</p>
-
+      <div className="max-w-4xl mx-auto">
         {loading ? (
-          <p className="text-muted-foreground text-sm">Načítání...</p>
-        ) : visibleStaff.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Žádné pověřené osoby.</p>
+          <p className="text-muted-foreground text-sm text-center py-8">Načítání...</p>
         ) : (
-          <div className="grid gap-3">
-            {visibleStaff.map(member => (
-              <div key={member.user_id} className={`panel-card ${!member.is_visible ? 'opacity-50' : ''}`}>
-                <div className="flex items-start gap-3">
-                  {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                    {member.avatar_url ? (
-                      <img src={member.avatar_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground font-bold text-sm">
-                        {member.display_name[0]?.toUpperCase()}
-                      </div>
-                    )}
+          <div className="grid gap-8">
+            {roleGroups.map(roleKey => {
+              const members = visibleStaff.filter(s => s.role === roleKey);
+              if (!members.length) return null;
+              const info = ROLE_SECTION_INFO[roleKey];
+
+              return (
+                <section key={roleKey} className="staff-section rounded-2xl overflow-hidden" data-role={roleKey}>
+                  {/* Section header */}
+                  <div className="staff-section-header px-6 pt-5 pb-4">
+                    <h2 className="text-xl font-extrabold flex items-center gap-2 m-0">
+                      {info.title}
+                      <span className="staff-header-symbol">{info.symbol}</span>
+                    </h2>
+                    <p className="text-sm mt-1 mb-0 opacity-90">{info.description}</p>
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    {/* Name + role badge */}
-                    <div className="flex items-baseline gap-1.5 flex-wrap">
-                      <span className="font-extrabold text-base">{member.display_name}</span>
-                      <RoleBadge role={member.role} />
-                      <span
-                        className="text-xs font-bold px-1.5 py-0.5 rounded-full"
-                        style={{ background: `${ROLE_COLORS[member.role]}15`, color: ROLE_COLORS[member.role] }}
+                  {/* Member grid */}
+                  <div className="staff-grid px-6 py-5">
+                    {members.map(member => (
+                      <div
+                        key={member.user_id}
+                        className={`staff-card ${!member.is_visible ? 'opacity-40' : ''}`}
                       >
-                        {ROLE_LABELS[member.role]}
-                      </span>
-                    </div>
+                        {/* Avatar */}
+                        <div className="staff-avatar">
+                          {member.avatar_url ? (
+                            <img src={member.avatar_url} alt="" />
+                          ) : (
+                            <div className="staff-avatar-placeholder">
+                              {member.display_name[0]?.toUpperCase()}
+                            </div>
+                          )}
+                        </div>
 
-                    {member.custom_note && (
-                      <p className="text-xs text-muted-foreground mt-1">{member.custom_note}</p>
-                    )}
+                        {/* Name */}
+                        <div className="staff-name">
+                          <span>{member.display_name}</span>
+                          <RoleBadge role={member.role} />
+                        </div>
 
-                    {/* Action links */}
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      {member.show_mail_link && member.alik_username && (
-                        <a
-                          href={`https://www.alik.cz/@/${member.alik_username}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-bold px-2 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors no-underline"
-                        >
-                          ✉️ Napsat dopis
-                        </a>
-                      )}
-                      {member.show_profile_link && member.alik_username && (
-                        <a
-                          href={`https://www.alik.cz/u/${member.alik_username}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-bold px-2 py-1 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors no-underline"
-                        >
-                          👤 Na Alíkovi
-                        </a>
-                      )}
-                      {member.show_answers_link && (
-                        <a
-                          href={`/doucovani?mentor=${member.user_id}`}
-                          className="text-xs font-bold px-2 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors no-underline"
-                        >
-                          💡 Odpovědi
-                        </a>
-                      )}
-                    </div>
-                  </div>
+                        {member.custom_note && (
+                          <p className="text-[10px] opacity-70 mt-0 mb-1 text-center leading-tight">{member.custom_note}</p>
+                        )}
 
-                  {/* Developer edit button */}
-                  {isDeveloper && (
-                    <button
-                      onClick={() => {
-                        if (editingId === member.user_id) { setEditingId(null); setEditForm({}); }
-                        else { setEditingId(member.user_id); setEditForm({ ...member }); }
-                      }}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      ⚙️
-                    </button>
-                  )}
-                </div>
+                        {/* Action buttons */}
+                        <div className="staff-actions">
+                          {member.show_mail_link && member.alik_username && (
+                            <a href={`https://www.alik.cz/@/${member.alik_username}`} target="_blank" rel="noopener noreferrer" className="staff-btn">
+                              Napsat dopis
+                            </a>
+                          )}
+                          {member.show_profile_link && member.alik_username && (
+                            <a href={`https://www.alik.cz/u/${member.alik_username}`} target="_blank" rel="noopener noreferrer" className="staff-btn">
+                              Na Alíkovi
+                            </a>
+                          )}
+                          {member.show_answers_link && (
+                            <a href={`/doucovani?mentor=${member.user_id}`} className="staff-btn">
+                              Odpovědi
+                            </a>
+                          )}
+                        </div>
 
-                {/* Edit panel for developer */}
-                {isDeveloper && editingId === member.user_id && (
-                  <div className="mt-3 pt-3 border-t border-border grid gap-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-xs font-bold text-muted-foreground block mb-1">Přezdívka na Alíkovi</label>
-                        <input
-                          value={editForm.alik_username ?? member.alik_username}
-                          onChange={e => setEditForm(f => ({ ...f, alik_username: e.target.value }))}
-                          className="border-2 border-border rounded-xl py-1.5 px-2 text-sm outline-none w-full"
-                          placeholder="prezdivka"
-                        />
+                        {/* Dev edit */}
+                        {isDeveloper && (
+                          <button
+                            onClick={() => {
+                              if (editingId === member.user_id) { setEditingId(null); setEditForm({}); }
+                              else { setEditingId(member.user_id); setEditForm({ ...member }); }
+                            }}
+                            className="text-[10px] opacity-50 hover:opacity-100 mt-1 cursor-pointer bg-transparent border-none"
+                          >
+                            ⚙ Upravit
+                          </button>
+                        )}
+
+                        {isDeveloper && editingId === member.user_id && (
+                          <div className="staff-edit-panel">
+                            <input
+                              value={editForm.alik_username ?? member.alik_username}
+                              onChange={e => setEditForm(f => ({ ...f, alik_username: e.target.value }))}
+                              className="staff-edit-input"
+                              placeholder="Přezdívka na Alíkovi"
+                            />
+                            <input
+                              value={editForm.custom_note ?? member.custom_note}
+                              onChange={e => setEditForm(f => ({ ...f, custom_note: e.target.value }))}
+                              className="staff-edit-input"
+                              placeholder="Poznámka"
+                            />
+                            <input
+                              type="number"
+                              value={editForm.sort_order ?? member.sort_order}
+                              onChange={e => setEditForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))}
+                              className="staff-edit-input"
+                              placeholder="Pořadí"
+                            />
+                            <div className="flex flex-wrap gap-2 text-[10px]">
+                              {(['show_mail_link', 'show_profile_link', 'show_answers_link', 'is_visible'] as const).map(key => (
+                                <label key={key} className="flex items-center gap-1 cursor-pointer">
+                                  <input type="checkbox" checked={(editForm as any)[key] ?? (member as any)[key]}
+                                    onChange={e => setEditForm(f => ({ ...f, [key]: e.target.checked }))} className="accent-primary" />
+                                  {key === 'show_mail_link' ? 'Dopisy' : key === 'show_profile_link' ? 'Profil' : key === 'show_answers_link' ? 'Odpovědi' : 'Viditelný'}
+                                </label>
+                              ))}
+                            </div>
+                            <div className="flex gap-2 mt-1">
+                              <button onClick={() => saveSettings(member)} className="staff-btn font-bold">Uložit</button>
+                              <button onClick={() => { setEditingId(null); setEditForm({}); }} className="staff-btn opacity-60">Zrušit</button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <label className="text-xs font-bold text-muted-foreground block mb-1">Pořadí</label>
-                        <input
-                          type="number"
-                          value={editForm.sort_order ?? member.sort_order}
-                          onChange={e => setEditForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))}
-                          className="border-2 border-border rounded-xl py-1.5 px-2 text-sm outline-none w-full"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-muted-foreground block mb-1">Poznámka</label>
-                      <input
-                        value={editForm.custom_note ?? member.custom_note}
-                        onChange={e => setEditForm(f => ({ ...f, custom_note: e.target.value }))}
-                        className="border-2 border-border rounded-xl py-1.5 px-2 text-sm outline-none w-full"
-                        placeholder="Krátká poznámka..."
-                      />
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                      <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-                        <input type="checkbox" checked={editForm.show_mail_link ?? member.show_mail_link}
-                          onChange={e => setEditForm(f => ({ ...f, show_mail_link: e.target.checked }))} className="accent-primary" />
-                        Dopisy
-                      </label>
-                      <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-                        <input type="checkbox" checked={editForm.show_profile_link ?? member.show_profile_link}
-                          onChange={e => setEditForm(f => ({ ...f, show_profile_link: e.target.checked }))} className="accent-primary" />
-                        Profil na Alíkovi
-                      </label>
-                      <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-                        <input type="checkbox" checked={editForm.show_answers_link ?? member.show_answers_link}
-                          onChange={e => setEditForm(f => ({ ...f, show_answers_link: e.target.checked }))} className="accent-primary" />
-                        Odpovědi
-                      </label>
-                      <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-                        <input type="checkbox" checked={editForm.is_visible ?? member.is_visible}
-                          onChange={e => setEditForm(f => ({ ...f, is_visible: e.target.checked }))} className="accent-primary" />
-                        Viditelný
-                      </label>
-                    </div>
-                    <div className="flex gap-2 mt-1">
-                      <button onClick={() => saveSettings(member)} className="btn-alik-primary text-xs">💾 Uložit</button>
-                      <button onClick={() => { setEditingId(null); setEditForm({}); }} className="text-xs text-muted-foreground">Zrušit</button>
-                    </div>
+                    ))}
                   </div>
-                )}
-              </div>
-            ))}
+                </section>
+              );
+            })}
           </div>
         )}
       </div>
