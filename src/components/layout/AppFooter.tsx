@@ -10,6 +10,8 @@ export default function AppFooter() {
       <span className="text-border">•</span>
       <Link to="/kurzy" className="text-foreground no-underline hover:text-primary transition-colors">Kurzy</Link>
       <span className="text-border">•</span>
+      <Link to="/povereni" className="text-foreground no-underline hover:text-primary transition-colors">Pověřené osoby</Link>
+      <span className="text-border">•</span>
       <a href="https://www.alik.cz/" target="_blank" rel="noopener noreferrer" className="text-foreground no-underline hover:text-primary transition-colors">Alík.cz</a>
       <span className="text-border">•</span>
       <span className="text-muted-foreground text-sm font-normal flex items-center gap-1">

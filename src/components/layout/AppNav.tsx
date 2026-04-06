@@ -23,7 +23,7 @@ export default function AppNav() {
           <Link
             key={item.href}
             to={item.href}
-            className={`sign-card ${item.color} ${location.pathname === item.href ? 'active' : ''} animate-slide-up stagger-${i + 1}`}
+            className={`sign-card sign-card-nav ${item.color} ${location.pathname === item.href ? 'active' : ''} animate-slide-up stagger-${i + 1}`}
           >
             {item.label}
           </Link>
