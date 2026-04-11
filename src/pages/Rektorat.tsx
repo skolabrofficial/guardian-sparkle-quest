@@ -260,7 +260,7 @@ export default function Rektorat() {
 
   const saveCourseEdit = async () => {
     if (!editingCourseId) return;
-    const { error } = await supabase.from('courses').update(courseEdit).eq('id', editingCourseId);
+    const { error } = await supabase.from('courses').update(courseEdit as any).eq('id', editingCourseId);
     if (error) toast.error(error.message);
     else {
       if (user) await recordHistory('course', editingCourseId, user.id, 'update', courseEdit);
@@ -270,7 +270,7 @@ export default function Rektorat() {
 
   const saveFacultyEdit = async () => {
     if (!editingFacultyId) return;
-    const { error } = await supabase.from('faculties').update(facultyEdit).eq('id', editingFacultyId);
+    const { error } = await supabase.from('faculties').update(facultyEdit as any).eq('id', editingFacultyId);
     if (error) toast.error(error.message);
     else {
       if (user) await recordHistory('faculty', editingFacultyId, user.id, 'update', facultyEdit);
