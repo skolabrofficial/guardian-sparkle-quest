@@ -482,6 +482,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          last_seen: string | null
           updated_at: string
           user_id: string
         }
@@ -491,6 +492,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          last_seen?: string | null
           updated_at?: string
           user_id: string
         }
@@ -500,6 +502,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          last_seen?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -581,40 +584,100 @@ export type Database = {
       }
       staff_page_settings: {
         Row: {
+          accepting_questions: boolean | null
+          achievements: string[] | null
           alik_username: string | null
+          availability_status: string | null
+          bio_short: string | null
+          contact_hours: string | null
           custom_note: string | null
+          education: string | null
+          experience_years: number | null
+          favorite_subject: string | null
+          fun_fact: string | null
+          hobbies: string | null
           id: string
           is_visible: boolean | null
+          joined_date: string | null
+          languages: string | null
+          max_questions_daily: number | null
+          motto: string | null
+          preferred_contact: string | null
+          profile_color: string | null
+          response_style: string | null
           show_answers_link: boolean | null
           show_mail_link: boolean | null
           show_profile_link: boolean | null
+          social_link: string | null
           sort_order: number | null
+          specialization: string | null
           updated_at: string
           user_id: string
+          working_days: string | null
         }
         Insert: {
+          accepting_questions?: boolean | null
+          achievements?: string[] | null
           alik_username?: string | null
+          availability_status?: string | null
+          bio_short?: string | null
+          contact_hours?: string | null
           custom_note?: string | null
+          education?: string | null
+          experience_years?: number | null
+          favorite_subject?: string | null
+          fun_fact?: string | null
+          hobbies?: string | null
           id?: string
           is_visible?: boolean | null
+          joined_date?: string | null
+          languages?: string | null
+          max_questions_daily?: number | null
+          motto?: string | null
+          preferred_contact?: string | null
+          profile_color?: string | null
+          response_style?: string | null
           show_answers_link?: boolean | null
           show_mail_link?: boolean | null
           show_profile_link?: boolean | null
+          social_link?: string | null
           sort_order?: number | null
+          specialization?: string | null
           updated_at?: string
           user_id: string
+          working_days?: string | null
         }
         Update: {
+          accepting_questions?: boolean | null
+          achievements?: string[] | null
           alik_username?: string | null
+          availability_status?: string | null
+          bio_short?: string | null
+          contact_hours?: string | null
           custom_note?: string | null
+          education?: string | null
+          experience_years?: number | null
+          favorite_subject?: string | null
+          fun_fact?: string | null
+          hobbies?: string | null
           id?: string
           is_visible?: boolean | null
+          joined_date?: string | null
+          languages?: string | null
+          max_questions_daily?: number | null
+          motto?: string | null
+          preferred_contact?: string | null
+          profile_color?: string | null
+          response_style?: string | null
           show_answers_link?: boolean | null
           show_mail_link?: boolean | null
           show_profile_link?: boolean | null
+          social_link?: string | null
           sort_order?: number | null
+          specialization?: string | null
           updated_at?: string
           user_id?: string
+          working_days?: string | null
         }
         Relationships: []
       }
