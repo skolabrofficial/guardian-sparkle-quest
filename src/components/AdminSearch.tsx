@@ -287,7 +287,12 @@ export default function AdminSearch() {
 
           <div className="grid gap-2">
             {results.map((r, i) => (
-              <div key={`${r.type}-${r.id}-${i}`} className="catalog-item-card hover:shadow-sm transition-all">
+              <div
+                key={`${r.type}-${r.id}-${i}`}
+                className={`catalog-item-card hover:shadow-sm transition-all ${r.link ? 'cursor-pointer hover:border-secondary' : ''}`}
+                onClick={() => r.link && navigate(r.link)}
+                role={r.link ? 'link' : undefined}
+              >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground whitespace-nowrap">{r.type}</span>
@@ -302,11 +307,14 @@ export default function AdminSearch() {
                   {r.subtitle && <span className="text-xs text-muted-foreground block truncate">{r.subtitle}</span>}
                   {r.detail && <span className="text-xs block truncate" style={{ color: 'hsl(var(--ring))' }}>{r.detail}</span>}
                 </div>
-                {r.date && (
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {new Date(r.date).toLocaleDateString('cs')}
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {r.date && (
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(r.date).toLocaleDateString('cs')}
+                    </span>
+                  )}
+                  {r.link && <span className="text-xs text-secondary">→</span>}
+                </div>
               </div>
             ))}
           </div>
