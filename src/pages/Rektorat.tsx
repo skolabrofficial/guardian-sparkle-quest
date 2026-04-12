@@ -456,6 +456,8 @@ export default function Rektorat() {
   // ===== RENDER =====
   const renderContent = () => {
     switch (activeTab) {
+      case 'hledani':
+        return <AdminSearch />;
       case 'prehled': {
         const bs = getBlockStats();
         return (
