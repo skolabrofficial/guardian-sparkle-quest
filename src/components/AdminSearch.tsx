@@ -14,6 +14,7 @@ interface SearchResult {
   date?: string;
   userId?: string;
   lastSeen?: string | null;
+  link?: string;
 }
 
 const CATEGORIES = [
