@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { nameWithRole } from '@/lib/roleUtils';
 import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
 import { useProfanityFilter, recordProfanityViolation } from '@/hooks/useProfanityFilter';
+import OnlineIndicator from '@/components/OnlineIndicator';
 
 interface Question { id: string; topic: string; question: string; status: string | null; created_at: string; user_id: string; }
 interface Answer { id: string; answer: string; created_at: string; mentor_id: string; visibility: string; }
@@ -15,6 +16,7 @@ export default function Doucovani() {
   const { user, isLektor, isStaff, isDeveloper } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
+  const [profileLastSeen, setProfileLastSeen] = useState<Record<string, string | null>>({});
   const [userRoles, setUserRoles] = useState<Record<string, string>>({});
   const [topic, setTopic] = useState('Matematika');
   const [questionText, setQuestionText] = useState('');
@@ -24,6 +26,7 @@ export default function Doucovani() {
   const [answerText, setAnswerText] = useState('');
   const [answerVisibility, setAnswerVisibility] = useState('public_all');
   const [mentorProfiles, setMentorProfiles] = useState<Record<string, string>>({});
+  const [mentorLastSeen, setMentorLastSeen] = useState<Record<string, string | null>>({});
   const [mentorRoles, setMentorRoles] = useState<Record<string, string>>({});
 
   const canAnswer = isLektor || isStaff || isDeveloper;
@@ -36,13 +39,15 @@ export default function Doucovani() {
       const ids = [...new Set(data.map(q => q.user_id))];
       if (ids.length > 0) {
         const [profRes, roleRes] = await Promise.all([
-          supabase.from('profiles').select('user_id, display_name').in('user_id', ids),
+          supabase.from('profiles').select('user_id, display_name, last_seen').in('user_id', ids),
           supabase.from('user_roles').select('user_id, role').in('user_id', ids),
         ]);
         if (profRes.data) {
           const map: Record<string, string> = {};
-          profRes.data.forEach(p => { map[p.user_id] = p.display_name; });
+          const lsMap: Record<string, string | null> = {};
+          profRes.data.forEach(p => { map[p.user_id] = p.display_name; lsMap[p.user_id] = p.last_seen; });
           setProfiles(map);
+          setProfileLastSeen(lsMap);
         }
         if (roleRes.data) {
           const map: Record<string, string> = {};
@@ -111,13 +116,15 @@ export default function Doucovani() {
       const mentorIds = [...new Set(filtered.map(a => a.mentor_id))];
       if (mentorIds.length > 0) {
         const [pRes, rRes] = await Promise.all([
-          supabase.from('profiles').select('user_id, display_name').in('user_id', mentorIds),
+          supabase.from('profiles').select('user_id, display_name, last_seen').in('user_id', mentorIds),
           supabase.from('user_roles').select('user_id, role').in('user_id', mentorIds),
         ]);
         if (pRes.data) {
           const m: Record<string, string> = {};
-          pRes.data.forEach(p => { m[p.user_id] = p.display_name; });
+          const ls: Record<string, string | null> = {};
+          pRes.data.forEach(p => { m[p.user_id] = p.display_name; ls[p.user_id] = p.last_seen; });
           setMentorProfiles(m);
+          setMentorLastSeen(ls);
         }
         if (rRes.data) {
           const m: Record<string, string> = {};
@@ -198,7 +205,7 @@ export default function Doucovani() {
                 <div key={q.id} className="catalog-item-card cursor-pointer hover:shadow-sm transition-all duration-200" onClick={() => loadAnswers(q.id)} style={{ background: selectedQ === q.id ? 'hsl(var(--muted))' : undefined }}>
                   <div className="flex-1">
                     <strong>{q.question.slice(0, 60)}{q.question.length > 60 ? '...' : ''}</strong>
-                    <span className="block text-xs text-muted-foreground">{nameWithRole(profiles[q.user_id] || 'Uživatel', userRoles[q.user_id])}</span>
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground"><OnlineIndicator lastSeen={profileLastSeen[q.user_id] ?? null} size="sm" />{nameWithRole(profiles[q.user_id] || 'Uživatel', userRoles[q.user_id])}</span>
                     <ChangeHistory entityType="tutoring_question" entityId={q.id} authorId={q.user_id} />
                   </div>
                   <div className="flex flex-col items-end gap-1">
@@ -219,6 +226,7 @@ export default function Doucovani() {
               {answers.map(a => (
                 <div key={a.id} className="catalog-item-card mb-2 flex-col">
                   <div className="flex items-center gap-2 mb-1">
+                    <OnlineIndicator lastSeen={mentorLastSeen[a.mentor_id] ?? null} size="sm" />
                     <strong className="text-xs">{nameWithRole(mentorProfiles[a.mentor_id] || 'Mentor', mentorRoles[a.mentor_id])}</strong>
                     {a.visibility === 'private_asker' && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#fff3cd', color: '#856404' }}>🔒 Soukromé</span>}
                     {(isStaff || isDeveloper) && (
