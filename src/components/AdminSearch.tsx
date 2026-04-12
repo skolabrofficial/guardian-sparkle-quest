@@ -133,6 +133,7 @@ export default function AdminSearch() {
               subtitle: n.content?.slice(0, 100) || '',
               detail: n.tags?.join(', ') || undefined,
               date: n.created_at, userId: n.user_id,
+              link: '/vypisky',
             }));
         }
       }
