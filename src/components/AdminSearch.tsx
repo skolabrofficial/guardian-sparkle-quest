@@ -82,7 +82,7 @@ export default function AdminSearch() {
         const { data } = await supabase.from('faculties').select('id, name, description');
         if (data) {
           data.filter(f => f.name.toLowerCase().includes(q) || f.description?.toLowerCase().includes(q))
-            .forEach(f => allResults.push({ type: '🏛 Fakulta', id: f.id, title: f.name, subtitle: f.description?.slice(0, 100) || '' }));
+            .forEach(f => allResults.push({ type: '🏛 Fakulta', id: f.id, title: f.name, subtitle: f.description?.slice(0, 100) || '', link: `/fakulty/${f.id}` }));
         }
       }
 
