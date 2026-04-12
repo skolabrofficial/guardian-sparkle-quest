@@ -109,6 +109,7 @@ export default function AdminSearch() {
               type: '❓ Dotaz', id: t.id, title: t.question.slice(0, 80),
               subtitle: `${t.topic} • ${t.status === 'answered' ? '✅' : '⏳'}`,
               date: t.created_at, userId: t.user_id,
+              link: '/doucovani',
             }));
         }
         const { data: ans } = await supabase.from('tutoring_answers').select('id, answer, mentor_id, created_at');
