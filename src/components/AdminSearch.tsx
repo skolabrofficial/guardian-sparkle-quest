@@ -72,6 +72,7 @@ export default function AdminSearch() {
               type: '📚 Kurz', id: c.id, title: c.title,
               subtitle: c.description?.slice(0, 120) || '',
               detail: [c.difficulty, c.semester, c.building, c.room].filter(Boolean).join(' • '),
+              link: `/kurz/${c.id}`,
             }));
         }
       }
