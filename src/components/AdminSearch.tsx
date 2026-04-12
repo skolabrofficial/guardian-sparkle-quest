@@ -88,13 +88,14 @@ export default function AdminSearch() {
 
       // Forum posts
       if (shouldSearch('forum')) {
-        const { data } = await supabase.from('forum_posts').select('id, content, author_id, created_at, label, is_deleted').limit(500);
+        const { data } = await supabase.from('forum_posts').select('id, content, author_id, created_at, label, is_deleted, course_id').limit(500);
         if (data) {
           data.filter(p => !p.is_deleted && p.content.toLowerCase().includes(q))
             .forEach(p => allResults.push({
               type: '💬 Fórum', id: p.id, title: p.content.slice(0, 80) + (p.content.length > 80 ? '...' : ''),
               subtitle: p.label ? `Štítek: ${p.label}` : undefined,
               date: p.created_at, userId: p.author_id,
+              link: `/kurz/${p.course_id}`,
             }));
         }
       }
