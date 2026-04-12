@@ -33,6 +33,7 @@ const CATEGORIES = [
 ];
 
 export default function AdminSearch() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [results, setResults] = useState<SearchResult[]>([]);
