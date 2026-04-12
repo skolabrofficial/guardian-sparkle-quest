@@ -118,6 +118,7 @@ export default function AdminSearch() {
             .forEach(a => allResults.push({
               type: '💡 Odpověď', id: a.id, title: a.answer.slice(0, 80),
               date: a.created_at, userId: a.mentor_id,
+              link: '/doucovani',
             }));
         }
       }
