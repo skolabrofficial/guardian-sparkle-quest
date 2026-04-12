@@ -58,6 +58,7 @@ export default function AdminSearch() {
             .forEach(p => allResults.push({
               type: '👥 Uživatel', id: p.user_id, title: p.display_name,
               subtitle: p.bio?.slice(0, 100) || '', lastSeen: p.last_seen, userId: p.user_id,
+              link: `/profil/${p.user_id}`,
             }));
         }
       }
