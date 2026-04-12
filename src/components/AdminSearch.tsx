@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import OnlineIndicator from '@/components/OnlineIndicator';
@@ -13,6 +14,7 @@ interface SearchResult {
   date?: string;
   userId?: string;
   lastSeen?: string | null;
+  link?: string;
 }
 
 const CATEGORIES = [
@@ -31,6 +33,7 @@ const CATEGORIES = [
 ];
 
 export default function AdminSearch() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -55,6 +58,7 @@ export default function AdminSearch() {
             .forEach(p => allResults.push({
               type: '👥 Uživatel', id: p.user_id, title: p.display_name,
               subtitle: p.bio?.slice(0, 100) || '', lastSeen: p.last_seen, userId: p.user_id,
+              link: `/profil/${p.user_id}`,
             }));
         }
       }
@@ -68,6 +72,7 @@ export default function AdminSearch() {
               type: '📚 Kurz', id: c.id, title: c.title,
               subtitle: c.description?.slice(0, 120) || '',
               detail: [c.difficulty, c.semester, c.building, c.room].filter(Boolean).join(' • '),
+              link: `/kurz/${c.id}`,
             }));
         }
       }
@@ -77,19 +82,20 @@ export default function AdminSearch() {
         const { data } = await supabase.from('faculties').select('id, name, description');
         if (data) {
           data.filter(f => f.name.toLowerCase().includes(q) || f.description?.toLowerCase().includes(q))
-            .forEach(f => allResults.push({ type: '🏛 Fakulta', id: f.id, title: f.name, subtitle: f.description?.slice(0, 100) || '' }));
+            .forEach(f => allResults.push({ type: '🏛 Fakulta', id: f.id, title: f.name, subtitle: f.description?.slice(0, 100) || '', link: `/fakulty/${f.id}` }));
         }
       }
 
       // Forum posts
       if (shouldSearch('forum')) {
-        const { data } = await supabase.from('forum_posts').select('id, content, author_id, created_at, label, is_deleted').limit(500);
+        const { data } = await supabase.from('forum_posts').select('id, content, author_id, created_at, label, is_deleted, course_id').limit(500);
         if (data) {
           data.filter(p => !p.is_deleted && p.content.toLowerCase().includes(q))
             .forEach(p => allResults.push({
               type: '💬 Fórum', id: p.id, title: p.content.slice(0, 80) + (p.content.length > 80 ? '...' : ''),
               subtitle: p.label ? `Štítek: ${p.label}` : undefined,
               date: p.created_at, userId: p.author_id,
+              link: `/kurz/${p.course_id}`,
             }));
         }
       }
@@ -103,6 +109,7 @@ export default function AdminSearch() {
               type: '❓ Dotaz', id: t.id, title: t.question.slice(0, 80),
               subtitle: `${t.topic} • ${t.status === 'answered' ? '✅' : '⏳'}`,
               date: t.created_at, userId: t.user_id,
+              link: '/doucovani',
             }));
         }
         const { data: ans } = await supabase.from('tutoring_answers').select('id, answer, mentor_id, created_at');
@@ -111,6 +118,7 @@ export default function AdminSearch() {
             .forEach(a => allResults.push({
               type: '💡 Odpověď', id: a.id, title: a.answer.slice(0, 80),
               date: a.created_at, userId: a.mentor_id,
+              link: '/doucovani',
             }));
         }
       }
@@ -125,6 +133,7 @@ export default function AdminSearch() {
               subtitle: n.content?.slice(0, 100) || '',
               detail: n.tags?.join(', ') || undefined,
               date: n.created_at, userId: n.user_id,
+              link: '/vypisky',
             }));
         }
       }
@@ -278,7 +287,12 @@ export default function AdminSearch() {
 
           <div className="grid gap-2">
             {results.map((r, i) => (
-              <div key={`${r.type}-${r.id}-${i}`} className="catalog-item-card hover:shadow-sm transition-all">
+              <div
+                key={`${r.type}-${r.id}-${i}`}
+                className={`catalog-item-card hover:shadow-sm transition-all ${r.link ? 'cursor-pointer hover:border-secondary' : ''}`}
+                onClick={() => r.link && navigate(r.link)}
+                role={r.link ? 'link' : undefined}
+              >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground whitespace-nowrap">{r.type}</span>
@@ -293,11 +307,14 @@ export default function AdminSearch() {
                   {r.subtitle && <span className="text-xs text-muted-foreground block truncate">{r.subtitle}</span>}
                   {r.detail && <span className="text-xs block truncate" style={{ color: 'hsl(var(--ring))' }}>{r.detail}</span>}
                 </div>
-                {r.date && (
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {new Date(r.date).toLocaleDateString('cs')}
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {r.date && (
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(r.date).toLocaleDateString('cs')}
+                    </span>
+                  )}
+                  {r.link && <span className="text-xs text-secondary">→</span>}
+                </div>
               </div>
             ))}
           </div>
