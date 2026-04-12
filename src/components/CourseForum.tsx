@@ -6,6 +6,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { nameWithRole } from '@/lib/roleUtils';
 import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
 import { useProfanityFilter, recordProfanityViolation } from '@/hooks/useProfanityFilter';
+import OnlineIndicator from '@/components/OnlineIndicator';
 
 interface ForumPost {
   id: string;
@@ -35,6 +36,7 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
   const { user, role, isDeveloper, isStaff, isLektor } = useAuth();
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
+  const [profileLastSeen, setProfileLastSeen] = useState<Record<string, string | null>>({});
   const [userRoles, setUserRoles] = useState<Record<string, string>>({});
   const [newContent, setNewContent] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
@@ -63,13 +65,15 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
     if (data && data.length > 0) {
       const authorIds = [...new Set(data.map(p => p.author_id))];
       const [profRes, roleRes] = await Promise.all([
-        supabase.from('profiles').select('user_id, display_name').in('user_id', authorIds),
+        supabase.from('profiles').select('user_id, display_name, last_seen').in('user_id', authorIds),
         supabase.from('user_roles').select('user_id, role').in('user_id', authorIds),
       ]);
       if (profRes.data) {
         const map: Record<string, string> = {};
-        profRes.data.forEach(p => { map[p.user_id] = p.display_name; });
+        const lsMap: Record<string, string | null> = {};
+        profRes.data.forEach(p => { map[p.user_id] = p.display_name; lsMap[p.user_id] = p.last_seen; });
         setProfiles(map);
+        setProfileLastSeen(lsMap);
       }
       if (roleRes.data) {
         const map: Record<string, string> = {};
@@ -202,6 +206,7 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
     <div key={post.id} className={`rounded-xl p-3.5 ${isReply ? 'ml-6 mt-2' : 'mt-3'} ${post.is_deleted ? 'opacity-50' : ''} transition-all duration-200 hover:shadow-md`} style={{ background: post.is_pinned ? '#fffbe8' : '#f6f9ff', border: `1px solid ${post.is_pinned ? '#e8d44d' : '#d4e0f7'}` }}>
       <div className="flex justify-between items-start gap-2 mb-1">
         <div className="flex items-center gap-2 flex-wrap">
+          <OnlineIndicator lastSeen={profileLastSeen[post.author_id] ?? null} size="sm" />
           <strong className="text-sm">{nameWithRole(profiles[post.author_id] || 'Uživatel', userRoles[post.author_id])}</strong>
           <span className="text-xs text-muted-foreground">{new Date(post.created_at).toLocaleString('cs')}</span>
           {post.is_pinned && <span className="text-xs font-bold" style={{ color: '#b8860b' }}>📌 Připnuto</span>}
