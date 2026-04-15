@@ -14,6 +14,7 @@ interface SearchResult {
   date?: string;
   userId?: string;
   lastSeen?: string | null;
+  avatarUrl?: string | null;
   link?: string;
 }
 
@@ -214,14 +215,14 @@ export default function AdminSearch() {
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); search(); };
 
   // Load profiles for results that have userId
-  const [profileCache, setProfileCache] = useState<Record<string, { name: string; lastSeen: string | null }>>({});
+  const [profileCache, setProfileCache] = useState<Record<string, { name: string; lastSeen: string | null; avatarUrl: string | null }>>({});
   const loadProfilesForResults = async (res: SearchResult[]) => {
     const ids = [...new Set(res.filter(r => r.userId).map(r => r.userId!))].filter(id => !profileCache[id]);
     if (ids.length === 0) return;
-    const { data } = await supabase.from('profiles').select('user_id, display_name, last_seen').in('user_id', ids);
+    const { data } = await supabase.from('profiles').select('user_id, display_name, last_seen, avatar_url').in('user_id', ids);
     if (data) {
       const newCache = { ...profileCache };
-      data.forEach(p => { newCache[p.user_id] = { name: p.display_name, lastSeen: p.last_seen }; });
+      data.forEach(p => { newCache[p.user_id] = { name: p.display_name, lastSeen: p.last_seen, avatarUrl: p.avatar_url }; });
       setProfileCache(newCache);
     }
   };
@@ -297,8 +298,15 @@ export default function AdminSearch() {
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground whitespace-nowrap">{r.type}</span>
                     {r.userId && profileCache[r.userId] && (
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <OnlineIndicator lastSeen={profileCache[r.userId].lastSeen} size="sm" />
+                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <span className="relative flex-shrink-0">
+                          {profileCache[r.userId].avatarUrl ? (
+                            <img src={profileCache[r.userId].avatarUrl!} alt="" className="w-5 h-5 rounded-full object-cover ring-1 ring-border" />
+                          ) : (
+                            <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold">{profileCache[r.userId].name.charAt(0)}</span>
+                          )}
+                          <OnlineIndicator lastSeen={profileCache[r.userId].lastSeen} size="sm" className="absolute -bottom-0.5 -right-0.5" />
+                        </span>
                         {profileCache[r.userId].name}
                       </span>
                     )}
