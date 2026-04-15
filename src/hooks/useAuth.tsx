@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   role: AppRole | null;
-  profile: { display_name: string; avatar_url: string | null } | null;
+  profile: { display_name: string; avatar_url: string | null; last_seen: string | null } | null;
   loading: boolean;
   isBlocked: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -26,14 +26,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
-  const [profile, setProfile] = useState<{ display_name: string; avatar_url: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ display_name: string; avatar_url: string | null; last_seen: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [isBlocked, setIsBlocked] = useState(false);
 
   const fetchUserData = async (userId: string) => {
     const [roleRes, profileRes, blockRes] = await Promise.all([
       supabase.from('user_roles').select('role').eq('user_id', userId).limit(1).single(),
-      supabase.from('profiles').select('display_name, avatar_url').eq('user_id', userId).limit(1).single(),
+      supabase.from('profiles').select('display_name, avatar_url, last_seen').eq('user_id', userId).limit(1).single(),
       supabase.from('user_blocks').select('id').eq('user_id', userId).eq('is_active', true).limit(1).maybeSingle(),
     ]);
     if (roleRes.data) setRole(roleRes.data.role as AppRole);
