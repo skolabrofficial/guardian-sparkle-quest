@@ -485,6 +485,7 @@ export type Database = {
           last_seen: string | null
           updated_at: string
           user_id: string
+          username: string
         }
         Insert: {
           avatar_url?: string | null
@@ -495,6 +496,7 @@ export type Database = {
           last_seen?: string | null
           updated_at?: string
           user_id: string
+          username: string
         }
         Update: {
           avatar_url?: string | null
@@ -505,6 +507,7 @@ export type Database = {
           last_seen?: string | null
           updated_at?: string
           user_id?: string
+          username?: string
         }
         Relationships: []
       }
@@ -1027,6 +1030,72 @@ export type Database = {
         }
         Relationships: []
       }
+      user_ip_log: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_notes: {
+        Row: {
+          author_id: string
+          block_id: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          occurred_at: string
+          private_description: string | null
+          public_description: string | null
+          punishment: string | null
+          target_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          block_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          occurred_at?: string
+          private_description?: string | null
+          public_description?: string | null
+          punishment?: string | null
+          target_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          block_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          occurred_at?: string
+          private_description?: string | null
+          public_description?: string | null
+          punishment?: string | null
+          target_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -1061,6 +1130,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {
       app_role: "developer" | "dohledci" | "lektor" | "student"
