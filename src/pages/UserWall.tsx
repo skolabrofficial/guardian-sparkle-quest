@@ -365,7 +365,7 @@ function NotesSection({ target, canSeePrivate }: { target: ProfileRow; canSeePri
             <div className="md:col-span-2">
               <Label>Trest (je-li)</Label>
               <Input value={punishment} onChange={(e) => setPunishment(e.target.value)}
-                placeholder="např. „Blokace na týden", „Napomenutí"…" />
+                placeholder={'např. „Blokace na týden", „Napomenutí"…'} />
             </div>
           </div>
           <div className="flex justify-end gap-2">
