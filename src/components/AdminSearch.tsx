@@ -53,13 +53,14 @@ export default function AdminSearch() {
 
       // Users
       if (shouldSearch('users')) {
-        const { data } = await supabase.from('profiles').select('user_id, display_name, bio, last_seen, avatar_url');
+        const { data } = await supabase.from('profiles').select('user_id, username, display_name, bio, last_seen, avatar_url' as any);
         if (data) {
-          data.filter(p => p.display_name.toLowerCase().includes(q) || p.bio?.toLowerCase().includes(q))
+          (data as any[]).filter(p => p.display_name.toLowerCase().includes(q) || p.bio?.toLowerCase().includes(q) || p.username?.toLowerCase().includes(q))
             .forEach(p => allResults.push({
               type: '👥 Uživatel', id: p.user_id, title: p.display_name,
-              subtitle: p.bio?.slice(0, 100) || '', lastSeen: p.last_seen, userId: p.user_id,
-              link: `/profil/${p.user_id}`,
+              subtitle: p.bio?.slice(0, 100) || `@${p.username}`, lastSeen: p.last_seen, userId: p.user_id,
+              avatarUrl: p.avatar_url,
+              link: `/uziv/${p.username}`,
             }));
         }
       }
