@@ -41,14 +41,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsBlocked(!!blockRes.data);
   };
 
-  // Update last_seen periodically
+  // Update last_seen periodically + log IP once per session
   useEffect(() => {
     if (!user) return;
     const updateLastSeen = () => {
       supabase.from('profiles').update({ last_seen: new Date().toISOString() } as any).eq('user_id', user.id).then(() => {});
     };
     updateLastSeen();
-    const interval = setInterval(updateLastSeen, 60000); // every minute
+    // Fire-and-forget IP log (edge function dedupes consecutive identical IPs)
+    supabase.functions.invoke('log-ip').catch(() => {});
+    const interval = setInterval(updateLastSeen, 60000);
     return () => clearInterval(interval);
   }, [user]);
 
