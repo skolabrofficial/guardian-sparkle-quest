@@ -4,7 +4,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { nameWithRole } from '@/lib/roleUtils';
+import UserLink from '@/components/UserLink';
 import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
 import { useProfanityFilter, recordProfanityViolation } from '@/hooks/useProfanityFilter';
 import OnlineIndicator from '@/components/OnlineIndicator';
