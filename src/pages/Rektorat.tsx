@@ -463,6 +463,36 @@ export default function Rektorat() {
     switch (activeTab) {
       case 'hledani':
         return <AdminSearch />;
+      case 'zmenar':
+        return <ChangelogPanel />;
+      case 'uzivatele': {
+        if (!isDeveloper) return <div className="panel-card"><p className="text-muted-foreground">Pouze pro vývojáře.</p></div>;
+        return (
+          <div className="grid gap-3">
+            <h3 className="mt-0 text-xl font-extrabold">👥 Všichni uživatelé ({users.length})</h3>
+            <p className="text-sm text-muted-foreground">Klikni na přezdívku pro otevření zdi uživatele.</p>
+            <div className="grid gap-1.5 max-h-[70vh] overflow-y-auto">
+              {users.map((u: any) => {
+                const r = roles.find((rr: any) => rr.user_id === u.user_id)?.role;
+                return (
+                  <div key={u.user_id} className="catalog-item-card items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-muted overflow-hidden flex items-center justify-center text-xs font-bold">
+                      {u.avatar_url ? <img src={u.avatar_url} alt="" className="w-full h-full object-cover" /> : (u.display_name || '?').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <strong className="text-sm block">
+                        <UserLink userId={u.user_id} username={u.username} displayName={u.display_name} role={r} />
+                      </strong>
+                      <span className="text-xs text-muted-foreground">@{u.username || '—'} • {ROLE_LABELS[r || 'student'] || 'Student'}</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">{u.last_seen ? new Date(u.last_seen).toLocaleString('cs') : 'nikdy'}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
       case 'prehled': {
         const bs = getBlockStats();
         return (
