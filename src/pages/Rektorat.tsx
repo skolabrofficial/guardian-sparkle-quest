@@ -1810,6 +1810,7 @@ export default function Rektorat() {
 
   return (
     <AppLayout searchLabel="Rektorát" searchPlaceholder="Hledat v rektorátu..." searchTags={['kurzy', 'uživatelé', 'blokace']}>
+      <RektoratBoard activeTab={activeTab} onSelect={(k) => setActiveTab(k as Tab)} />
       <main className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6 items-start">
         {/* Sidebar */}
         <aside className="panel-card !p-3 sticky top-4 max-h-[85vh] overflow-y-auto">
