@@ -28,6 +28,7 @@ const tabGroups: { group: string; items: { key: Tab; label: string; icon: string
     { key: 'studenti', label: 'Studenti', icon: '🎓' },
     { key: 'lektori', label: 'Lektoři', icon: '👨‍🏫' },
     { key: 'mentori', label: 'Mentoři', icon: '🤝' },
+    { key: 'uzivatele', label: 'Všichni uživatelé', icon: '👥' },
     { key: 'role', label: 'Práva', icon: '🔑' },
     { key: 'blokace', label: 'Blokace', icon: '🚫' },
   ]},
@@ -59,6 +60,7 @@ const tabGroups: { group: string; items: { key: Tab; label: string; icon: string
   { group: '⚙ Systém', items: [
     { key: 'reporty', label: 'Hlášení', icon: '⚠' },
     { key: 'audit', label: 'Audit log', icon: '📋' },
+    { key: 'zmenar', label: 'Změnář', icon: '📝' },
     { key: 'filtr-slov', label: 'Filtr slov', icon: '🤬' },
     { key: 'bezpecnost', label: 'Bezpečnost', icon: '🛡' },
     { key: 'rozpocet', label: 'Rozpočet', icon: '💰' },
