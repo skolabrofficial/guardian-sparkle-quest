@@ -10,7 +10,9 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
+    console.log('[log-ip] start, hasAuth=', !!authHeader);
     if (!authHeader?.startsWith('Bearer ')) {
+      console.log('[log-ip] missing Bearer header');
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -19,12 +21,13 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY')!,
       { global: { headers: { Authorization: authHeader } } }
     );
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claims, error: cErr } = await userClient.auth.getClaims(token);
-    if (cErr || !claims?.claims) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // Use getUser which is reliable across SDK versions
+    const { data: userData, error: uErr } = await userClient.auth.getUser();
+    if (uErr || !userData?.user) {
+      console.log('[log-ip] getUser failed', uErr?.message);
+      return new Response(JSON.stringify({ error: 'Unauthorized', detail: uErr?.message }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    const userId = claims.claims.sub as string;
+    const userId = userData.user.id;
 
     const ip =
       req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
@@ -32,9 +35,9 @@ Deno.serve(async (req) => {
       req.headers.get('x-real-ip') ||
       'unknown';
     const ua = req.headers.get('user-agent') || '';
+    console.log('[log-ip] user', userId, 'ip', ip);
 
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-    // Insert only if last entry differs (avoid spam)
     const { data: last } = await admin
       .from('user_ip_log')
       .select('ip_address')
@@ -43,11 +46,19 @@ Deno.serve(async (req) => {
       .limit(1)
       .maybeSingle();
     if (!last || last.ip_address !== ip) {
-      await admin.from('user_ip_log').insert({ user_id: userId, ip_address: ip, user_agent: ua });
+      const { error: insErr } = await admin.from('user_ip_log').insert({ user_id: userId, ip_address: ip, user_agent: ua });
+      if (insErr) {
+        console.log('[log-ip] insert error', insErr.message);
+        return new Response(JSON.stringify({ error: insErr.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      console.log('[log-ip] inserted new entry');
+    } else {
+      console.log('[log-ip] same as last, skip');
     }
 
-    return new Response(JSON.stringify({ ok: true, ip }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ ok: true, ip, userId }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) {
+    console.log('[log-ip] exception', String(e));
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

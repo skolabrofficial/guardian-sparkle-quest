@@ -107,6 +107,39 @@ export type Database = {
         }
         Relationships: []
       }
+      changelog_entries: {
+        Row: {
+          author_id: string
+          category: string
+          created_at: string
+          description: string
+          id: string
+          severity: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          severity?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          severity?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       content_blocks: {
         Row: {
           content: string

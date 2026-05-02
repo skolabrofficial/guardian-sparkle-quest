@@ -3,10 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
-import { nameWithRole } from '@/lib/roleUtils';
 import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
 import { useProfanityFilter, recordProfanityViolation } from '@/hooks/useProfanityFilter';
 import OnlineIndicator from '@/components/OnlineIndicator';
+import UserLink from '@/components/UserLink';
 
 interface ForumPost {
   id: string;
@@ -36,6 +36,7 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
   const { user, role, isDeveloper, isStaff, isLektor } = useAuth();
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
+  const [usernames, setUsernames] = useState<Record<string, string>>({});
   const [profileLastSeen, setProfileLastSeen] = useState<Record<string, string | null>>({});
   const [userRoles, setUserRoles] = useState<Record<string, string>>({});
   const [newContent, setNewContent] = useState('');
@@ -65,14 +66,16 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
     if (data && data.length > 0) {
       const authorIds = [...new Set(data.map(p => p.author_id))];
       const [profRes, roleRes] = await Promise.all([
-        supabase.from('profiles').select('user_id, display_name, last_seen').in('user_id', authorIds),
+        supabase.from('profiles').select('user_id, display_name, username, last_seen').in('user_id', authorIds),
         supabase.from('user_roles').select('user_id, role').in('user_id', authorIds),
       ]);
       if (profRes.data) {
         const map: Record<string, string> = {};
+        const unMap: Record<string, string> = {};
         const lsMap: Record<string, string | null> = {};
-        profRes.data.forEach(p => { map[p.user_id] = p.display_name; lsMap[p.user_id] = p.last_seen; });
+        profRes.data.forEach((p: any) => { map[p.user_id] = p.display_name; unMap[p.user_id] = p.username; lsMap[p.user_id] = p.last_seen; });
         setProfiles(map);
+        setUsernames(unMap);
         setProfileLastSeen(lsMap);
       }
       if (roleRes.data) {
@@ -207,7 +210,9 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
       <div className="flex justify-between items-start gap-2 mb-1">
         <div className="flex items-center gap-2 flex-wrap">
           <OnlineIndicator lastSeen={profileLastSeen[post.author_id] ?? null} size="sm" />
-          <strong className="text-sm">{nameWithRole(profiles[post.author_id] || 'Uživatel', userRoles[post.author_id])}</strong>
+          <strong className="text-sm">
+            <UserLink userId={post.author_id} username={usernames[post.author_id]} displayName={profiles[post.author_id]} role={userRoles[post.author_id]} />
+          </strong>
           <span className="text-xs text-muted-foreground">{new Date(post.created_at).toLocaleString('cs')}</span>
           {post.is_pinned && <span className="text-xs font-bold" style={{ color: '#b8860b' }}>📌 Připnuto</span>}
           {post.is_locked && <span className="text-xs font-bold text-muted-foreground">🔒 Zamčeno</span>}
