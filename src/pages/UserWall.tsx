@@ -435,14 +435,11 @@ function SearchesSection({ userId }: { userId: string }) {
     <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-5 shadow-sm">
       <h2 className="text-lg font-semibold mb-3">Audit (akce uživatele)</h2>
       {rows.length === 0 ? <div className="text-muted-foreground italic">Žádné záznamy.</div> : (
-        <ul className="space-y-1.5 text-sm">
+        <div>
           {rows.map((r) => (
-            <li key={r.id} className="flex justify-between p-2 rounded hover:bg-muted/40">
-              <span><code className="text-xs">{r.action}</code> {r.entity_type && <span className="text-muted-foreground">on {r.entity_type}</span>}</span>
-              <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString('cs')}</span>
-            </li>
+            <ProtokolFromAudit key={r.id} row={r} />
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

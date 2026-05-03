@@ -14,6 +14,7 @@ import AdminSearch from '@/components/AdminSearch';
 // RektoratBoard removed — toggle now lives in AppNav
 import ChangelogPanel from '@/components/ChangelogPanel';
 import UserLink from '@/components/UserLink';
+import { ProtokolFromAudit } from '@/components/Protokol';
 
 type Tab = 'prehled' | 'kurzy' | 'lektori' | 'studenti' | 'fakulty' | 'rozvrh' | 'dotazy' | 'vypisky' | 'oznameni' | 'reporty' | 'audit' | 'nastaveni' | 'notifikace' | 'role' | 'statistiky' | 'rozpocet' | 'smernice' | 'zpravy' | 'zadosti' | 'kvalita' | 'export' | 'import' | 'hromadne' | 'harmonogram' | 'bezpecnost' | 'klubovny' | 'kapacity' | 'mentori' | 'plany' | 'hodnoceni' | 'blokace' | 'forum' | 'emailove-sablony' | 'integrace' | 'obrazky' | 'odeslat-notifikaci' | 'styly-stranek' | 'obsahove-boxy' | 'filtr-slov' | 'hledani' | 'zmenar' | 'uzivatele';
 
@@ -541,12 +542,10 @@ export default function Rektorat() {
             </div>
             <div className="panel-card">
               <h4 className="mt-0 text-sm">Poslední aktivity</h4>
-              {auditLogs.slice(0, 5).map(l => (
-                <div key={l.id} className="text-xs py-1.5 border-b border-border last:border-0 flex justify-between">
-                  <span><strong>{l.action}</strong> {l.user_id && <span className="text-muted-foreground">— {getUserName(l.user_id)}</span>}</span>
-                  <span className="text-muted-foreground">{new Date(l.created_at).toLocaleString('cs')}</span>
-                </div>
-              ))}
+              {auditLogs.slice(0, 5).map(l => {
+                const u = users.find((x: any) => x.user_id === l.user_id);
+                return <ProtokolFromAudit key={l.id} row={l} profile={u} role={getUserRole(l.user_id)} />;
+              })}
             </div>
           </div>
         );
@@ -1059,9 +1058,10 @@ export default function Rektorat() {
         return (
           <div className="grid gap-2">
             <h3 className="mt-0 text-lg font-extrabold">📋 Audit log</h3>
-            {auditLogs.map(l => (
-              <div key={l.id} className="catalog-item-card text-xs"><div className="flex-1"><strong>{l.action}</strong> <span className="text-muted-foreground">— {l.entity_type}</span>{l.user_id && <span className="ml-2">{getUserName(l.user_id)}</span>}</div><span className="text-muted-foreground">{new Date(l.created_at).toLocaleString('cs')}</span></div>
-            ))}
+            {auditLogs.map(l => {
+              const u = users.find((x: any) => x.user_id === l.user_id);
+              return <ProtokolFromAudit key={l.id} row={l} profile={u} role={getUserRole(l.user_id)} />;
+            })}
           </div>
         );
 
