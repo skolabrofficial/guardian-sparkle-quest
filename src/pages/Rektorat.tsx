@@ -6,7 +6,7 @@ import ImageUploader from '@/components/ImageUploader';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { nameWithRole, getRoleSymbol, ROLE_COLORS, ROLE_LABELS } from '@/lib/roleUtils';
 import ChangeHistory, { recordHistory } from '@/components/ChangeHistory';
 import { invalidateProfanityCache } from '@/hooks/useProfanityFilter';
@@ -81,7 +81,11 @@ const allTabs = tabGroups.flatMap(g => g.items);
 export default function Rektorat() {
   const { user, isStaff, isDeveloper, isLektor, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>('prehled');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const t = searchParams.get('tab') as Tab | null;
+    return (t && allTabs.find(x => x.key === t)) ? t : 'prehled';
+  });
   const [courses, setCourses] = useState<any[]>([]);
   const [faculties, setFaculties] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -185,6 +189,11 @@ export default function Rektorat() {
   useEffect(() => {
     if (!authLoading && !isStaff && !isDeveloper && !isLektor) navigate('/');
   }, [authLoading, isStaff, isDeveloper, isLektor]);
+
+  useEffect(() => {
+    const t = searchParams.get('tab') as Tab | null;
+    if (t && allTabs.find(x => x.key === t) && t !== activeTab) setActiveTab(t);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!user || (!isStaff && !isDeveloper && !isLektor)) return;
