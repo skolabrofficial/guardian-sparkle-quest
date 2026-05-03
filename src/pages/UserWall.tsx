@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/roleUtils';
 import { logAudit } from '@/lib/auditLog';
+import { ProtokolFromAudit } from '@/components/Protokol';
 
 const db = () => supabase as any;
 
