@@ -48,6 +48,14 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    await admin.from('audit_log').insert({
+      user_id: callerId,
+      action: 'user.force_signout.server',
+      entity_type: 'profile',
+      entity_id: target_user_id,
+      details: { target_user_id },
+    });
+
     return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
