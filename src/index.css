@@ -425,3 +425,109 @@
 .stagger-5 { animation-delay: 0.25s; }
 .stagger-6 { animation-delay: 0.3s; }
 .stagger-7 { animation-delay: 0.35s; }
+
+/* ───────────── Protokol (auditní karta) ───────────── */
+.protokol {
+  position: relative;
+  display: block;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  margin: 0 0 8px;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.protokol::before {
+  content: '';
+  display: block;
+  float: left;
+  width: 0;
+  min-height: 8.5em;
+}
+.protokol-druh {
+  float: left;
+  width: 1.9em;
+  min-height: 100%;
+  padding: 0.5em 0;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 0.8em;
+  background: #444;
+  color: #fff;
+}
+.protokol-druh > span {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  margin: 1em 0;
+}
+.protokol-info {
+  padding: 8px 10px 6px 10px;
+  margin-left: 2.4em;
+  overflow: hidden;
+  position: relative;
+}
+.protokol-info .profilovka {
+  float: right;
+  width: 36px;
+  height: 36px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 50%;
+  margin: 0 0 4px 8px;
+  background-color: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+}
+.protokol-info .profilovka-fallback {
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12px; color: hsl(var(--muted-foreground));
+}
+.protokol-info .protokol-autorita {
+  float: right;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin: 6px 6px 0 0;
+  text-transform: lowercase;
+}
+.protokol-info .nick {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  text-decoration: none;
+}
+.protokol-info .nick:hover { text-decoration: underline; }
+.protokol-info .odznak { margin: 0 2px; }
+.protokol-info time {
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  border-bottom: 1px dotted hsl(var(--muted-foreground));
+  cursor: help;
+}
+.protokol-zmeny {
+  margin: 0;
+  padding: 0 10px 8px 2.4em;
+  clear: both;
+  font-size: 12px;
+}
+.protokol-zmeny > div {
+  display: flex;
+  gap: 0.4em;
+  padding: 2px 0 2px 8px;
+  margin-left: 8px;
+  border-left: 2px solid hsl(var(--border));
+}
+.protokol-zmeny dt { font-weight: 700; color: hsl(var(--muted-foreground)); margin: 0; }
+.protokol-zmeny dd { margin: 0; }
+.protokol-zmeny ins { background: #d1fadf; color: #064e3b; text-decoration: none; padding: 0 3px; border-radius: 3px; }
+.protokol-zmeny del { background: #fee2e2; color: #7f1d1d; padding: 0 3px; border-radius: 3px; }
+.protokol-text {
+  clear: both;
+  padding: 0 10px 8px 2.4em;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+
