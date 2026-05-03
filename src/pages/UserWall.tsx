@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/roleUtils';
+import { logAudit } from '@/lib/auditLog';
 
 const db = () => supabase as any;
 
@@ -490,6 +491,10 @@ function BlocksSection({ target }: { target: ProfileRow }) {
       punishment: `Blokace na ${preset.label.toLowerCase()}`,
       block_id: blk?.id,
     });
+    await logAudit('user.block', {
+      entityType: 'user_block', entityId: blk?.id,
+      details: { target_user_id: target.user_id, target_username: target.username, preset: preset.label, reason: reason.trim(), permanent: isPerm, expires_at },
+    });
     toast.success(`Zablokováno: ${preset.label}`);
     setReason('');
     load();
@@ -501,6 +506,7 @@ function BlocksSection({ target }: { target: ProfileRow }) {
       is_active: false, unblocked_by: me.id, unblocked_at: new Date().toISOString(),
     }).eq('id', id);
     if (error) { toast.error(error.message); return; }
+    await logAudit('user.unblock', { entityType: 'user_block', entityId: id, details: { target_user_id: target.user_id, target_username: target.username } });
     toast.success('Odblokováno.');
     load();
   };
@@ -566,6 +572,10 @@ function SignoutSection({ target }: { target: ProfileRow }) {
       toast.error(`Nepodařilo se: ${error?.message || (data as any)?.error}`);
       return;
     }
+    await logAudit('user.force_signout', {
+      entityType: 'profile', entityId: target.user_id,
+      details: { target_username: target.username, target_display_name: target.display_name },
+    });
     toast.success('Uživatel byl odhlášen ze všech zařízení.');
   };
   return (
