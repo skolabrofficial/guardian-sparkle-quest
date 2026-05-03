@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import UserLink from '@/components/UserLink';
+import { logAudit } from '@/lib/auditLog';
 
 interface Entry {
   id: string;
@@ -65,10 +66,11 @@ export default function ChangelogPanel() {
 
   const create = async () => {
     if (!user || !title.trim()) return;
-    const { error } = await supabase.from('changelog_entries').insert({
+    const { data, error } = await supabase.from('changelog_entries').insert({
       title: title.trim(), description, category, severity, author_id: user.id,
-    });
+    }).select().single();
     if (error) { toast.error(error.message); return; }
+    await logAudit('changelog.create', { entityType: 'changelog_entry', entityId: data?.id, details: { title: title.trim(), category, severity } });
     toast.success('Záznam přidán');
     setTitle(''); setDescription(''); setCategory('feature'); setSeverity('normal');
     load();
@@ -76,14 +78,21 @@ export default function ChangelogPanel() {
 
   const remove = async (id: string) => {
     if (!confirm('Smazat záznam?')) return;
+    const entry = entries.find(e => e.id === id);
     const { error } = await supabase.from('changelog_entries').delete().eq('id', id);
-    if (error) toast.error(error.message); else { toast.success('Smazáno'); load(); }
+    if (error) toast.error(error.message); else {
+      await logAudit('changelog.delete', { entityType: 'changelog_entry', entityId: id, details: { title: entry?.title } });
+      toast.success('Smazáno'); load();
+    }
   };
 
   const saveEdit = async () => {
     if (!editingId) return;
     const { error } = await supabase.from('changelog_entries').update({ title: editTitle, description: editDesc }).eq('id', editingId);
-    if (error) toast.error(error.message); else { toast.success('Uloženo'); setEditingId(null); load(); }
+    if (error) toast.error(error.message); else {
+      await logAudit('changelog.update', { entityType: 'changelog_entry', entityId: editingId, details: { title: editTitle } });
+      toast.success('Uloženo'); setEditingId(null); load();
+    }
   };
 
   return (
