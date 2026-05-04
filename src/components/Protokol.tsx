@@ -171,17 +171,19 @@ export default function Protokol({
 
 /* ─────────────── Pomocník: vykreslí protokol z audit_log řádku ─────────────── */
 export function ProtokolFromAudit({
-  row, profile, role,
+  row, profile, role, sourceTable = 'audit_log',
 }: {
-  row: { id: string; action: string; entity_type?: string | null; entity_id?: string | null; details?: any; created_at: string; user_id?: string | null };
+  row: { id: string; action: string; entity_type?: string | null; entity_id?: string | null; details?: any; changes?: any; created_at: string; user_id?: string | null };
   profile?: { display_name?: string; username?: string; avatar_url?: string | null } | null;
   role?: string | null;
+  /** Která tabulka je zdrojem – pro generování kódu PRT-… */
+  sourceTable?: 'audit_log' | 'entity_history';
 }) {
   const druh = actionToDruh(row.action);
   const autorita = roleToAutorita(role);
   const nick = profile?.display_name || (row.user_id ? row.user_id.slice(0, 8) : 'systém');
   const href = profile?.username ? `/uziv/${profile.username}` : undefined;
-  const det = row.details || {};
+  const det = row.details || row.changes || {};
   const zmeny: Zmena[] = [];
 
   if (det && typeof det === 'object') {
@@ -198,6 +200,16 @@ export function ProtokolFromAudit({
 
   const text = zmeny.length === 0 ? <code className="text-xs">{row.action}</code> : undefined;
 
+  // Lazy načtení / vygenerování kódu PRT-…
+  const [kod, setKod] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    import('@/lib/protokolCodes').then(({ ensureProtokolCode }) => {
+      ensureProtokolCode(sourceTable, row.id).then(c => { if (!cancelled && c) setKod(c); });
+    });
+    return () => { cancelled = true; };
+  }, [row.id, sourceTable]);
+
   return (
     <Protokol
       druh={druh}
@@ -209,6 +221,7 @@ export function ProtokolFromAudit({
       kontext={kontext}
       zmeny={zmeny.length ? zmeny : undefined}
       text={text}
+      kod={kod}
     />
   );
 }
