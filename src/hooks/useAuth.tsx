@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 
-type AppRole = 'developer' | 'dohledci' | 'lektor' | 'student';
+type AppRole = 'rektor' | 'spravce' | 'lektor' | 'student';
 
 interface AuthContextType {
   user: User | null;
@@ -96,8 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const isDeveloper = role === 'developer';
-  const isDohledci = role === 'dohledci';
+  const isDeveloper = role === 'rektor';
+  const isDohledci = role === 'spravce';
   const isLektor = role === 'lektor';
   const isStaff = isDeveloper || isDohledci;
 

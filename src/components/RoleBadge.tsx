@@ -19,7 +19,7 @@ export default function RoleBadge({ role, className = '' }: Props) {
     <span
       className={`role-badge ${className}`}
       style={{ color }}
-      title={role === 'developer' ? 'Vývojář' : role === 'dohledci' ? 'Dohledčí' : role === 'lektor' ? 'Lektor' : ''}
+      title={role === 'rektor' ? 'Vývojář' : role === 'spravce' ? 'Dohledčí' : role === 'lektor' ? 'Lektor' : ''}
       aria-label={`Role: ${role}`}
     >
       {symbol}

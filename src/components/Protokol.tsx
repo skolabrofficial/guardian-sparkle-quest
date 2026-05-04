@@ -26,8 +26,8 @@ export const AUTORITY: Record<number, { label: string; bg?: string; fg?: string;
 /* ─────────────── Helpers ─────────────── */
 export function roleToAutorita(role?: string | null): number {
   switch (role) {
-    case 'developer': return 255;
-    case 'dohledci':  return 192;
+    case 'rektor': return 255;
+    case 'spravce':  return 192;
     case 'lektor':    return 48;
     case 'student':   return 2;
     default:          return 1;
