@@ -47,7 +47,7 @@ export default function Blocked() {
     setLoading(false);
   };
 
-  // 1. Submit appeal
+  // 1. Odesílání odvolání
   const submitAppeal = async () => {
     if (!block || !appealText.trim()) return;
     setSubmitting(true);
@@ -61,75 +61,75 @@ export default function Blocked() {
     else { toast.success('Odvolání odesláno'); loadBlock(); }
   };
 
-  // 2. Check remaining time
+  // 2. Revize času do osvobození
   const getRemainingTime = () => {
     if (!block?.expires_at) return 'Neurčeno';
     const diff = new Date(block.expires_at).getTime() - Date.now();
-    if (diff <= 0) return 'Blokace vypršela';
+    if (diff <= 0) return 'Blokace vypršela.';
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(hours / 24);
     if (days > 0) return `${days} dní, ${hours % 24} hodin`;
     return `${hours} hodin`;
   };
 
-  // 3. Get severity label
+  // 3. Zjištění stupně závažnosti blokace
   const getSeverityLabel = () => {
-    const map: Record<string, string> = { low: 'Nízká', standard: 'Standardní', high: 'Vysoká', critical: 'Kritická' };
+    const map: Record<string, string> = { low: 'Drobná', standard: 'Klasická', high: 'Mimořádná', critical: 'Bezpečnostní hrozba' };
     return map[block?.severity || 'standard'] || block?.severity;
   };
 
-  // 4. Get block type label
+  // 4. Zjištění momentního omezení
   const getBlockTypeLabel = () => {
-    const map: Record<string, string> = { full: 'Plná blokace', partial: 'Částečná blokace', warning: 'Varování', temporary: 'Dočasná' };
+    const map: Record<string, string> = { full: 'Plná blokace', partial: 'Částečná blokace', warning: 'Varování', temporary: 'Drobná - naučná' };
     return map[block?.block_type || 'full'] || block?.block_type;
   };
 
-  // 5. Check if appeal is available
+  // 5. Revize (ne)zamítnutí odvolání
   const canAppeal = () => {
     return block && (!block.appeal_status || block.appeal_status === 'none' || block.appeal_status === 'rejected');
   };
 
-  // 6. Get appeal status label
+  // 6. Revize stavu odvolání
   const getAppealStatusLabel = () => {
-    const map: Record<string, string> = { none: 'Nebylo podáno', pending: 'Čeká na posouzení', approved: 'Schváleno', rejected: 'Zamítnuto', reviewing: 'Probíhá přezkoumání' };
+    const map: Record<string, string> = { none: 'nepodáno', pending: 'neposouzeno', approved: 'schváleno', rejected: 'zámítnuto', reviewing: 'zpracováváno' };
     return map[block?.appeal_status || 'none'] || block?.appeal_status;
   };
 
-  // 7. Check if permanent
+  // 7. Pernamentnost blokace
   const isPermanent = () => block?.is_permanent === true;
 
-  // 8. Get affected areas display
+  // 8. Zjištění ovlivněných oblastí
   const getAffectedAreas = () => {
     if (!block?.affected_areas?.length) return ['Veškerý přístup'];
     return block.affected_areas;
   };
 
-  // 9. Check if block expired
+  // 9. Zjištění (ne)platnosti blokace
   const isExpired = () => {
     if (!block?.expires_at) return false;
     return new Date(block.expires_at).getTime() < Date.now();
   };
 
-  // 10. Get warning count info
+  // 10. Zjištění počtu varování
   const getWarningInfo = () => {
     return `Počet varování: ${block?.warning_count || 0}`;
   };
 
-  // 11. Get block count
+  // 11. Zjištění pořadí blokace
   const getBlockCountInfo = () => {
     return `Pořadí blokace: ${block?.block_count || 1}. blokace`;
   };
 
-  // 12. Check if escalated
+  // 12. Zjištění vyeskalace blokace
   const isEscalated = () => block?.escalated === true;
 
-  // 13. Format blocked date
+  // 13. Formát a pásmo blokace
   const getBlockedDate = () => {
     if (!block) return '';
     return new Date(block.blocked_at).toLocaleString('cs-CZ');
   };
 
-  // 14. Format expiry date
+  // 14. Formát a pásmo expirace blokace
   const getExpiryDate = () => {
     if (!block?.expires_at) return 'Bez konce';
     return new Date(block.expires_at).toLocaleString('cs-CZ');
