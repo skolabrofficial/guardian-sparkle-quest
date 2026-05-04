@@ -100,13 +100,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const isDeveloper = role === 'rektor';
-  const isDohledci = role === 'spravce';
+  const isRektor = role === 'rektor';
+  const isSpravce = role === 'spravce';
   const isLektor = role === 'lektor';
-  const isStaff = isDeveloper || isDohledci;
+  const isStaff = isRektor || isSpravce;
+  const isDeveloper = isRektor;   // alias pro zpětnou kompatibilitu
+  const isDohledci = isSpravce;   // alias pro zpětnou kompatibilitu
 
   return (
-    <AuthContext.Provider value={{ user, session, role, profile, loading, isBlocked, signIn, signUp, signOut, isStaff, isDeveloper, isDohledci, isLektor }}>
+    <AuthContext.Provider value={{ user, session, role, profile, loading, isBlocked, signIn, signUp, signOut, isStaff, isRektor, isSpravce, isLektor, isDeveloper, isDohledci }}>
       {children}
     </AuthContext.Provider>
   );
