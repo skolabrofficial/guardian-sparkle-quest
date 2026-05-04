@@ -139,6 +139,16 @@ export default function Protokol({
         {kontext}{' '}
         <time dateTime={iso} title={abs}>{rel}</time>
         {(zmeny?.length || text) ? ':' : '.'}
+        {kod && (
+          <button
+            type="button"
+            onClick={copyKod}
+            className="protokol-kod"
+            title={copied ? 'Zkopírováno!' : 'Klikni a vlož do poznámky'}
+          >
+            {copied ? '✓ ' : ''}[[{kod}]]
+          </button>
+        )}
       </div>
       {zmeny && zmeny.length > 0 && (
         <dl className="protokol-zmeny">
