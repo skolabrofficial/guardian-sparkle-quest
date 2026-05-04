@@ -15,9 +15,13 @@ interface AuthContextType {
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   isStaff: boolean;
-  isDeveloper: boolean;
-  isDohledci: boolean;
+  isRektor: boolean;
+  isSpravce: boolean;
   isLektor: boolean;
+  /** @deprecated use isRektor */
+  isDeveloper: boolean;
+  /** @deprecated use isSpravce */
+  isDohledci: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
