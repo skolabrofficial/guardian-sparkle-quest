@@ -443,7 +443,7 @@ export default function Rektorat() {
   const getBlockStats = () => ({ active: blocks.filter(b => b.is_active).length, pending: blocks.filter(b => b.appeal_status === 'pending').length, permanent: blocks.filter(b => b.is_permanent && b.is_active).length, escalated: blocks.filter(b => b.escalated && b.is_active).length, total: blocks.length });
   const regenerateBlockMessage = async (block: any) => { if (!user) return; await supabase.from('block_messages').insert({ block_id: block.id, generated_by: user.id, message_text: generateBlockMessage(block) }); toast.success('Regenerováno'); loadAll(); };
 
-  const lektors = users.filter(u => { const r = roles.find(r => r.user_id === u.user_id); return r && ['lektor', 'dohledci', 'developer'].includes(r.role); });
+  const lektors = users.filter(u => { const r = roles.find(r => r.user_id === u.user_id); return r && ['lektor', 'spravce', 'rektor'].includes(r.role); });
 
   // Send notification
   const sendNotification = async () => {

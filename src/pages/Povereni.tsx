@@ -179,7 +179,7 @@ export default function Povereni() {
   };
 
   const visibleStaff = isDeveloper ? staff : staff.filter(s => s.is_visible);
-  const roleGroups = ['developer', 'dohledci', 'lektor'] as const;
+  const roleGroups = ['rektor', 'spravce', 'lektor'] as const;
 
   return (
     <AppLayout>

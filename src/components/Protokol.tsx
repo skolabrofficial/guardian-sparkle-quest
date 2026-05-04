@@ -14,19 +14,18 @@ export const DRUHY: Record<number, { label: string; bg: string; fg: string; verb
 /* ─────────────── Autority ─────────────── */
 export const AUTORITY: Record<number, { label: string; bg?: string; fg?: string; bold?: boolean }> = {
   1:   { label: 'host' },
-  2:   { label: 'uživatel', bold: true },
-  32:  { label: 'redaktor',    bg: '#FFC538', fg: '#000' },
-  48:  { label: 'editor',      bg: '#FFC538', fg: '#000' },
-  128: { label: 'moderátor',   bg: '#FF3915', fg: '#fff' },
-  129: { label: 'moderátor+',  bg: '#FF3915', fg: '#fff' },
-  192: { label: 'správce',     bg: '#258B25', fg: '#fff' },
-  255: { label: 'root',        bg: '#254BFF', fg: '#fff' },
+  2:   { label: 'student',  bold: true },
+  48:  { label: 'lektor',   bg: '#C0392B', fg: '#fff' },   // červená
+  192: { label: 'správce',  bg: '#258B25', fg: '#fff' },   // zelená
+  255: { label: 'rektor',   bg: '#254BFF', fg: '#fff' },   // modrá
 };
 
 /* ─────────────── Helpers ─────────────── */
 export function roleToAutorita(role?: string | null): number {
   switch (role) {
+    case 'rektor':
     case 'developer': return 255;
+    case 'spravce':
     case 'dohledci':  return 192;
     case 'lektor':    return 48;
     case 'student':   return 2;
@@ -87,14 +86,25 @@ export type ProtokolProps = {
   kontext?: ReactNode;
   zmeny?: Zmena[];
   text?: ReactNode;
+  /** Krátký kód protokolu, např. "PRT-A1B2C3". Zobrazí se jako tlačítko ke kopírování. */
+  kod?: string;
 };
 
 /* ─────────────── Komponenta ─────────────── */
 export default function Protokol({
-  druh, autorita = 1, nick, nickHref, feminin, koruna, profilovka, cas, kontext, zmeny, text,
+  druh, autorita = 1, nick, nickHref, feminin, koruna, profilovka, cas, kontext, zmeny, text, kod,
 }: ProtokolProps) {
   const [, tick] = useState(0);
   useEffect(() => { const id = setInterval(() => tick(x => x + 1), 60_000); return () => clearInterval(id); }, []);
+  const [copied, setCopied] = useState(false);
+  const copyKod = async () => {
+    if (!kod) return;
+    try {
+      await navigator.clipboard.writeText(`[[${kod}]]`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  };
 
   const D = DRUHY[druh] ?? DRUHY[223];
   const A = AUTORITY[autorita] ?? AUTORITY[1];
@@ -129,6 +139,16 @@ export default function Protokol({
         {kontext}{' '}
         <time dateTime={iso} title={abs}>{rel}</time>
         {(zmeny?.length || text) ? ':' : '.'}
+        {kod && (
+          <button
+            type="button"
+            onClick={copyKod}
+            className="protokol-kod"
+            title={copied ? 'Zkopírováno!' : 'Klikni a vlož do poznámky'}
+          >
+            {copied ? '✓ ' : ''}[[{kod}]]
+          </button>
+        )}
       </div>
       {zmeny && zmeny.length > 0 && (
         <dl className="protokol-zmeny">
@@ -151,17 +171,19 @@ export default function Protokol({
 
 /* ─────────────── Pomocník: vykreslí protokol z audit_log řádku ─────────────── */
 export function ProtokolFromAudit({
-  row, profile, role,
+  row, profile, role, sourceTable = 'audit_log',
 }: {
-  row: { id: string; action: string; entity_type?: string | null; entity_id?: string | null; details?: any; created_at: string; user_id?: string | null };
+  row: { id: string; action: string; entity_type?: string | null; entity_id?: string | null; details?: any; changes?: any; created_at: string; user_id?: string | null };
   profile?: { display_name?: string; username?: string; avatar_url?: string | null } | null;
   role?: string | null;
+  /** Která tabulka je zdrojem – pro generování kódu PRT-… */
+  sourceTable?: 'audit_log' | 'entity_history';
 }) {
   const druh = actionToDruh(row.action);
   const autorita = roleToAutorita(role);
   const nick = profile?.display_name || (row.user_id ? row.user_id.slice(0, 8) : 'systém');
   const href = profile?.username ? `/uziv/${profile.username}` : undefined;
-  const det = row.details || {};
+  const det = row.details || row.changes || {};
   const zmeny: Zmena[] = [];
 
   if (det && typeof det === 'object') {
@@ -178,6 +200,16 @@ export function ProtokolFromAudit({
 
   const text = zmeny.length === 0 ? <code className="text-xs">{row.action}</code> : undefined;
 
+  // Lazy načtení / vygenerování kódu PRT-…
+  const [kod, setKod] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    import('@/lib/protokolCodes').then(({ ensureProtokolCode }) => {
+      ensureProtokolCode(sourceTable, row.id).then(c => { if (!cancelled && c) setKod(c); });
+    });
+    return () => { cancelled = true; };
+  }, [row.id, sourceTable]);
+
   return (
     <Protokol
       druh={druh}
@@ -189,6 +221,7 @@ export function ProtokolFromAudit({
       kontext={kontext}
       zmeny={zmeny.length ? zmeny : undefined}
       text={text}
+      kod={kod}
     />
   );
 }

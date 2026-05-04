@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 
-type AppRole = 'developer' | 'dohledci' | 'lektor' | 'student';
+type AppRole = 'rektor' | 'spravce' | 'lektor' | 'student';
 
 interface AuthContextType {
   user: User | null;
@@ -15,9 +15,13 @@ interface AuthContextType {
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   isStaff: boolean;
-  isDeveloper: boolean;
-  isDohledci: boolean;
+  isRektor: boolean;
+  isSpravce: boolean;
   isLektor: boolean;
+  /** @deprecated use isRektor */
+  isDeveloper: boolean;
+  /** @deprecated use isSpravce */
+  isDohledci: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -96,13 +100,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const isDeveloper = role === 'developer';
-  const isDohledci = role === 'dohledci';
+  const isRektor = role === 'rektor';
+  const isSpravce = role === 'spravce';
   const isLektor = role === 'lektor';
-  const isStaff = isDeveloper || isDohledci;
+  const isStaff = isRektor || isSpravce;
+  const isDeveloper = isRektor;   // alias pro zpětnou kompatibilitu
+  const isDohledci = isSpravce;   // alias pro zpětnou kompatibilitu
 
   return (
-    <AuthContext.Provider value={{ user, session, role, profile, loading, isBlocked, signIn, signUp, signOut, isStaff, isDeveloper, isDohledci, isLektor }}>
+    <AuthContext.Provider value={{ user, session, role, profile, loading, isBlocked, signIn, signUp, signOut, isStaff, isRektor, isSpravce, isLektor, isDeveloper, isDohledci }}>
       {children}
     </AuthContext.Provider>
   );

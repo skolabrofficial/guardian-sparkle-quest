@@ -35,7 +35,7 @@ export default function Fakulty() {
         const roleMap: Record<string, string> = {};
         rRes.data.forEach(r => { roleMap[r.user_id] = r.role; });
         setUserRoles(roleMap);
-        const staffIds = rRes.data.filter(r => ['lektor', 'dohledci', 'developer'].includes(r.role)).map(r => r.user_id);
+        const staffIds = rRes.data.filter(r => ['lektor', 'spravce', 'rektor'].includes(r.role)).map(r => r.user_id);
         setLektors(pRes.data.filter(p => staffIds.includes(p.user_id)));
       }
     }
