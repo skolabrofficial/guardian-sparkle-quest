@@ -442,6 +442,36 @@ export type Database = {
           },
         ]
       }
+      gdpr_consents: {
+        Row: {
+          accepted: boolean
+          consent_type: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accepted?: boolean
+          consent_type: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accepted?: boolean
+          consent_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -541,6 +571,33 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string
+        }
+        Relationships: []
+      }
+      protokol_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          source_id: string
+          source_table: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          source_id: string
+          source_table: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          source_id?: string
+          source_table?: string
         }
         Relationships: []
       }
@@ -1166,7 +1223,7 @@ export type Database = {
       slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {
-      app_role: "developer" | "dohledci" | "lektor" | "student"
+      app_role: "rektor" | "spravce" | "lektor" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1294,7 +1351,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["developer", "dohledci", "lektor", "student"],
+      app_role: ["rektor", "spravce", "lektor", "student"],
     },
   },
 } as const
