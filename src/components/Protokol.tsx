@@ -86,14 +86,25 @@ export type ProtokolProps = {
   kontext?: ReactNode;
   zmeny?: Zmena[];
   text?: ReactNode;
+  /** Krátký kód protokolu, např. "PRT-A1B2C3". Zobrazí se jako tlačítko ke kopírování. */
+  kod?: string;
 };
 
 /* ─────────────── Komponenta ─────────────── */
 export default function Protokol({
-  druh, autorita = 1, nick, nickHref, feminin, koruna, profilovka, cas, kontext, zmeny, text,
+  druh, autorita = 1, nick, nickHref, feminin, koruna, profilovka, cas, kontext, zmeny, text, kod,
 }: ProtokolProps) {
   const [, tick] = useState(0);
   useEffect(() => { const id = setInterval(() => tick(x => x + 1), 60_000); return () => clearInterval(id); }, []);
+  const [copied, setCopied] = useState(false);
+  const copyKod = async () => {
+    if (!kod) return;
+    try {
+      await navigator.clipboard.writeText(`[[${kod}]]`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  };
 
   const D = DRUHY[druh] ?? DRUHY[223];
   const A = AUTORITY[autorita] ?? AUTORITY[1];
