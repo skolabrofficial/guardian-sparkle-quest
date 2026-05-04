@@ -14,20 +14,19 @@ export const DRUHY: Record<number, { label: string; bg: string; fg: string; verb
 /* ─────────────── Autority ─────────────── */
 export const AUTORITY: Record<number, { label: string; bg?: string; fg?: string; bold?: boolean }> = {
   1:   { label: 'host' },
-  2:   { label: 'uživatel', bold: true },
-  32:  { label: 'redaktor',    bg: '#FFC538', fg: '#000' },
-  48:  { label: 'editor',      bg: '#FFC538', fg: '#000' },
-  128: { label: 'moderátor',   bg: '#FF3915', fg: '#fff' },
-  129: { label: 'moderátor+',  bg: '#FF3915', fg: '#fff' },
-  192: { label: 'správce',     bg: '#258B25', fg: '#fff' },
-  255: { label: 'root',        bg: '#254BFF', fg: '#fff' },
+  2:   { label: 'student',  bold: true },
+  48:  { label: 'lektor',   bg: '#C0392B', fg: '#fff' },   // červená
+  192: { label: 'správce',  bg: '#258B25', fg: '#fff' },   // zelená
+  255: { label: 'rektor',   bg: '#254BFF', fg: '#fff' },   // modrá
 };
 
 /* ─────────────── Helpers ─────────────── */
 export function roleToAutorita(role?: string | null): number {
   switch (role) {
-    case 'rektor': return 255;
-    case 'spravce':  return 192;
+    case 'rektor':
+    case 'developer': return 255;
+    case 'spravce':
+    case 'dohledci':  return 192;
     case 'lektor':    return 48;
     case 'student':   return 2;
     default:          return 1;
