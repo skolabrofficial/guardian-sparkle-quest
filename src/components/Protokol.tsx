@@ -12,12 +12,12 @@ export const DRUHY: Record<number, { label: string; bg: string; fg: string; verb
 };
 
 /* ─────────────── Autority ─────────────── */
-export const AUTORITY: Record<number, { label: string; bg?: string; fg?: string; bold?: boolean }> = {
-  1:   { label: 'host' },
-  2:   { label: 'student',  bold: true },
-  48:  { label: 'lektor',   bg: '#C0392B', fg: '#fff' },   // červená
-  192: { label: 'správce',  bg: '#258B25', fg: '#fff' },   // zelená
-  255: { label: 'rektor',   bg: '#254BFF', fg: '#fff' },   // modrá
+export const AUTORITY: Record<number, { label: string; bg?: string; fg?: string; bold?: boolean; show?: boolean }> = {
+  1:   { label: 'host',     show: false },
+  2:   { label: 'uživatel', bold: true, show: false },
+  48:  { label: 'lektor',   bg: '#C0392B', fg: '#fff', show: true },   // červená
+  192: { label: 'správce',  bg: '#258B25', fg: '#fff', show: true },   // zelená
+  255: { label: 'rektor',   bg: '#254BFF', fg: '#fff', show: true },   // modrá
 };
 
 /* ─────────────── Helpers ─────────────── */
