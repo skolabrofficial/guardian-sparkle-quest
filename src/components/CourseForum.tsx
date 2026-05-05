@@ -300,16 +300,22 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
       <h3 className="mt-0 mb-1">💬 Diskuzní fórum — {courseName}</h3>
       <p className="text-xs text-muted-foreground mb-3">{topPosts.length} příspěvků</p>
 
-      <form onSubmit={handlePost} className="grid gap-2 mb-4">
-        <textarea
-          value={newContent}
-          onChange={e => setNewContent(e.target.value)}
-          placeholder="Napište příspěvek do fóra... (podporuje Markdown a $\LaTeX$)"
-          required
-          className="border-2 border-border rounded-xl py-2.5 px-3 text-sm outline-none min-h-[70px] resize-y focus:border-secondary transition-colors"
-        />
-        <button type="submit" className="btn-alik-primary text-sm w-fit">Přidat příspěvek</button>
-      </form>
+      {user ? (
+        <form onSubmit={handlePost} className="grid gap-2 mb-4">
+          <textarea
+            value={newContent}
+            onChange={e => setNewContent(e.target.value)}
+            placeholder="Napište příspěvek do fóra... (podporuje Markdown a $\LaTeX$)"
+            required
+            className="border-2 border-border rounded-xl py-2.5 px-3 text-sm outline-none min-h-[70px] resize-y focus:border-secondary transition-colors"
+          />
+          <button type="submit" className="btn-alik-primary text-sm w-fit">Přidat příspěvek</button>
+        </form>
+      ) : (
+        <div className="mb-4 p-3 rounded-xl border border-border bg-muted/40 text-sm text-center">
+          Pro přidání příspěvku se musíš <Link to="/login" className="font-bold text-primary hover:underline">přihlásit</Link> nebo <Link to="/register" className="font-bold text-primary hover:underline">zaregistrovat</Link>.
+        </div>
+      )}
 
       <div>
         {topPosts.map(p => renderPost(p))}
