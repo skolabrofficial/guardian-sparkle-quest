@@ -54,8 +54,12 @@ export default function ChangeHistory({ entityType, entityId, authorId }: Props)
           setProfiles(map);
         }
         if (rRes.data) {
+          const { highestRoleFor } = await import('@/lib/rolePriority');
           const map: Record<string, string> = {};
-          rRes.data.forEach((r: any) => { map[r.user_id] = r.role; });
+          ids.forEach(uid => {
+            const r = highestRoleFor(uid, rRes.data as any);
+            if (r) map[uid] = r;
+          });
           setUserRoles(map);
         }
       }
