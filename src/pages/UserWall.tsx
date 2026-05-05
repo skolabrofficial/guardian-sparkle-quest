@@ -397,15 +397,15 @@ function NotesSection({ target, canSeePrivate }: { target: ProfileRow; canSeePri
                 </div>
               </div>
               {n.public_description && (
-                <div className="mt-1.5 text-sm"><strong>📢 Veřejný popis:</strong> {n.public_description}</div>
+                <div className="mt-1.5 text-sm"><strong>📢 Veřejný popis:</strong> <PoznamkaText text={n.public_description} /></div>
               )}
               {canSeePrivate && n.private_description && (
                 <div className="mt-1.5 text-sm bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded">
-                  <strong>🔒 Neveřejný popis:</strong> {n.private_description}
+                  <strong>🔒 Neveřejný popis:</strong> <PoznamkaText text={n.private_description} />
                 </div>
               )}
               {n.punishment && (
-                <div className="mt-1.5 text-sm"><strong>⚖ Trest:</strong> {n.punishment}</div>
+                <div className="mt-1.5 text-sm"><strong>⚖ Trest:</strong> <PoznamkaText text={n.punishment} /></div>
               )}
             </li>
           ))}
