@@ -187,16 +187,21 @@ export function ProtokolFromAudit({
   if (det && typeof det === 'object') {
     for (const [k, v] of Object.entries(det)) {
       if (v && typeof v === 'object' && 'from' in (v as any) && 'to' in (v as any)) {
-        zmeny.push({ field: k, from: String((v as any).from ?? '—'), to: String((v as any).to ?? '—') });
+        zmeny.push({ field: FIELD_LABELS[k] || k, from: String((v as any).from ?? '—'), to: String((v as any).to ?? '—') });
       }
     }
   }
 
-  const kontext = row.entity_type
-    ? <>v <em>{row.entity_type}</em>{row.entity_id ? <> <code className="text-xs">{row.entity_id.slice(0, 8)}</code></> : null}</>
-    : null;
+  // České větné popisy podle akce
+  const sentence = describeAction(row.action, row.entity_type, det);
+  const kontext = sentence
+    ? <>{sentence}</>
+    : row.entity_type
+      ? <>v sekci <em>{ENTITY_LABELS[row.entity_type] || row.entity_type}</em>{row.entity_id ? <> (<code className="text-xs">{row.entity_id.slice(0, 8)}</code>)</> : null}</>
+      : null;
 
-  const text = zmeny.length === 0 ? <code className="text-xs">{row.action}</code> : undefined;
+  const text = zmeny.length === 0 && !sentence ? <code className="text-xs">{row.action}</code> : undefined;
+
 
   // Lazy načtení / vygenerování kódu PRT-…
   const [kod, setKod] = useState<string | undefined>(undefined);
