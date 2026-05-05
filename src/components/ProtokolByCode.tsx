@@ -21,10 +21,11 @@ export function ProtokolByCode({ code }: { code: string }) {
       if (found.row.user_id) {
         const [pRes, rRes] = await Promise.all([
           supabase.from('profiles').select('display_name, username, avatar_url').eq('user_id', found.row.user_id).maybeSingle(),
-          supabase.from('user_roles').select('role').eq('user_id', found.row.user_id).maybeSingle(),
+          supabase.from('user_roles').select('role').eq('user_id', found.row.user_id),
         ]);
         profile = pRes.data;
-        role = rRes.data?.role ?? null;
+        const { pickHighestRole } = await import('@/lib/rolePriority');
+        role = pickHighestRole((rRes.data || []).map((r: any) => r.role));
       }
       if (!cancelled) setState({ status: 'ready', row: found.row, profile, role, sourceTable: found.kind });
     })();
