@@ -123,7 +123,7 @@ export default function Protokol({
         {profilovka
           ? <div className="profilovka" style={{ backgroundImage: `url(${profilovka})` }} />
           : <div className="profilovka profilovka-fallback">{nick.slice(0, 2).toUpperCase()}</div>}
-        {A.label !== 'host' && (
+        {A.show && (
           <span
             className="protokol-autorita"
             style={A.bg ? { background: A.bg, color: A.fg } : undefined}
@@ -138,7 +138,20 @@ export default function Protokol({
         {' '}{verb}{' '}
         {kontext}{' '}
         <time dateTime={iso} title={abs}>{rel}</time>
-        {(zmeny?.length || text) ? ':' : '.'}
+        {(zmeny?.length || text) ? '. ' : '.'}
+        {zmeny && zmeny.length > 0 && (
+          <span className="protokol-zmeny-inline">
+            {zmeny.map((z, i) => (
+              <span key={i}>
+                {z.custom
+                  ? <>{z.custom}</>
+                  : <><strong>{z.field}</strong>: změna z <del>{z.from ?? '—'}</del> na <ins>{z.to ?? '—'}</ins>.</>
+                }{' '}
+              </span>
+            ))}
+          </span>
+        )}
+        {text && <span className="protokol-text-inline"> {text}</span>}
         {kod && (
           <button
             type="button"
@@ -150,22 +163,6 @@ export default function Protokol({
           </button>
         )}
       </div>
-      {zmeny && zmeny.length > 0 && (
-        <dl className="protokol-zmeny">
-          {zmeny.map((z, i) => (
-            <div key={i}>
-              <dt>{z.field}:</dt>
-              <dd>
-                {z.custom ? z.custom : (
-                  <>Změna z <del>{z.from ?? '—'}</del> na <ins>{z.to ?? '—'}</ins>.</>
-                )}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      {text && <div className="protokol-text">{text}</div>}
-    </div>
   );
 }
 
