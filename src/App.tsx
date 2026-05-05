@@ -22,6 +22,7 @@ import Profil from "./pages/Profil";
 import Blocked from "./pages/Blocked";
 import Povereni from "./pages/Povereni";
 import UserWall from "./pages/UserWall";
+import Gdpr from "./pages/Gdpr";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/profil" element={<BlockGuard><Profil /></BlockGuard>} />
             <Route path="/povereni" element={<BlockGuard><Povereni /></BlockGuard>} />
             <Route path="/uziv/:username" element={<BlockGuard><UserWall /></BlockGuard>} />
+            <Route path="/gdpr" element={<Gdpr />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
