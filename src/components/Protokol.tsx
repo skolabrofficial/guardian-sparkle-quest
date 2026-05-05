@@ -167,6 +167,46 @@ export default function Protokol({
   );
 }
 
+/* ─────────────── České popisky polí, entit a akcí ─────────────── */
+export const FIELD_LABELS: Record<string, string> = {
+  title: 'Název', content: 'Obsah', description: 'Popis', name: 'Jméno',
+  display_name: 'Přezdívka', username: 'Uživatelské jméno', avatar_url: 'Avatar', bio: 'Bio',
+  role: 'Role', reason: 'Důvod', severity: 'Závažnost', category: 'Kategorie',
+  is_pinned: 'Připnutí', is_locked: 'Zamčeno', is_deleted: 'Smazáno', label: 'Štítek',
+  block_type: 'Typ blokace', is_permanent: 'Trvalé', expires_at: 'Vyprší',
+};
+
+export const ENTITY_LABELS: Record<string, string> = {
+  forum_posts: 'fóru kurzu', courses: 'kurzu', faculties: 'fakulty',
+  tutoring_questions: 'doučovacího dotazu', tutoring_answers: 'odpovědi',
+  user_blocks: 'blokace uživatele', user_block: 'blokace uživatele',
+  user: 'uživatele', profiles: 'profilu', notifications: 'oznámení',
+  changelog_entry: 'záznamu Změnáře', changelog_entries: 'záznamu Změnáře',
+  announcements: 'oznámení', uploaded_images: 'obrázku',
+  content_blocks: 'obsahového bloku', page_styles: 'stylu stránky',
+  user_notes: 'poznámky o uživateli',
+};
+
+/** Vrať pěknou českou větu popisující akci, nebo null. */
+function describeAction(action: string, entityType?: string | null, det?: any): string | null {
+  const a = (action || '').toLowerCase();
+  const ent = entityType ? (ENTITY_LABELS[entityType] || entityType) : null;
+  const target = det?.target_username ? `uživateli ${det.target_username}` : (det?.target_user_id ? 'uživateli' : null);
+
+  if (a === 'user.block')          return `blokaci ${target ?? 'uživatele'}${det?.reason ? ` (důvod: „${det.reason}")` : ''}`;
+  if (a === 'user.unblock')        return `odblokování ${target ?? 'uživatele'}`;
+  if (a === 'user.force_signout')  return `vynucené odhlášení ${target ?? 'uživatele'}`;
+  if (a === 'changelog.create')    return `nový záznam ve Změnáři${det?.title ? `: „${det.title}"` : ''}`;
+  if (a === 'changelog.update')    return `úpravu záznamu Změnáře${det?.title ? ` „${det.title}"` : ''}`;
+  if (a === 'changelog.delete')    return `smazání záznamu Změnáře${det?.title ? ` „${det.title}"` : ''}`;
+  if (a.startsWith('forum.'))      return `příspěvek ve fóru kurzu`;
+  if (a.startsWith('image.'))      return `obrázek v moderaci`;
+  if (a.startsWith('profanity.'))  return `automatický zásah filtru vulgarit`;
+  if (a.startsWith('role.'))       return `úpravu role uživatele`;
+  if (ent)                         return `${a.includes('create') ? 'nové' : 'změnu'} ${ent}`;
+  return null;
+}
+
 /* ─────────────── Pomocník: vykreslí protokol z audit_log řádku ─────────────── */
 export function ProtokolFromAudit({
   row, profile, role, sourceTable = 'audit_log',
@@ -187,16 +227,21 @@ export function ProtokolFromAudit({
   if (det && typeof det === 'object') {
     for (const [k, v] of Object.entries(det)) {
       if (v && typeof v === 'object' && 'from' in (v as any) && 'to' in (v as any)) {
-        zmeny.push({ field: k, from: String((v as any).from ?? '—'), to: String((v as any).to ?? '—') });
+        zmeny.push({ field: FIELD_LABELS[k] || k, from: String((v as any).from ?? '—'), to: String((v as any).to ?? '—') });
       }
     }
   }
 
-  const kontext = row.entity_type
-    ? <>v <em>{row.entity_type}</em>{row.entity_id ? <> <code className="text-xs">{row.entity_id.slice(0, 8)}</code></> : null}</>
-    : null;
+  // České větné popisy podle akce
+  const sentence = describeAction(row.action, row.entity_type, det);
+  const kontext = sentence
+    ? <>{sentence}</>
+    : row.entity_type
+      ? <>v sekci <em>{ENTITY_LABELS[row.entity_type] || row.entity_type}</em>{row.entity_id ? <> (<code className="text-xs">{row.entity_id.slice(0, 8)}</code>)</> : null}</>
+      : null;
 
-  const text = zmeny.length === 0 ? <code className="text-xs">{row.action}</code> : undefined;
+  const text = zmeny.length === 0 && !sentence ? <code className="text-xs">{row.action}</code> : undefined;
+
 
   // Lazy načtení / vygenerování kódu PRT-…
   const [kod, setKod] = useState<string | undefined>(undefined);

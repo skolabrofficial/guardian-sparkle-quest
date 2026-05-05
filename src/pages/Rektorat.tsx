@@ -251,7 +251,11 @@ export default function Rektorat() {
     });
   };
 
-  const getUserRole = (userId: string) => roles.find(r => r.user_id === userId)?.role || null;
+  const getUserRole = (userId: string) => {
+    const userRoles = roles.filter(r => r.user_id === userId).map(r => r.role);
+    const prio: Record<string, number> = { rektor: 4, developer: 4, spravce: 3, dohledci: 3, lektor: 2, student: 1 };
+    return userRoles.sort((a, b) => (prio[b] || 0) - (prio[a] || 0))[0] || null;
+  };
   const getUserName = (userId: string) => {
     const u = users.find(u => u.user_id === userId);
     return nameWithRole(u?.display_name || userId?.slice(0, 8) || '—', getUserRole(userId));
