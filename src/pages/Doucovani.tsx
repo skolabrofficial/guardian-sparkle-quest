@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { supabase } from '@/integrations/supabase/client';
@@ -194,14 +195,20 @@ export default function Doucovani() {
 
           <div className="panel-card animate-slide-up stagger-3" id="poloz-dotaz">
             <h3 className="mt-0 mb-2">Polož dotaz</h3>
-            <form onSubmit={handleSubmitQ} className="grid gap-2.5">
-              <select value={topic} onChange={e => setTopic(e.target.value)} className="border-2 border-border rounded-xl py-2.5 px-3 text-sm bg-card outline-none focus:border-secondary transition-colors">
-                <option>Matematika</option><option>Český jazyk</option><option>Vědy</option><option>Umění</option><option>Programování</option><option>Obecné</option>
-              </select>
-              <textarea placeholder="Napiš svůj dotaz... (podporuje Markdown a $\LaTeX$)" value={questionText} onChange={e => setQuestionText(e.target.value)} required className="border-2 border-border rounded-xl py-2.5 px-3 text-sm outline-none min-h-[120px] resize-y font-mono focus:border-secondary transition-colors" />
-              <input placeholder="Kde ses zasekl/a? (volitelné)" value={context} onChange={e => setContext(e.target.value)} className="border-2 border-border rounded-xl py-2.5 px-3 text-sm outline-none focus:border-secondary transition-colors" />
-              <button type="submit" className="btn-alik-primary">Odeslat dotaz</button>
-            </form>
+            {user ? (
+              <form onSubmit={handleSubmitQ} className="grid gap-2.5">
+                <select value={topic} onChange={e => setTopic(e.target.value)} className="border-2 border-border rounded-xl py-2.5 px-3 text-sm bg-card outline-none focus:border-secondary transition-colors">
+                  <option>Matematika</option><option>Český jazyk</option><option>Vědy</option><option>Umění</option><option>Programování</option><option>Obecné</option>
+                </select>
+                <textarea placeholder="Napiš svůj dotaz... (podporuje Markdown a $\LaTeX$)" value={questionText} onChange={e => setQuestionText(e.target.value)} required className="border-2 border-border rounded-xl py-2.5 px-3 text-sm outline-none min-h-[120px] resize-y font-mono focus:border-secondary transition-colors" />
+                <input placeholder="Kde ses zasekl/a? (volitelné)" value={context} onChange={e => setContext(e.target.value)} className="border-2 border-border rounded-xl py-2.5 px-3 text-sm outline-none focus:border-secondary transition-colors" />
+                <button type="submit" className="btn-alik-primary">Odeslat dotaz</button>
+              </form>
+            ) : (
+              <div className="p-3 rounded-xl border border-border bg-muted/40 text-sm text-center">
+                Pro položení dotazu se musíš <Link to="/login" className="font-bold text-primary hover:underline">přihlásit</Link> nebo <Link to="/register" className="font-bold text-primary hover:underline">zaregistrovat</Link>.
+              </div>
+            )}
           </div>
 
           <div className="catalog-card animate-slide-up stagger-4">
