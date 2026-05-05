@@ -36,11 +36,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserData = async (userId: string) => {
     const [roleRes, profileRes, blockRes] = await Promise.all([
-      supabase.from('user_roles').select('role').eq('user_id', userId).limit(1).single(),
+      supabase.from('user_roles').select('role').eq('user_id', userId),
       supabase.from('profiles').select('display_name, avatar_url, last_seen').eq('user_id', userId).limit(1).single(),
       supabase.from('user_blocks').select('id').eq('user_id', userId).eq('is_active', true).limit(1).maybeSingle(),
     ]);
-    if (roleRes.data) setRole(roleRes.data.role as AppRole);
+    if (roleRes.data && roleRes.data.length) {
+      const { pickHighestRole } = await import('@/lib/rolePriority');
+      const best = pickHighestRole(roleRes.data.map((r: any) => r.role));
+      if (best) setRole(best as AppRole);
+    }
     if (profileRes.data) setProfile(profileRes.data);
     setIsBlocked(!!blockRes.data);
   };
