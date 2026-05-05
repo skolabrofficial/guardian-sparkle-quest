@@ -85,9 +85,9 @@ export default function UserWall() {
       const { data: r } = await db()
         .from('user_roles')
         .select('role')
-        .eq('user_id', data.user_id)
-        .maybeSingle();
-      setTargetRole(r?.role ?? 'student');
+        .eq('user_id', data.user_id);
+      const { pickHighestRole } = await import('@/lib/rolePriority');
+      setTargetRole(pickHighestRole((r || []).map((x: any) => x.role)) ?? 'student');
       setLoading(false);
     })();
     return () => { alive = false; };
