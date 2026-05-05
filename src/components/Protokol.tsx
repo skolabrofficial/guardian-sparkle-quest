@@ -163,6 +163,7 @@ export default function Protokol({
           </button>
         )}
       </div>
+    </div>
   );
 }
 
