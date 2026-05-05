@@ -186,10 +186,11 @@ export default function CourseForum({ courseId, courseName, allCourses, facultyD
 
   const saveEdit = async () => {
     if (!editingId || !editContent.trim()) return;
+    const prev = posts.find(p => p.id === editingId)?.content ?? '';
     const { error } = await supabase.from('forum_posts').update({ content: editContent }).eq('id', editingId);
     if (error) toast.error(error.message);
     else {
-      if (user) await recordHistory('forum_post', editingId, user.id, 'update', { content: { from: '(předchozí obsah)', to: editContent.slice(0, 100) + '...' } });
+      if (user) await recordHistory('forum_post', editingId, user.id, 'update', { content: { from: prev, to: editContent } });
       toast.success('Upraveno'); setEditingId(null); setEditContent(''); load();
     }
   };
