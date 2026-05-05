@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/roleUtils';
 import { logAudit } from '@/lib/auditLog';
 import { ProtokolFromAudit } from '@/components/Protokol';
+import { PoznamkaText } from '@/components/ProtokolByCode';
 
 const db = () => supabase as any;
 
