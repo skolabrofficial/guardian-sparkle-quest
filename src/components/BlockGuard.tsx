@@ -45,6 +45,11 @@ export default function BlockGuard({ children }: { children: ReactNode }) {
   if (!isBlocked) return <>{children}</>;
   if (!block) return <Navigate to="/blocked" replace />;
 
+  // Shadow / read-only / hidden — let user through silently
+  if (block.block_type === 'shadow' || block.block_type === 'readonly' || (block as any).visible_to_user === false) {
+    return <>{children}</>;
+  }
+
   // Warning type — show a dismissible banner, don't block
   if (block.block_type === 'warning') {
     return (
