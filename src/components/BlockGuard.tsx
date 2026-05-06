@@ -29,13 +29,13 @@ export default function BlockGuard({ children }: { children: ReactNode }) {
     (async () => {
       const { data } = await supabase
         .from('user_blocks')
-        .select('block_type, affected_areas, severity, reason')
+        .select('block_type, affected_areas, severity, reason, visible_to_user')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .order('blocked_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      setBlock(data);
+      setBlock(data as any);
       setChecked(true);
     })();
   }, [user, isBlocked]);
