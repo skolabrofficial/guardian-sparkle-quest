@@ -914,7 +914,13 @@ export default function Rektorat() {
                   <textarea placeholder="Podrobnosti" value={blockDetails} onChange={e => setBlockDetails(e.target.value)} className="border-2 border-destructive/30 rounded-xl py-2 px-3 text-sm outline-none min-h-[50px]" />
                   <div className="grid grid-cols-2 gap-2">
                     <select value={blockType} onChange={e => setBlockType(e.target.value)} className="border-2 border-destructive/30 rounded-xl py-2 px-3 text-sm outline-none">
-                      <option value="full">Plná</option><option value="partial">Částečná</option><option value="warning">Varování</option><option value="temporary">Dočasná</option>
+                      <option value="warning">Varování</option>
+                      <option value="partial">Částečná</option>
+                      <option value="readonly">Pouze čtení</option>
+                      <option value="shadow">Stínová</option>
+                      <option value="temporary">Dočasná</option>
+                      <option value="full">Plná</option>
+                      <option value="ip_ban">IP ban</option>
                     </select>
                     <select value={blockSeverity} onChange={e => setBlockSeverity(e.target.value)} className="border-2 border-destructive/30 rounded-xl py-2 px-3 text-sm outline-none">
                       <option value="low">Nízká</option><option value="standard">Standardní</option><option value="high">Vysoká</option><option value="critical">Kritická</option>
