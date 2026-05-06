@@ -77,6 +77,47 @@ export type Database = {
         }
         Relationships: []
       }
+      block_actions: {
+        Row: {
+          action_type: string
+          actor_id: string
+          block_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          metadata: Json | null
+        }
+        Insert: {
+          action_type: string
+          actor_id: string
+          block_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          metadata?: Json | null
+        }
+        Update: {
+          action_type?: string
+          actor_id?: string
+          block_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "block_actions_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "user_blocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       block_messages: {
         Row: {
           acknowledged_at: string | null
@@ -1024,6 +1065,8 @@ export type Database = {
           appeal_status: string | null
           appeal_submitted_at: string | null
           appeal_text: string | null
+          assigned_to: string | null
+          banned_ips: string[] | null
           block_count: number | null
           block_type: string
           blocked_at: string
@@ -1035,12 +1078,14 @@ export type Database = {
           expires_at: string | null
           id: string
           internal_notes: string | null
+          ip_ban_active: boolean | null
           ip_note: string | null
           is_active: boolean
           is_permanent: boolean | null
           last_warning_at: string | null
           metadata: Json | null
           notification_sent: boolean | null
+          offense_category: string | null
           reason: string
           review_scheduled_at: string | null
           severity: string
@@ -1048,6 +1093,7 @@ export type Database = {
           unblocked_at: string | null
           unblocked_by: string | null
           user_id: string
+          visible_to_user: boolean | null
           warning_count: number | null
         }
         Insert: {
@@ -1058,6 +1104,8 @@ export type Database = {
           appeal_status?: string | null
           appeal_submitted_at?: string | null
           appeal_text?: string | null
+          assigned_to?: string | null
+          banned_ips?: string[] | null
           block_count?: number | null
           block_type?: string
           blocked_at?: string
@@ -1069,12 +1117,14 @@ export type Database = {
           expires_at?: string | null
           id?: string
           internal_notes?: string | null
+          ip_ban_active?: boolean | null
           ip_note?: string | null
           is_active?: boolean
           is_permanent?: boolean | null
           last_warning_at?: string | null
           metadata?: Json | null
           notification_sent?: boolean | null
+          offense_category?: string | null
           reason: string
           review_scheduled_at?: string | null
           severity?: string
@@ -1082,6 +1132,7 @@ export type Database = {
           unblocked_at?: string | null
           unblocked_by?: string | null
           user_id: string
+          visible_to_user?: boolean | null
           warning_count?: number | null
         }
         Update: {
@@ -1092,6 +1143,8 @@ export type Database = {
           appeal_status?: string | null
           appeal_submitted_at?: string | null
           appeal_text?: string | null
+          assigned_to?: string | null
+          banned_ips?: string[] | null
           block_count?: number | null
           block_type?: string
           blocked_at?: string
@@ -1103,12 +1156,14 @@ export type Database = {
           expires_at?: string | null
           id?: string
           internal_notes?: string | null
+          ip_ban_active?: boolean | null
           ip_note?: string | null
           is_active?: boolean
           is_permanent?: boolean | null
           last_warning_at?: string | null
           metadata?: Json | null
           notification_sent?: boolean | null
+          offense_category?: string | null
           reason?: string
           review_scheduled_at?: string | null
           severity?: string
@@ -1116,6 +1171,7 @@ export type Database = {
           unblocked_at?: string | null
           unblocked_by?: string | null
           user_id?: string
+          visible_to_user?: boolean | null
           warning_count?: number | null
         }
         Relationships: []

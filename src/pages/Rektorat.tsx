@@ -914,7 +914,13 @@ export default function Rektorat() {
                   <textarea placeholder="Podrobnosti" value={blockDetails} onChange={e => setBlockDetails(e.target.value)} className="border-2 border-destructive/30 rounded-xl py-2 px-3 text-sm outline-none min-h-[50px]" />
                   <div className="grid grid-cols-2 gap-2">
                     <select value={blockType} onChange={e => setBlockType(e.target.value)} className="border-2 border-destructive/30 rounded-xl py-2 px-3 text-sm outline-none">
-                      <option value="full">Plná</option><option value="partial">Částečná</option><option value="warning">Varování</option><option value="temporary">Dočasná</option>
+                      <option value="warning">Varování</option>
+                      <option value="partial">Částečná</option>
+                      <option value="readonly">Pouze čtení</option>
+                      <option value="shadow">Stínová</option>
+                      <option value="temporary">Dočasná</option>
+                      <option value="full">Plná</option>
+                      <option value="ip_ban">IP ban</option>
                     </select>
                     <select value={blockSeverity} onChange={e => setBlockSeverity(e.target.value)} className="border-2 border-destructive/30 rounded-xl py-2 px-3 text-sm outline-none">
                       <option value="low">Nízká</option><option value="standard">Standardní</option><option value="high">Vysoká</option><option value="critical">Kritická</option>
@@ -943,54 +949,37 @@ export default function Rektorat() {
                 </div>
               </div>
             )}
-            {blocks.map(b => (
-              <div key={b.id}>
-                <div className="catalog-item-card items-center cursor-pointer" onClick={() => setExpandedBlock(expandedBlock === b.id ? null : b.id)} style={{ borderLeft: `4px solid ${b.is_active ? 'hsl(var(--destructive))' : 'hsl(var(--chart-2))'}` }}>
-                  <div className="flex-1">
-                    <strong>{getUserName(b.user_id)}</strong>
-                    <span className="text-xs ml-2">{b.reason.slice(0, 40)}</span>
-                    {b.appeal_status === 'pending' && <span className="text-xs ml-2 font-bold text-accent-foreground">⏳</span>}
-                    {b.escalated && <span className="text-xs ml-2 font-bold text-destructive">⚠</span>}
-                  </div>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full text-white ${b.is_active ? 'bg-destructive' : 'bg-green-600'}`}>{b.is_active ? 'Aktivní' : '✓'}</span>
-                </div>
-                {expandedBlock === b.id && (
-                  <div className="p-3 rounded-b-xl text-sm grid gap-3 bg-muted/30 border-l-4 border-border">
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div><span className="text-muted-foreground">Typ:</span> <strong>{b.block_type}</strong></div>
-                      <div><span className="text-muted-foreground">Závažnost:</span> <strong>{b.severity}</strong></div>
-                      <div><span className="text-muted-foreground">Trvalá:</span> <strong>{b.is_permanent ? 'Ano' : 'Ne'}</strong></div>
-                      <div><span className="text-muted-foreground">Blokoval:</span> <strong>{getUserName(b.blocked_by)}</strong></div>
-                    </div>
-                    {b.details && <div className="text-xs bg-card p-2 rounded-xl"><MarkdownRenderer content={b.details} /></div>}
-                    {b.is_active && (
-                      <div className="flex flex-wrap gap-1.5">
-                        <button onClick={() => unblockUser(b.id)} className="text-xs font-bold px-2 py-1 rounded-lg bg-green-100 text-green-700">Odblokovat</button>
-                        <button onClick={() => escalateBlock(b.id)} className="text-xs font-bold px-2 py-1 rounded-lg bg-accent text-accent-foreground">Eskalovat</button>
-                        <button onClick={() => sendWarning(b.id)} className="text-xs font-bold px-2 py-1 rounded-lg bg-muted">Varování</button>
-                        <button onClick={() => extendBlock(b.id, 7)} className="text-xs font-bold px-2 py-1 rounded-lg bg-muted">+7d</button>
-                        <button onClick={() => makePermanent(b.id)} className="text-xs font-bold px-2 py-1 rounded-lg bg-destructive/10 text-destructive">Trvalá</button>
-                        <button onClick={() => regenerateBlockMessage(b)} className="text-xs font-bold px-2 py-1 rounded-lg bg-muted">📄 Zpráva</button>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {blocks.map(b => {
+                const typeColors: Record<string, string> = { warning: '#eab308', partial: '#f97316', temporary: '#ef4444', full: '#dc2626', shadow: '#6b7280', readonly: '#a855f7', ip_ban: '#7f1d1d' };
+                const c = typeColors[b.block_type] || '#dc2626';
+                const remaining = b.is_permanent ? '∞' : b.expires_at ? Math.max(0, Math.ceil((new Date(b.expires_at).getTime() - Date.now()) / 86400000)) + 'd' : '?';
+                return (
+                  <a key={b.id} href={`/blokace/${b.id}`} className="panel-card hover:scale-[1.01] transition-transform" style={{ borderTop: `4px solid ${c}`, opacity: b.is_active ? 1 : 0.6 }}>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1">
+                        <strong className="block text-sm">{getUserName(b.user_id)}</strong>
+                        <span className="text-xs text-muted-foreground">BLK-{b.id.slice(0, 8).toUpperCase()}</span>
                       </div>
-                    )}
-                    {b.appeal_status === 'pending' && (
-                      <div className="grid gap-2 p-2 rounded-xl bg-accent/10 border border-accent/30">
-                        <p className="text-xs"><strong>Odvolání:</strong> {b.appeal_text}</p>
-                        <div className="flex gap-2">
-                          <button onClick={() => approveAppeal(b.id)} className="text-xs font-bold px-3 py-1 rounded-lg bg-green-600 text-white">✓ Schválit</button>
-                          <button onClick={() => setAppealReviewing(b.id)} className="text-xs font-bold px-3 py-1 rounded-lg bg-accent text-accent-foreground">Přezkoumat</button>
-                          <button onClick={() => rejectAppeal(b.id, 'Zamítnuto.')} className="text-xs font-bold px-3 py-1 rounded-lg bg-destructive text-destructive-foreground">✗ Zamítnout</button>
-                        </div>
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold text-white" style={{ background: b.is_active ? c : '#10b981' }}>
+                          {b.is_active ? b.block_type : '✓ konec'}
+                        </span>
+                        {b.ip_ban_active && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-900 text-white">IP</span>}
                       </div>
-                    )}
-                    <div className="flex gap-2">
-                      <input placeholder="Interní poznámka" value={internalNoteText} onChange={e => setInternalNoteText(e.target.value)} className="border rounded-lg px-2 py-1 text-xs flex-1 outline-none" />
-                      <button onClick={() => { addInternalNote(b.id, internalNoteText); setInternalNoteText(''); }} className="text-xs font-bold px-2 py-1 rounded-lg bg-primary text-primary-foreground">+</button>
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                    <p className="text-xs line-clamp-2 mb-2">{b.reason}</p>
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <span>⏱ {remaining}</span>
+                      {b.appeal_status === 'pending' && <span className="font-bold text-amber-600">⏳ odvolání</span>}
+                      {b.escalated && <span className="font-bold text-purple-600">⚠ eskalace</span>}
+                      <span>{b.warning_count || 0}× ⚠</span>
+                    </div>
+                  </a>
+                );
+              })}
+              {blocks.length === 0 && <p className="text-sm text-muted-foreground sm:col-span-2">Žádné blokace.</p>}
+            </div>
           </div>
         );
       }
