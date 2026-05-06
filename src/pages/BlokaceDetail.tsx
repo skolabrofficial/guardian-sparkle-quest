@@ -88,11 +88,11 @@ export default function BlokaceDetail() {
     await supabase.from('block_actions').insert({
       block_id: block.id, actor_id: user.id, action_type, description, metadata, is_public,
     });
-    await logAudit('block.action', 'user_blocks', block.id, { action_type, description });
+    await logAudit('block.action', { entityType: 'user_blocks', entityId: block.id, details: { action_type, description } });
   };
 
-  const update = async (patch: Record<string, any>, log?: { type: string; desc: string; pub?: boolean }) => {
-    const { error } = await supabase.from('user_blocks').update(patch).eq('id', block.id);
+  const update = async (patch: any, log?: { type: string; desc: string; pub?: boolean }) => {
+    const { error } = await supabase.from('user_blocks').update(patch as any).eq('id', block.id);
     if (error) return toast.error(error.message);
     if (log) await addAction(log.type, log.desc, patch, log.pub ?? false);
     toast.success('Uloženo');
