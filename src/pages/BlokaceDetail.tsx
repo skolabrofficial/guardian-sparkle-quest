@@ -348,7 +348,7 @@ export default function BlokaceDetail() {
                 <textarea value={appealReply} onChange={e => setAppealReply(e.target.value)} placeholder="Odpověď uživateli…" className="border-2 border-border rounded-xl py-2 px-3 text-sm w-full outline-none min-h-[60px] mb-2" />
                 <div className="flex gap-2 flex-wrap">
                   <button onClick={() => submitAppealReply('approved')} className="text-xs font-bold px-3 py-1.5 rounded-lg bg-green-600 text-white">✓ Schválit (odblokovat)</button>
-                  <button onClick={() => submitAppealReply('reviewing')} className="text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-500 text-white">⏳ Přezkoumává se</button>
+                  <button onClick={() => submitAppealReply('under_review')} className="text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-500 text-white">⏳ Přezkoumává se</button>
                   <button onClick={() => submitAppealReply('rejected')} className="text-xs font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white">✗ Zamítnout</button>
                 </div>
               </>
