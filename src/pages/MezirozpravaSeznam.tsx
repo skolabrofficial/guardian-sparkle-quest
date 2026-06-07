@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { logAudit } from '@/lib/auditLog';
 
 const STATUS_COLOR: Record<string, string> = {
-  requested: '#f59e0b', approved: '#10b981', open: '#10b981', rejected: '#ef4444', closed: '#6b7280',
+  open: '#10b981', closed: '#6b7280', archived: '#9ca3af',
 };
 
 export default function MezirozpravaSeznam() {
@@ -18,7 +18,7 @@ export default function MezirozpravaSeznam() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const { data } = await (supabase as any).from('mediations').select('*').order('created_at', { ascending: false });
+    const { data } = await (supabase as any).from('mediations_v2').select('*').order('created_at', { ascending: false });
     setMeds(data || []);
     const ids = (data || []).map((m: any) => m.subject_user_id);
     if (ids.length) {
@@ -34,11 +34,11 @@ export default function MezirozpravaSeznam() {
   const request = async () => {
     if (!user) return toast.error('Musíš být přihlášen');
     if (!reason.trim()) return toast.error('Napiš důvod žádosti');
-    const { data, error } = await (supabase as any).from('mediations').insert({
-      subject_user_id: user.id, opened_by: user.id, status: 'requested', request_reason: reason,
+    const { data, error } = await (supabase as any).from('mediations_v2').insert({
+      subject_user_id: user.id, opened_by: user.id, status: 'open', request_reason: reason,
     }).select().single();
     if (error) return toast.error(error.message);
-    await logAudit('mediation.request', { entityType: 'mediations', entityId: data.id, minRole: 'student' });
+    await logAudit('mediation.request', { entityType: 'mediations_v2', entityId: data.id, minRole: 'student' });
     setReason(''); toast.success('Žádost odeslána'); load();
   };
 
@@ -48,7 +48,7 @@ export default function MezirozpravaSeznam() {
         <div className="panel-card">
           <h1 className="text-2xl font-extrabold mt-0">📨 Mezirozpravy</h1>
           <p className="text-sm text-muted-foreground mb-3">
-            Soukromá konverzace mezi vedením webu a tebou. Žádost musí být schválena, než se otevře.
+            Soukromá konverzace mezi vedením webu a tebou.
           </p>
           {user && (
             <div className="grid gap-2">
