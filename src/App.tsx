@@ -26,6 +26,8 @@ import Gdpr from "./pages/Gdpr";
 import BlokaceDetail from "./pages/BlokaceDetail";
 import Mezirozprava from "./pages/Mezirozprava";
 import MezirozpravaSeznam from "./pages/MezirozpravaSeznam";
+import RektoratMezirozpravy from "./pages/RektoratMezirozpravy";
+import RektoratMezirozpravaDetail from "./pages/RektoratMezirozpravaDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +54,8 @@ const App = () => (
             <Route path="/vypisky" element={<BlockGuard><Vypisky /></BlockGuard>} />
             <Route path="/doucovani" element={<BlockGuard><Doucovani /></BlockGuard>} />
             <Route path="/rektorat" element={<BlockGuard><Rektorat /></BlockGuard>} />
+            <Route path="/rektorat/mezirozpravy" element={<BlockGuard><RektoratMezirozpravy /></BlockGuard>} />
+            <Route path="/rektorat/mezirozprava/:id" element={<BlockGuard><RektoratMezirozpravaDetail /></BlockGuard>} />
             <Route path="/profil" element={<BlockGuard><Profil /></BlockGuard>} />
             <Route path="/povereni" element={<BlockGuard><Povereni /></BlockGuard>} />
             <Route path="/uziv/:username" element={<BlockGuard><UserWall /></BlockGuard>} />
