@@ -270,10 +270,19 @@ export default function Rektorat() {
 
   const assignRole = async () => {
     if (!roleUserId) return;
+    const { data: prev } = await supabase.from('user_roles').select('role').eq('user_id', roleUserId);
     await supabase.from('user_roles').delete().eq('user_id', roleUserId);
     const { error } = await supabase.from('user_roles').insert({ user_id: roleUserId, role: roleValue as any });
     if (error) toast.error(error.message);
-    else { toast.success('Role přiřazena'); loadAll(); }
+    else {
+      const { logAudit } = await import('@/lib/auditLog');
+      await logAudit('role.assign', {
+        entityType: 'user_roles', entityId: roleUserId,
+        details: { target_user_id: roleUserId, from: (prev || []).map(p => p.role).join(',') || 'student', to: roleValue },
+        minRole: 'rektor',
+      });
+      toast.success('Role přiřazena'); loadAll();
+    }
   };
 
   const deleteCourse = async (id: string) => { await supabase.from('courses').delete().eq('id', id); toast.success('Kurz smazán'); loadAll(); };

@@ -513,6 +513,92 @@ export type Database = {
         }
         Relationships: []
       }
+      mediation_messages: {
+        Row: {
+          author_id: string
+          author_role: string | null
+          content: string
+          created_at: string
+          id: string
+          mediation_id: string
+        }
+        Insert: {
+          author_id: string
+          author_role?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          mediation_id: string
+        }
+        Update: {
+          author_id?: string
+          author_role?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          mediation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mediation_messages_mediation_id_fkey"
+            columns: ["mediation_id"]
+            isOneToOne: false
+            referencedRelation: "mediations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mediations: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          id: string
+          invited_lektors: string[]
+          metadata: Json
+          opened_by: string
+          request_reason: string | null
+          status: string
+          subject_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          id?: string
+          invited_lektors?: string[]
+          metadata?: Json
+          opened_by: string
+          request_reason?: string | null
+          status?: string
+          subject_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          id?: string
+          invited_lektors?: string[]
+          metadata?: Json
+          opened_by?: string
+          request_reason?: string | null
+          status?: string
+          subject_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -1265,6 +1351,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_mediation: {
+        Args: { _med_id: string; _uid: string }
+        Returns: boolean
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
