@@ -218,10 +218,12 @@ export function ProtokolFromAudit({
   sourceTable?: 'audit_log' | 'entity_history';
 }) {
   const druh = actionToDruh(row.action);
-  const autorita = roleToAutorita(role);
+  const det = row.details || row.changes || {};
+  // Pokud akce má v details.min_role, zobraz odznáček minimální role (ne reálné role aktéra).
+  const effectiveRole = det?.min_role ?? role;
+  const autorita = roleToAutorita(effectiveRole);
   const nick = profile?.display_name || (row.user_id ? row.user_id.slice(0, 8) : 'systém');
   const href = profile?.username ? `/uziv/${profile.username}` : undefined;
-  const det = row.details || row.changes || {};
   const zmeny: Zmena[] = [];
 
   if (det && typeof det === 'object') {

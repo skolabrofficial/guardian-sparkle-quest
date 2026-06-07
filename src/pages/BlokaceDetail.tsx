@@ -140,10 +140,16 @@ export default function BlokaceDetail() {
     update({ evidence_urls: list }, { type: 'evidence', desc: `Důkaz: ${evidenceUrl.trim()}` });
     setEvidenceUrl('');
   };
-  const submitAppealReply = (status: 'approved' | 'rejected' | 'reviewing') => {
+  const submitAppealReply = async (status: 'under_review' | 'approved' | 'rejected') => {
     const patch: any = { appeal_status: status, appeal_reviewed_by: user!.id, appeal_reviewed_at: new Date().toISOString(), appeal_response: appealReply };
     if (status === 'approved') Object.assign(patch, { is_active: false, unblocked_at: new Date().toISOString(), unblocked_by: user!.id, unblock_reason: 'Schválené odvolání' });
-    update(patch, { type: `appeal_${status}`, desc: `Odvolání: ${status} — ${appealReply || '(bez komentáře)'}`, pub: true });
+    const label = status === 'under_review' ? 'Přezkoumává se' : status === 'approved' ? 'Schváleno' : 'Zamítnuto';
+    await update(patch, { type: `appeal_${status}`, desc: `Odvolání → ${label}: ${appealReply || '(bez komentáře)'}`, pub: true });
+    await logAudit(`appeal.${status}`, {
+      entityType: 'user_blocks', entityId: block.id,
+      details: { from: block.appeal_status || 'submitted', to: status, reply: appealReply },
+      minRole: status === 'approved' ? 'rektor' : 'spravce',
+    });
     setAppealReply('');
   };
   const toggleVisibility = () => update({ visible_to_user: !block.visible_to_user }, { type: 'visibility', desc: `Viditelnost pro uživatele: ${!block.visible_to_user ? 'ano' : 'ne (skryté)'}` });
