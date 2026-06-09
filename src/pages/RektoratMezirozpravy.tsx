@@ -7,22 +7,22 @@ import { toast } from 'sonner';
 import { logAudit } from '@/lib/auditLog';
 
 const STATUS_COLOR: Record<string, string> = {
-  open: '#10b981', closed: '#6b7280', archived: '#9ca3af',
+  requested: '#f59e0b', open: '#10b981', closed: '#6b7280', archived: '#9ca3af',
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  open: 'Otevřená', closed: 'Uzavřená', archived: 'Archivovaná',
+  requested: 'Čeká na schválení', open: 'Otevřená', closed: 'Uzavřená', archived: 'Archivovaná',
 };
 
 export default function RektoratMezirozpravy() {
-  const { user, isRektor } = useAuth();
+  const { isRektor, isSpravce } = useAuth();
   const [meds, setMeds] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<Record<string, any>>({});
-  const [selectedStatus, setSelectedStatus] = useState<string>('open');
+  const [selectedStatus, setSelectedStatus] = useState<string>('requested');
   const [loading, setLoading] = useState(true);
 
-  if (!isRektor) {
-    return <AppLayout><div className="panel-card text-red-600 font-bold">Přístup odepřen. Musíš být rektor.</div></AppLayout>;
+  if (!isRektor && !isSpravce) {
+    return <AppLayout><div className="panel-card text-red-600 font-bold">Přístup odepřen. Musíš být rektor nebo správce.</div></AppLayout>;
   }
 
   const load = useCallback(async () => {
@@ -53,7 +53,7 @@ export default function RektoratMezirozpravy() {
 
           {/* Filter tabs */}
           <div className="flex gap-2 mb-4 flex-wrap">
-            {['open', 'closed', 'archived', 'all'].map(status => (
+            {['requested', 'open', 'closed', 'archived', 'all'].map(status => (
               <button
                 key={status}
                 onClick={() => setSelectedStatus(status)}
@@ -94,7 +94,7 @@ export default function RektoratMezirozpravy() {
                     </div>
                     <div className="text-right">
                       <span className="px-2 py-0.5 rounded-full text-xs font-bold text-white block" style={{ background: STATUS_COLOR[m.status] || '#6b7280' }}>
-                        {m.status}
+                        {STATUS_LABEL[m.status] || m.status}
                       </span>
                       <span className="text-xs text-muted-foreground block mt-1">
                         {new Date(m.created_at).toLocaleDateString('cs-CZ')}
