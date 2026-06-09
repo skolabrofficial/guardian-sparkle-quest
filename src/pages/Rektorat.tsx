@@ -190,7 +190,7 @@ export default function Rektorat() {
   useEffect(() => {
     if (!user || (!isStaff && !isDeveloper && !isLektor)) return;
     loadAll();
-  }, [user, activeTab]);
+  }, [user, activeTab, isStaff, isDeveloper, isLektor]);
 
   const loadAll = async () => {
     const [c, f, q, n, s, ann, al, rep, notif, ur, pr, bl, fp, enr, bm, ss] = await Promise.all([
@@ -301,8 +301,8 @@ export default function Rektorat() {
         return (
           <div className="grid gap-4">
             <h3 className="mt-0 text-lg font-extrabold">📨 Mezirozpravy – Rektorát</h3>
-            <p className="text-sm text-muted-foreground">Přehled všech mezirozprav v systému. Klikni na mezirozpravu pro zobrazení detailů.</p>
-            <a href="/mezirozprava" className="btn-alik-primary text-sm w-fit">→ Přejít na seznam mezirozprav</a>
+            <p className="text-sm text-muted-foreground">Přehled všech mezirozprav, čekajících žádostí a posledních zpráv.</p>
+            <a href="/rektorat/mezirozpravy" className="btn-alik-primary text-sm w-fit">→ Otevřít dohled mezirozprav</a>
           </div>
         );
       case 'prehled': {
@@ -332,9 +332,15 @@ export default function Rektorat() {
       }
       default:
         return (
-          <div className="panel-card">
+          <div className="grid gap-4">
             <h3 className="mt-0">{allTabs.find(t => t.key === activeTab)?.icon} {allTabs.find(t => t.key === activeTab)?.label}</h3>
-            <p className="text-muted-foreground">Tento modul je ve vývoji.</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="stat-card"><strong>{courses.length}</strong><span className="block text-xs text-muted-foreground">kurzů</span></div>
+              <div className="stat-card"><strong>{users.length}</strong><span className="block text-xs text-muted-foreground">uživatelů</span></div>
+              <div className="stat-card"><strong>{blocks.filter((b: any) => b.is_active).length}</strong><span className="block text-xs text-muted-foreground">aktivních blokací</span></div>
+              <div className="stat-card"><strong>{auditLogs.length}</strong><span className="block text-xs text-muted-foreground">protokolů</span></div>
+            </div>
+            <p className="text-sm text-muted-foreground">Modul je načtený; data a rychlé akce jsou dostupné v příslušných přehledech Rektorátu.</p>
           </div>
         );
     }

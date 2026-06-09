@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import NotificationBell from '@/components/NotificationBell';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import { getRoleSymbol, ROLE_LABELS, ROLE_GRADIENT, ROLE_COLORS } from '@/lib/roleUtils';
+import { getSpecialUserBadge, SpecialUserBadgeView } from '@/lib/userBadges';
 import { Search, User, LogOut, BookOpen, LogIn, UserPlus, GraduationCap, Sparkles } from 'lucide-react';
 
 interface AppHeaderProps {
@@ -17,6 +18,7 @@ export default function AppHeader({ searchLabel = 'Najít', searchPlaceholder = 
   const { user, profile, role, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const specialBadge = getSpecialUserBadge(profile);
 
   return (
     <header className="relative grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_0.9fr] gap-4 items-stretch animate-float-in rounded-3xl p-5 border border-border overflow-hidden"
@@ -124,6 +126,7 @@ export default function AppHeader({ searchLabel = 'Najít', searchPlaceholder = 
               <div className="flex-1 min-w-0">
                 <strong className="block truncate text-sm">
                   {profile?.display_name || user.email}{getRoleSymbol(role)}
+                  <SpecialUserBadgeView badge={specialBadge} compact />
                 </strong>
                 <small className="block text-xs" style={{ color: ROLE_COLORS[role || 'student'] }}>
                   {ROLE_LABELS[role || 'student'] || 'Student'}

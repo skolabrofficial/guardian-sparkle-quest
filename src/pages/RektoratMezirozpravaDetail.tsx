@@ -11,16 +11,16 @@ type Med = any;
 type Msg = { id: string; mediation_id: string; author_id: string; content: string; created_at: string };
 
 const STATUS_COLOR: Record<string, string> = {
-  open: '#10b981', closed: '#6b7280', archived: '#9ca3af',
+  requested: '#f59e0b', open: '#10b981', closed: '#6b7280', archived: '#9ca3af',
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  open: 'Otevřená', closed: 'Uzavřená', archived: 'Archivovaná',
+  requested: 'Čeká na schválení', open: 'Otevřená', closed: 'Uzavřená', archived: 'Archivovaná',
 };
 
 export default function RektoratMezirozpravaDetail() {
   const { id } = useParams();
-  const { user, isRektor } = useAuth();
+  const { user, isRektor, isSpravce } = useAuth();
   const [med, setMed] = useState<Med | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [profiles, setProfiles] = useState<Record<string, any>>({});
@@ -28,8 +28,8 @@ export default function RektoratMezirozpravaDetail() {
   const [newStatus, setNewStatus] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
-  if (!isRektor) {
-    return <AppLayout><div className="panel-card text-red-600 font-bold">Přístup odepřen. Musíš být rektor.</div></AppLayout>;
+  if (!isRektor && !isSpravce) {
+    return <AppLayout><div className="panel-card text-red-600 font-bold">Přístup odepřen. Musíš být rektor nebo správce.</div></AppLayout>;
   }
 
   const load = useCallback(async () => {
@@ -124,7 +124,7 @@ export default function RektoratMezirozpravaDetail() {
         <div className="panel-card">
           <h3 className="mt-0 text-sm font-extrabold">🔧 Správa</h3>
           <div className="flex gap-2 flex-wrap">
-            {['open', 'closed', 'archived'].map(st => (
+            {['requested', 'open', 'closed', 'archived'].map(st => (
               <button
                 key={st}
                 onClick={() => updateStatus(st)}

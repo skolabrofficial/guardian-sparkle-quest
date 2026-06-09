@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
+import { pickHighestRole } from '@/lib/rolePriority';
 
 type AppRole = 'rektor' | 'spravce' | 'lektor' | 'student';
 
@@ -8,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   role: AppRole | null;
-  profile: { display_name: string; avatar_url: string | null; last_seen: string | null } | null;
+  profile: { display_name: string; username: string; avatar_url: string | null; last_seen: string | null } | null;
   loading: boolean;
   isBlocked: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -30,20 +31,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
-  const [profile, setProfile] = useState<{ display_name: string; avatar_url: string | null; last_seen: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ display_name: string; username: string; avatar_url: string | null; last_seen: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [isBlocked, setIsBlocked] = useState(false);
 
   const fetchUserData = async (userId: string) => {
     const [roleRes, profileRes, blockRes] = await Promise.all([
       supabase.from('user_roles').select('role').eq('user_id', userId),
-      supabase.from('profiles').select('display_name, avatar_url, last_seen').eq('user_id', userId).limit(1).single(),
+      supabase.from('profiles').select('display_name, username, avatar_url, last_seen').eq('user_id', userId).limit(1).single(),
       supabase.from('user_blocks').select('id').eq('user_id', userId).eq('is_active', true).limit(1).maybeSingle(),
     ]);
     if (roleRes.data && roleRes.data.length) {
-      const { pickHighestRole } = await import('@/lib/rolePriority');
       const best = pickHighestRole(roleRes.data.map((r: any) => r.role));
-      if (best) setRole(best as AppRole);
+      setRole((best || 'student') as AppRole);
+    } else {
+      setRole('student');
     }
     if (profileRes.data) setProfile(profileRes.data);
     setIsBlocked(!!blockRes.data);
@@ -63,28 +65,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setTimeout(() => fetchUserData(session.user.id), 0);
+    let alive = true;
+    const applySession = (nextSession: Session | null) => {
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      if (nextSession?.user) {
+        setLoading(true);
       } else {
         setRole(null);
         setProfile(null);
         setIsBlocked(false);
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) fetchUserData(session.user.id);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    supabase.auth.getSession().then(({ data: { session } }) => { if (alive) applySession(session); });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => applySession(session));
+    return () => { alive = false; subscription.unsubscribe(); };
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    setLoading(true);
+    fetchUserData(user.id).finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [user?.id]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });

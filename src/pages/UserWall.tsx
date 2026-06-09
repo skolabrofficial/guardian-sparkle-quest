@@ -15,6 +15,7 @@ import { ROLE_LABELS, ROLE_COLORS } from '@/lib/roleUtils';
 import { logAudit } from '@/lib/auditLog';
 import { ProtokolFromAudit } from '@/components/Protokol';
 import { PoznamkaText } from '@/components/ProtokolByCode';
+import { getSpecialUserBadge, SpecialUserBadgeView } from '@/lib/userBadges';
 
 const db = () => supabase as any;
 
@@ -117,6 +118,7 @@ export default function UserWall() {
   }
 
   const isMe = me?.id === profile.user_id;
+  const specialBadge = getSpecialUserBadge(profile);
 
   return (
     <AppLayout>
@@ -142,6 +144,7 @@ export default function UserWall() {
                 {profile.display_name}
                 <RoleBadge role={targetRole} />
               </div>
+              <SpecialUserBadgeView badge={specialBadge} />
               {targetRole && targetRole !== 'student' && (
                 <div className="text-xs mt-1" style={{ color: ROLE_COLORS[targetRole] }}>
                   {ROLE_LABELS[targetRole]}
