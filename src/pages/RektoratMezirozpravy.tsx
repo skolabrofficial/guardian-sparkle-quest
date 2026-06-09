@@ -31,8 +31,8 @@ export default function RektoratMezirozpravy() {
     const filtered = (data || []).filter((m: any) => selectedStatus === 'all' || m.status === selectedStatus);
     setMeds(filtered);
     
-    const ids = (filtered || []).map((m: any) => [m.subject_user_id, m.opened_by]).flat().filter(Boolean);
-    const uniqueIds = Array.from(new Set(ids));
+    const ids = (filtered || []).flatMap((m: any) => [m.subject_user_id, m.opened_by]).filter(Boolean) as string[];
+    const uniqueIds = Array.from(new Set<string>(ids));
     if (uniqueIds.length) {
       const { data: profs } = await supabase.from('profiles').select('user_id,display_name,username').in('user_id', uniqueIds);
       const map: Record<string, any> = {};
