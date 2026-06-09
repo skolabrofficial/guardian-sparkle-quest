@@ -513,10 +513,9 @@ export type Database = {
         }
         Relationships: []
       }
-      mediation_messages: {
+      mediation_messages_v2: {
         Row: {
           author_id: string
-          author_role: string | null
           content: string
           created_at: string
           id: string
@@ -524,7 +523,6 @@ export type Database = {
         }
         Insert: {
           author_id: string
-          author_role?: string | null
           content: string
           created_at?: string
           id?: string
@@ -532,7 +530,6 @@ export type Database = {
         }
         Update: {
           author_id?: string
-          author_role?: string | null
           content?: string
           created_at?: string
           id?: string
@@ -540,25 +537,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "mediation_messages_mediation_id_fkey"
+            foreignKeyName: "mediation_messages_v2_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mediation_messages_v2_mediation_id_fkey"
             columns: ["mediation_id"]
             isOneToOne: false
-            referencedRelation: "mediations"
+            referencedRelation: "mediations_v2"
             referencedColumns: ["id"]
           },
         ]
       }
-      mediations: {
+      mediations_v2: {
         Row: {
-          closed_at: string | null
-          closed_by: string | null
           created_at: string
-          decided_at: string | null
-          decided_by: string | null
-          decision_reason: string | null
           id: string
-          invited_lektors: string[]
-          metadata: Json
           opened_by: string
           request_reason: string | null
           status: string
@@ -566,15 +563,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          closed_at?: string | null
-          closed_by?: string | null
           created_at?: string
-          decided_at?: string | null
-          decided_by?: string | null
-          decision_reason?: string | null
           id?: string
-          invited_lektors?: string[]
-          metadata?: Json
           opened_by: string
           request_reason?: string | null
           status?: string
@@ -582,22 +572,30 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          closed_at?: string | null
-          closed_by?: string | null
           created_at?: string
-          decided_at?: string | null
-          decided_by?: string | null
-          decision_reason?: string | null
           id?: string
-          invited_lektors?: string[]
-          metadata?: Json
           opened_by?: string
           request_reason?: string | null
           status?: string
           subject_user_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "mediations_v2_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mediations_v2_subject_user_id_fkey"
+            columns: ["subject_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       notifications: {
         Row: {
