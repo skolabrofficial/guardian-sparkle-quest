@@ -129,6 +129,27 @@
     font-family: 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif;
   }
 
+  .special-user-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #fff0b8, #f4c64d);
+    color: #6a3a00;
+    border: 1px solid #d7a72e;
+    font-size: 11px;
+    font-weight: 900;
+    box-shadow: 0 3px 0 #b88718;
+  }
+  .special-user-badge-compact {
+    padding: 1px 5px;
+    font-size: 10px;
+    vertical-align: middle;
+    margin-left: 3px;
+  }
+
   .s-red { @apply bg-red-50 border-2 border-red-200; }
   .s-blue { @apply bg-blue-50 border-2 border-blue-200; }
   .s-green { @apply bg-green-50 border-2 border-green-200; }

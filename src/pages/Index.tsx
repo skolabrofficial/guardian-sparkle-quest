@@ -36,6 +36,11 @@ export default function Index() {
               <Link to="/kurzy" className="inline-flex items-center gap-1 text-primary font-bold no-underline hover:gap-2 transition-all duration-200">
                 Prohlédnout kurzy <span>→</span>
               </Link>
+              {user && (
+                <Link to="/mezirozprava" className="ml-4 inline-flex items-center gap-1 text-primary font-bold no-underline hover:gap-2 transition-all duration-200">
+                  Moje mezirozpravy <span>→</span>
+                </Link>
+              )}
             </div>
             <div className="grid place-items-center">
               <div className="poster-gradient" />
@@ -78,6 +83,7 @@ export default function Index() {
               <Link to="/fakulty" className="btn-alik-outline text-center no-underline block hover:translate-x-1 transition-transform">Fakulty</Link>
               <Link to="/kurzy" className="btn-alik-outline text-center no-underline block hover:translate-x-1 transition-transform">Kurzy</Link>
               <Link to="/doucovani" className="btn-alik-outline text-center no-underline block hover:translate-x-1 transition-transform">Doučování</Link>
+              {user && <Link to="/mezirozprava" className="btn-alik-outline text-center no-underline block hover:translate-x-1 transition-transform">Mezirozpravy</Link>}
             </div>
           </div>
           <Link to="/doucovani" className="btn-alik-accent text-center no-underline block hover:brightness-110 transition-all">💬 Položit dotaz</Link>
