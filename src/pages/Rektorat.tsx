@@ -190,7 +190,7 @@ export default function Rektorat() {
   useEffect(() => {
     if (!user || (!isStaff && !isDeveloper && !isLektor)) return;
     loadAll();
-  }, [user, activeTab]);
+  }, [user, activeTab, isStaff, isDeveloper, isLektor]);
 
   const loadAll = async () => {
     const [c, f, q, n, s, ann, al, rep, notif, ur, pr, bl, fp, enr, bm, ss] = await Promise.all([
