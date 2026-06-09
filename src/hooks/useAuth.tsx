@@ -66,35 +66,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let alive = true;
-    let seq = 0;
-
-    const applySession = async (nextSession: Session | null) => {
-      const ticket = ++seq;
-      setLoading(true);
+    const applySession = (nextSession: Session | null) => {
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       if (nextSession?.user) {
-        setRole(null);
-        setProfile(null);
-        await fetchUserData(nextSession.user.id);
+        setLoading(true);
       } else {
         setRole(null);
         setProfile(null);
         setIsBlocked(false);
+        setLoading(false);
       }
-      if (alive && ticket === seq) setLoading(false);
     };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (alive) applySession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      applySession(session);
-    });
-
+    supabase.auth.getSession().then(({ data: { session } }) => { if (alive) applySession(session); });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => applySession(session));
     return () => { alive = false; subscription.unsubscribe(); };
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    setLoading(true);
+    fetchUserData(user.id).finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [user?.id]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
