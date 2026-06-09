@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { nameWithRole } from '@/lib/roleUtils';
+import { getSpecialUserBadge, SpecialUserBadgeView } from '@/lib/userBadges';
 
 interface UserLinkProps {
   userId?: string | null;
@@ -35,13 +36,14 @@ export default function UserLink({ userId, username, displayName, role, classNam
   }, [userId, username, resolved]);
 
   const label = nameWithRole(displayName || fallback, role);
+  const specialBadge = getSpecialUserBadge({ user_id: userId, username, display_name: displayName });
 
   if (!resolved) {
-    return <span className={className}>{label}</span>;
+    return <span className={className}>{label}<SpecialUserBadgeView badge={specialBadge} compact /></span>;
   }
   return (
     <Link to={`/uziv/${resolved}`} className={`hover:underline focus:underline ${className || ''}`}>
-      {label}
+      {label}<SpecialUserBadgeView badge={specialBadge} compact />
     </Link>
   );
 }
