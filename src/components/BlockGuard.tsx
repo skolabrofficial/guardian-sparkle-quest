@@ -40,7 +40,16 @@ export default function BlockGuard({ children }: { children: ReactNode }) {
     })();
   }, [user, isBlocked]);
 
-  if (loading || !checked) return null;
+  if (loading || !checked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+          <p className="text-sm text-muted-foreground font-bold">Načítání…</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isBlocked) return <>{children}</>;
   if (!block) return <Navigate to="/blocked" replace />;

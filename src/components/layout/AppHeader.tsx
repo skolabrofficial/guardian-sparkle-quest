@@ -21,7 +21,7 @@ export default function AppHeader({ searchLabel = 'Najít', searchPlaceholder = 
   const specialBadge = getSpecialUserBadge(profile);
 
   return (
-    <header className="relative grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_0.9fr] gap-4 items-stretch animate-float-in rounded-3xl p-5 border border-border overflow-hidden"
+    <header className="relative grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_0.9fr] gap-4 items-stretch animate-float-in rounded-3xl p-5 border border-border"
       style={{
         background: `
           linear-gradient(135deg, hsla(225,60%,97%,0.95), hsla(225,60%,97%,0.8)),
@@ -135,7 +135,7 @@ export default function AppHeader({ searchLabel = 'Najít', searchPlaceholder = 
               <NotificationBell />
             </div>
             <div className="grid grid-cols-3 gap-1.5 mt-2.5">
-              <button className="btn-alik-secondary text-[11px] flex items-center justify-center gap-1" onClick={() => navigate('/profil')}>
+              <button className="btn-alik-secondary text-[11px] flex items-center justify-center gap-1" onClick={() => navigate(profile?.username ? `/uziv/${profile.username}` : '/profil')}>
                 <User size={11} /> Profil
               </button>
               <button className="btn-alik-outline text-[11px] flex items-center justify-center gap-1" onClick={() => navigate('/studium')}>
