@@ -21,7 +21,7 @@ export default function AppHeader({ searchLabel = 'Najít', searchPlaceholder = 
   const specialBadge = getSpecialUserBadge(profile);
 
   return (
-    <header className="relative grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_0.9fr] gap-4 items-stretch animate-float-in rounded-3xl p-5 border border-border overflow-hidden"
+    <header className="relative grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_0.9fr] gap-4 items-stretch animate-float-in rounded-3xl p-5 border border-border"
       style={{
         background: `
           linear-gradient(135deg, hsla(225,60%,97%,0.95), hsla(225,60%,97%,0.8)),
