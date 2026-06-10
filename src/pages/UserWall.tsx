@@ -179,7 +179,7 @@ export default function UserWall() {
 
         {/* MAIN */}
         <main className="col-span-12 md:col-span-9 space-y-4">
-          {section === 'overview' && <OverviewSection profile={profile} role={targetRole} />}
+          {section === 'overview' && <OverviewSection profile={profile} role={targetRole} isMe={isMe} />}
           {section === 'activity' && isStaff && <ActivitySection userId={profile.user_id} />}
           {section === 'notes' && isStaff && <NotesSection target={profile} canSeePrivate={isDeveloper} />}
           {section === 'searches' && isDeveloper && <SearchesSection userId={profile.user_id} />}
@@ -192,19 +192,28 @@ export default function UserWall() {
 }
 
 /* ───────── Overview ───────── */
-function OverviewSection({ profile, role }: { profile: ProfileRow; role: string | null }) {
+function OverviewSection({ profile, role, isMe }: { profile: ProfileRow; role: string | null; isMe?: boolean }) {
   return (
     <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-6 shadow-sm">
-      <h1 className="text-2xl font-bold flex items-center gap-2">
-        Zeď uživatele <span className="text-secondary">{profile.display_name}</span>
-        <RoleBadge role={role} />
-      </h1>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <h1 className="text-2xl font-bold flex items-center gap-2 m-0">
+          Zeď uživatele <span className="text-secondary">{profile.display_name}</span>
+          <RoleBadge role={role} />
+        </h1>
+        {isMe && (
+          <Link to="/profil" className="btn-alik-primary text-xs flex items-center gap-1.5">
+            ⚙ Upravit profil
+          </Link>
+        )}
+      </div>
       {profile.bio ? (
         <div className="mt-4 prose prose-sm max-w-none">
           <MarkdownRenderer content={profile.bio} />
         </div>
       ) : (
-        <p className="mt-3 text-muted-foreground italic">Uživatel zatím nic o sobě nenapsal.</p>
+        <p className="mt-3 text-muted-foreground italic">
+          {isMe ? 'Zatím jsi o sobě nic nenapsal — klikni na „Upravit profil" a doplň své bio.' : 'Uživatel zatím nic o sobě nenapsal.'}
+        </p>
       )}
     </div>
   );
