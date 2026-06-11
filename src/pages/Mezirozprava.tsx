@@ -6,6 +6,9 @@ import AppLayout from '@/components/layout/AppLayout';
 import { toast } from 'sonner';
 import { logAudit } from '@/lib/auditLog';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type Med = any;
 type Msg = { id: string; mediation_id: string; author_id: string; content: string; created_at: string };
@@ -25,6 +28,9 @@ export default function Mezirozprava() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [profiles, setProfiles] = useState<Record<string, any>>({});
   const [text, setText] = useState('');
+  const [resolution, setResolution] = useState('');
+  const [addToNotes, setAddToNotes] = useState(false);
+  const [showClose, setShowClose] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -67,10 +73,13 @@ export default function Mezirozprava() {
   };
 
   const close = async () => {
-    const { error } = await (supabase as any).from('mediations_v2').update({ status: 'closed' }).eq('id', med.id);
+    if (resolution.trim().length < 5) return toast.error('Napiš výstup uzavření alespoň pěti znaky.');
+    const { error } = await (supabase as any).rpc('close_mediation_with_resolution', {
+      _mediation_id: med.id, _resolution: resolution.trim(), _add_to_notes: addToNotes,
+    });
     if (error) return toast.error(error.message);
-    await logAudit('mediation.close', { entityType: 'mediations_v2', entityId: med.id, details: { status: { from: med.status, to: 'closed' } }, minRole: 'spravce' });
     toast.success('Mezirozprava uzavřena');
+    setShowClose(false); setResolution(''); setAddToNotes(false);
     load();
   };
 
@@ -100,6 +109,14 @@ export default function Mezirozprava() {
           </div>
         )}
 
+        {med.resolution && (
+          <div className="panel-card border-l-4 border-primary">
+            <h3 className="mt-0 text-sm font-extrabold">✅ Výstup mezirozpravy</h3>
+            <MarkdownRenderer content={med.resolution} />
+            <p className="text-xs text-muted-foreground mt-2">Uzavřeno {med.resolved_at ? new Date(med.resolved_at).toLocaleString('cs-CZ') : ''}{med.resolution_added_to_notes ? ' • přidáno do poznámek uživatele' : ''}</p>
+          </div>
+        )}
+
         <div className="panel-card">
           <h3 className="mt-0 text-sm font-extrabold">💬 Konverzace ({msgs.length})</h3>
           <div className="space-y-2 mb-3 max-h-[60vh] overflow-y-auto pr-1">
@@ -123,9 +140,14 @@ export default function Mezirozprava() {
             <div className="grid gap-2">
               <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Napiš odpověď… (Markdown)" className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[90px]" />
               <div className="flex justify-between gap-2 flex-wrap">
-                {isStaff && <button onClick={close} className="text-xs font-bold px-3 py-1.5 rounded-lg bg-muted">Uzavřít mezirozpravu</button>}
+                {isStaff && <Button size="sm" variant="outline" onClick={() => setShowClose(v => !v)}>Uzavřít mezirozpravu</Button>}
                 <button onClick={send} className="btn-alik-primary text-sm ml-auto">Odeslat zprávu</button>
               </div>
+              {isStaff && showClose && <div className="rounded-xl border border-border bg-muted/30 p-3 grid gap-3">
+                <div><strong className="text-sm">Důvod / výstup uzavření</strong><Textarea value={resolution} onChange={e => setResolution(e.target.value)} maxLength={5000} placeholder="Shrnutí dohody, rozhodnutí nebo dalšího postupu…" /></div>
+                <label className="flex items-center gap-2 text-sm"><Checkbox checked={addToNotes} onCheckedChange={v => setAddToNotes(v === true)} /> Přidat výstup také do neveřejných poznámek k uživateli</label>
+                <Button onClick={close} disabled={resolution.trim().length < 5}>Potvrdit uzavření</Button>
+              </div>}
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">Do mezirozpravy teď psát nelze: {meta.label.toLowerCase()}.</p>
