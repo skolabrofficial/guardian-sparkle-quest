@@ -209,7 +209,15 @@ export default function UserWall() {
 }
 
 /* ───────── Overview ───────── */
-function OverviewSection({ profile, role, isMe }: { profile: ProfileRow; role: string | null; isMe?: boolean }) {
+function OverviewSection({ profile, role, isMe, canStaffEdit, onUpdated }: { profile: ProfileRow; role: string | null; isMe?: boolean; canStaffEdit?: boolean; onUpdated?: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [bio, setBio] = useState(profile.bio || '');
+  const saveWall = async () => {
+    const { error } = await db().rpc('update_user_wall_with_access', { _target_user_id: profile.user_id, _bio: bio });
+    if (error) return toast.error(error.message);
+    toast.success('Zeď byla upravena a změna zaprotokolována.');
+    setEditing(false); onUpdated?.();
+  };
   return (
     <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-6 shadow-sm">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -222,7 +230,9 @@ function OverviewSection({ profile, role, isMe }: { profile: ProfileRow; role: s
             ⚙ Upravit profil
           </Link>
         )}
+        {canStaffEdit && <Button size="sm" variant="outline" onClick={() => setEditing(v => !v)}>🛡 Upravit zeď jako vedení</Button>}
       </div>
+      {editing && <div className="mt-4 grid gap-2 rounded-xl border border-border p-3"><Label>Text uživatelské zdi</Label><Textarea value={bio} onChange={e => setBio(e.target.value)} maxLength={5000} rows={8} /><div className="flex gap-2 justify-end"><Button variant="ghost" onClick={() => setEditing(false)}>Zrušit</Button><Button onClick={saveWall}>Uložit a zaprotokolovat</Button></div></div>}
       {profile.bio ? (
         <div className="mt-4 prose prose-sm max-w-none">
           <MarkdownRenderer content={profile.bio} />
@@ -234,6 +244,10 @@ function OverviewSection({ profile, role, isMe }: { profile: ProfileRow; role: s
       )}
     </div>
   );
+}
+
+function LockedSection({ label }: { label: string }) {
+  return <div className="rounded-2xl border border-border bg-card/70 p-6 text-center"><div className="text-3xl mb-2">🔒</div><h2 className="font-semibold">Sekce je zamčená</h2><p className="text-sm text-muted-foreground">Pro {label} nejprve použij „Odemknout sekce“ a schválený speciální kód.</p></div>;
 }
 
 /* ───────── Activity (forum + tutoring + notes) ───────── */
