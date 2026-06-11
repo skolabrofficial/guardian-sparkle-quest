@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SearchResult {
   type: string;
@@ -34,6 +35,7 @@ const CATEGORIES = [
 ];
 
 export default function AdminSearch() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
@@ -206,6 +208,9 @@ export default function AdminSearch() {
       }
 
       setResults(allResults);
+      if (user) {
+        await (supabase as any).from('user_search_history').insert({ user_id: user.id, query: query.trim(), context: `rektorat:${category}` });
+      }
       if (allResults.length === 0) toast.info('Nic nebylo nalezeno');
     } catch (err) {
       toast.error('Chyba při hledání');

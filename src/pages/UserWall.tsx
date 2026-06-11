@@ -16,6 +16,7 @@ import { logAudit } from '@/lib/auditLog';
 import { ProtokolFromAudit } from '@/components/Protokol';
 import { PoznamkaText } from '@/components/ProtokolByCode';
 import { getSpecialUserBadge, SpecialUserBadgeView } from '@/lib/userBadges';
+import AccountAccessControl from '@/components/AccountAccessControl';
 
 const db = () => supabase as any;
 
@@ -41,7 +42,7 @@ interface UserNote {
   created_at: string;
 }
 
-type SectionKey = 'overview' | 'activity' | 'notes' | 'searches' | 'blocks' | 'signout';
+type SectionKey = 'overview' | 'activity' | 'notes' | 'searches' | 'interventions' | 'blocks' | 'signout' | 'access';
 
 const BLOCK_PRESETS: { label: string; minutes: number | 'permanent' }[] = [
   { label: 'Deset minut', minutes: 10 },
@@ -65,6 +66,17 @@ export default function UserWall() {
   const [section, setSection] = useState<SectionKey>('overview');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [access, setAccess] = useState({ wall: false, searches: false, account_actions: false });
+
+  const loadAccess = async (targetUserId: string) => {
+    if (!me || !isStaff) return setAccess({ wall: false, searches: false, account_actions: false });
+    const [wall, searches, actions] = await Promise.all([
+      db().rpc('has_account_access', { _staff_id: me.id, _target_user_id: targetUserId, _scope: 'wall' }),
+      db().rpc('has_account_access', { _staff_id: me.id, _target_user_id: targetUserId, _scope: 'searches' }),
+      db().rpc('has_account_access', { _staff_id: me.id, _target_user_id: targetUserId, _scope: 'account_actions' }),
+    ]);
+    setAccess({ wall: wall.data === true, searches: searches.data === true, account_actions: actions.data === true });
+  };
 
   useEffect(() => {
     let alive = true;
@@ -83,6 +95,7 @@ export default function UserWall() {
         return;
       }
       setProfile(data);
+      loadAccess(data.user_id);
       const { data: r } = await db()
         .from('user_roles')
         .select('role')
@@ -101,14 +114,16 @@ export default function UserWall() {
     if (isStaff) {
       items.push({ key: 'activity', label: 'Veškerá aktivita', icon: '📝' });
       items.push({ key: 'notes', label: 'Poznámky', icon: '📓' });
+      items.push({ key: 'interventions', label: access.account_actions ? 'Zásahy v účtu' : '🔒 Zásahy v účtu', icon: '🛡' });
+      items.push({ key: 'searches', label: access.searches ? 'Vyhledávání' : '🔒 Vyhledávání', icon: '🔍' });
+      items.push({ key: 'access', label: 'Odemknout sekce', icon: '🔐' });
     }
     if (isDeveloper) {
-      items.push({ key: 'searches', label: 'Vyhledávání', icon: '🔍' });
       items.push({ key: 'blocks', label: 'Blokace', icon: '🚫' });
       items.push({ key: 'signout', label: 'Odhlásit', icon: '⏻' });
     }
     return items;
-  }, [isStaff, isDeveloper]);
+  }, [isStaff, isDeveloper, access]);
 
   if (loading) {
     return <AppLayout><div className="p-8 text-center text-muted-foreground">Načítám…</div></AppLayout>;
@@ -179,10 +194,12 @@ export default function UserWall() {
 
         {/* MAIN */}
         <main className="col-span-12 md:col-span-9 space-y-4">
-          {section === 'overview' && <OverviewSection profile={profile} role={targetRole} isMe={isMe} />}
+          {section === 'overview' && <OverviewSection profile={profile} role={targetRole} isMe={isMe} canStaffEdit={access.wall} onUpdated={() => { setProfile(null); window.location.reload(); }} />}
           {section === 'activity' && isStaff && <ActivitySection userId={profile.user_id} />}
           {section === 'notes' && isStaff && <NotesSection target={profile} canSeePrivate={isDeveloper} />}
-          {section === 'searches' && isDeveloper && <SearchesSection userId={profile.user_id} />}
+          {section === 'searches' && isStaff && (access.searches ? <SearchesSection userId={profile.user_id} /> : <LockedSection label="historii vyhledávání" />)}
+          {section === 'interventions' && isStaff && (access.account_actions ? <InterventionsSection userId={profile.user_id} /> : <LockedSection label="zásahy v účtu" />)}
+          {section === 'access' && isStaff && <AccountAccessControl targetUserId={profile.user_id} onAccessChanged={() => loadAccess(profile.user_id)} />}
           {section === 'blocks' && isDeveloper && <BlocksSection target={profile} />}
           {section === 'signout' && isDeveloper && <SignoutSection target={profile} />}
         </main>
@@ -192,7 +209,15 @@ export default function UserWall() {
 }
 
 /* ───────── Overview ───────── */
-function OverviewSection({ profile, role, isMe }: { profile: ProfileRow; role: string | null; isMe?: boolean }) {
+function OverviewSection({ profile, role, isMe, canStaffEdit, onUpdated }: { profile: ProfileRow; role: string | null; isMe?: boolean; canStaffEdit?: boolean; onUpdated?: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [bio, setBio] = useState(profile.bio || '');
+  const saveWall = async () => {
+    const { error } = await db().rpc('update_user_wall_with_access', { _target_user_id: profile.user_id, _bio: bio });
+    if (error) return toast.error(error.message);
+    toast.success('Zeď byla upravena a změna zaprotokolována.');
+    setEditing(false); onUpdated?.();
+  };
   return (
     <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-6 shadow-sm">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -205,7 +230,9 @@ function OverviewSection({ profile, role, isMe }: { profile: ProfileRow; role: s
             ⚙ Upravit profil
           </Link>
         )}
+        {canStaffEdit && <Button size="sm" variant="outline" onClick={() => setEditing(v => !v)}>🛡 Upravit zeď jako vedení</Button>}
       </div>
+      {editing && <div className="mt-4 grid gap-2 rounded-xl border border-border p-3"><Label>Text uživatelské zdi</Label><Textarea value={bio} onChange={e => setBio(e.target.value)} maxLength={5000} rows={8} /><div className="flex gap-2 justify-end"><Button variant="ghost" onClick={() => setEditing(false)}>Zrušit</Button><Button onClick={saveWall}>Uložit a zaprotokolovat</Button></div></div>}
       {profile.bio ? (
         <div className="mt-4 prose prose-sm max-w-none">
           <MarkdownRenderer content={profile.bio} />
@@ -217,6 +244,10 @@ function OverviewSection({ profile, role, isMe }: { profile: ProfileRow; role: s
       )}
     </div>
   );
+}
+
+function LockedSection({ label }: { label: string }) {
+  return <div className="rounded-2xl border border-border bg-card/70 p-6 text-center"><div className="text-3xl mb-2">🔒</div><h2 className="font-semibold">Sekce je zamčená</h2><p className="text-sm text-muted-foreground">Pro {label} nejprve použij „Odemknout sekce“ a schválený speciální kód.</p></div>;
 }
 
 /* ───────── Activity (forum + tutoring + notes) ───────── */
@@ -435,7 +466,7 @@ function SearchesSection({ userId }: { userId: string }) {
   useEffect(() => {
     (async () => {
       const { data } = await db()
-        .from('audit_log')
+        .from('user_search_history')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
@@ -447,16 +478,39 @@ function SearchesSection({ userId }: { userId: string }) {
   if (loading) return <div className="p-6">Načítám…</div>;
   return (
     <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-5 shadow-sm">
-      <h2 className="text-lg font-semibold mb-3">Audit (akce uživatele)</h2>
+      <h2 className="text-lg font-semibold mb-3">Historie vyhledávání</h2>
       {rows.length === 0 ? <div className="text-muted-foreground italic">Žádné záznamy.</div> : (
         <div>
-          {rows.map((r) => (
-            <ProtokolFromAudit key={r.id} row={r} />
-          ))}
+          {rows.map((r) => <div key={r.id} className="rounded-lg border border-border p-3 mb-2"><strong className="text-sm">🔍 {r.query}</strong><div className="text-xs text-muted-foreground mt-1">{r.context} • {new Date(r.created_at).toLocaleString('cs-CZ')}</div></div>)}
         </div>
       )}
     </div>
   );
+}
+
+/* ───────── Account interventions (code-gated) ───────── */
+function InterventionsSection({ userId }: { userId: string }) {
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    (async () => {
+      const [{ data: audit }, { data: blocks }, { data: mediations }, { data: histories }] = await Promise.all([
+        db().from('audit_log').select('*').or(`entity_id.eq.${userId},details->>target_user_id.eq.${userId}`).order('created_at', { ascending: false }).limit(200),
+        db().from('user_blocks').select('id,user_id,reason,is_active,blocked_at,unblocked_at').eq('user_id', userId).order('blocked_at', { ascending: false }),
+        db().from('mediations_v2').select('id,subject_user_id,status,request_reason,resolution,created_at,resolved_at').eq('subject_user_id', userId).order('created_at', { ascending: false }),
+        db().from('entity_history').select('*').eq('entity_id', userId).order('created_at', { ascending: false }),
+      ]);
+      const merged = [
+        ...(audit || []).map((x: any) => ({ ...x, when: x.created_at, kind: 'audit' })),
+        ...(blocks || []).map((x: any) => ({ id: `block-${x.id}`, when: x.blocked_at, action: x.is_active ? 'user.block' : 'user.unblock', details: { reason: x.reason }, kind: 'block' })),
+        ...(mediations || []).map((x: any) => ({ id: `med-${x.id}`, when: x.resolved_at || x.created_at, action: `mediation.${x.status}`, details: { reason: x.request_reason, resolution: x.resolution }, kind: 'mediation' })),
+        ...(histories || []).map((x: any) => ({ ...x, when: x.created_at, details: x.changes, kind: 'history' })),
+      ].sort((a, b) => +new Date(b.when) - +new Date(a.when));
+      setRows(merged); setLoading(false);
+    })();
+  }, [userId]);
+  if (loading) return <div className="p-6 text-muted-foreground">Načítám zásahy…</div>;
+  return <div className="rounded-2xl border border-border bg-card/70 p-5 shadow-sm"><h2 className="text-lg font-semibold mb-1">🛡 Zásahy v účtu</h2><p className="text-xs text-muted-foreground mb-4">Blokace, odblokování, změny blokací a zdí, mezirozpravy a pravomoci.</p>{rows.length === 0 ? <p className="text-sm text-muted-foreground">Žádné zásahy.</p> : rows.map(r => <div key={`${r.kind}-${r.id}`} className="rounded-lg border border-border p-3 mb-2"><div className="flex justify-between gap-3"><strong className="text-sm">{r.action}</strong><span className="text-xs text-muted-foreground">{new Date(r.when).toLocaleString('cs-CZ')}</span></div>{r.details && <pre className="text-xs whitespace-pre-wrap text-muted-foreground mt-1 font-sans">{JSON.stringify(r.details, null, 2)}</pre>}</div>)}</div>;
 }
 
 /* ───────── Blocks (developer) ───────── */

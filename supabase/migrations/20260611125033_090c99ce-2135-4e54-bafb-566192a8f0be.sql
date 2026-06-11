@@ -1,0 +1,10 @@
+REVOKE ALL ON FUNCTION public.has_account_access(uuid, uuid, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.create_account_access_request(uuid, text, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.decide_account_access_request(uuid, text, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.redeem_account_access_code(uuid, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.revoke_account_access(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.has_account_access(uuid, uuid, text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.create_account_access_request(uuid, text, text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.decide_account_access_request(uuid, text, text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.redeem_account_access_code(uuid, text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.revoke_account_access(uuid) TO authenticated, service_role;

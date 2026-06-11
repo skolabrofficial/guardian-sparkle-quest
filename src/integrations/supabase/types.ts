@@ -14,6 +14,127 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_access_approvals: {
+        Row: {
+          approver_id: string
+          created_at: string
+          decision: string
+          id: string
+          note: string | null
+          request_id: string
+        }
+        Insert: {
+          approver_id: string
+          created_at?: string
+          decision: string
+          id?: string
+          note?: string | null
+          request_id: string
+        }
+        Update: {
+          approver_id?: string
+          created_at?: string
+          decision?: string
+          id?: string
+          note?: string | null
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_access_approvals_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "account_access_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      account_access_grants: {
+        Row: {
+          granted_at: string
+          grantee_id: string
+          id: string
+          request_id: string
+          revoked_at: string | null
+          revoked_by: string | null
+          scope: string
+          target_user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          grantee_id: string
+          id?: string
+          request_id: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          scope: string
+          target_user_id: string
+        }
+        Update: {
+          granted_at?: string
+          grantee_id?: string
+          id?: string
+          request_id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          scope?: string
+          target_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_access_grants_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "account_access_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      account_access_requests: {
+        Row: {
+          approved_at: string | null
+          code_hash: string
+          created_at: string
+          id: string
+          reason: string
+          requested_by: string
+          revoked_at: string | null
+          revoked_by: string | null
+          scope: string
+          status: string
+          target_user_id: string
+          used_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          code_hash: string
+          created_at?: string
+          id?: string
+          reason: string
+          requested_by: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          scope: string
+          status?: string
+          target_user_id: string
+          used_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          code_hash?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          requested_by?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          scope?: string
+          status?: string
+          target_user_id?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           author_id: string | null
@@ -560,6 +681,10 @@ export type Database = {
           message_count: number
           opened_by: string
           request_reason: string | null
+          resolution: string | null
+          resolution_added_to_notes: boolean
+          resolved_at: string | null
+          resolved_by: string | null
           status: string
           subject_user_id: string
           updated_at: string
@@ -571,6 +696,10 @@ export type Database = {
           message_count?: number
           opened_by: string
           request_reason?: string | null
+          resolution?: string | null
+          resolution_added_to_notes?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
           status?: string
           subject_user_id: string
           updated_at?: string
@@ -582,6 +711,10 @@ export type Database = {
           message_count?: number
           opened_by?: string
           request_reason?: string | null
+          resolution?: string | null
+          resolution_added_to_notes?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
           status?: string
           subject_user_id?: string
           updated_at?: string
@@ -1350,6 +1483,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_search_history: {
+        Row: {
+          context: string
+          created_at: string
+          id: string
+          query: string
+          user_id: string
+        }
+        Insert: {
+          context?: string
+          created_at?: string
+          id?: string
+          query: string
+          user_id: string
+        }
+        Update: {
+          context?: string
+          created_at?: string
+          id?: string
+          query?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1359,9 +1516,32 @@ export type Database = {
         Args: { _med_id: string; _uid: string }
         Returns: boolean
       }
+      close_mediation_with_resolution: {
+        Args: {
+          _add_to_notes?: boolean
+          _mediation_id: string
+          _resolution: string
+        }
+        Returns: undefined
+      }
+      create_account_access_request: {
+        Args: { _reason: string; _scope: string; _target_user_id: string }
+        Returns: {
+          access_code: string
+          request_id: string
+        }[]
+      }
+      decide_account_access_request: {
+        Args: { _decision: string; _note?: string; _request_id: string }
+        Returns: string
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_account_access: {
+        Args: { _scope: string; _staff_id: string; _target_user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
@@ -1370,7 +1550,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      redeem_account_access_code: {
+        Args: { _code: string; _request_id: string }
+        Returns: string
+      }
+      revoke_account_access: { Args: { _grant_id: string }; Returns: undefined }
       slugify: { Args: { input: string }; Returns: string }
+      update_user_wall_with_access: {
+        Args: { _bio: string; _target_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "rektor" | "spravce" | "lektor" | "student"
