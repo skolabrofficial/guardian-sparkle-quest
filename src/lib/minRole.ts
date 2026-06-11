@@ -23,6 +23,8 @@ const RULES: Array<{ test: RegExp | string; role: MinRole }> = [
   { test: /^note\./,            role: 'spravce' },
   { test: /^profanity\./,       role: 'spravce' },
   { test: /^forum\.(delete|pin|lock|move)/, role: 'spravce' },
+  { test: /^account_access\./,  role: 'spravce' },
+  { test: /^wall\./,            role: 'spravce' },
 
   // rektor + správce + lektor
   { test: /^image\./,           role: 'lektor' },

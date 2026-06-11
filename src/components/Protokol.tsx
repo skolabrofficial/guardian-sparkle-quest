@@ -185,6 +185,7 @@ export const ENTITY_LABELS: Record<string, string> = {
   announcements: 'oznámení', uploaded_images: 'obrázku',
   content_blocks: 'obsahového bloku', page_styles: 'stylu stránky',
   user_notes: 'poznámky o uživateli',
+  mediations_v2: 'mezirozpravy', profile: 'uživatelského účtu',
 };
 
 /** Vrať pěknou českou větu popisující akci, nebo null. */
@@ -203,6 +204,14 @@ function describeAction(action: string, entityType?: string | null, det?: any): 
   if (a.startsWith('image.'))      return `obrázek v moderaci`;
   if (a.startsWith('profanity.'))  return `automatický zásah filtru vulgarit`;
   if (a.startsWith('role.'))       return `úpravu role uživatele`;
+  if (a === 'mediation.close')     return `uzavření mezirozpravy s povinným výstupem`;
+  if (a.startsWith('mediation.'))  return `zásah v mezirozpravě`;
+  if (a === 'wall.update')         return `úpravu zdi ${target ?? 'uživatele'}`;
+  if (a === 'account_access.request') return `žádost o odemknutí citlivé sekce ${target ?? 'účtu'}`;
+  if (a === 'account_access.approved') return `schválení přístupu k citlivé sekci ${target ?? 'účtu'}`;
+  if (a === 'account_access.rejected') return `zamítnutí přístupu k citlivé sekci ${target ?? 'účtu'}`;
+  if (a === 'account_access.unlocked') return `odemknutí citlivé sekce ${target ?? 'účtu'} speciálním kódem`;
+  if (a === 'account_access.revoked') return `odvolání přístupu k citlivé sekci ${target ?? 'účtu'}`;
   if (ent)                         return `${a.includes('create') ? 'nové' : 'změnu'} ${ent}`;
   return null;
 }
