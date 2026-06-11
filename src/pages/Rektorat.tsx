@@ -16,7 +16,7 @@ import ChangelogPanel from '@/components/ChangelogPanel';
 import UserLink from '@/components/UserLink';
 import { ProtokolFromAudit } from '@/components/Protokol';
 
-type Tab = 'prehled' | 'kurzy' | 'lektori' | 'studenti' | 'fakulty' | 'rozvrh' | 'dotazy' | 'vypisky' | 'oznameni' | 'reporty' | 'audit' | 'nastaveni' | 'notifikace' | 'role' | 'statistiky' | 'rozpocet' | 'smernice' | 'zpravy' | 'zadosti' | 'kvalita' | 'export' | 'import' | 'hromadne' | 'harmonogram' | 'bezpecnost' | 'klubovny' | 'kapacity' | 'mentori' | 'plany' | 'hodnoceni' | 'blokace' | 'forum' | 'emailove-sablony' | 'integrace' | 'obrazky' | 'odeslat-notifikaci' | 'styly-stranek' | 'obsahove-boxy' | 'filtr-slov' | 'hledani' | 'zmenar' | 'uzivatele';
+type Tab = 'prehled' | 'kurzy' | 'lektori' | 'studenti' | 'fakulty' | 'rozvrh' | 'dotazy' | 'vypisky' | 'oznameni' | 'reporty' | 'audit' | 'nastaveni' | 'notifikace' | 'role' | 'statistiky' | 'rozpocet' | 'smernice' | 'zpravy' | 'zadosti' | 'kvalita' | 'export' | 'import' | 'hromadne' | 'harmonogram' | 'bezpecnost' | 'klubovny' | 'kapacity' | 'mentori' | 'plany' | 'hodnoceni' | 'blokace' | 'forum' | 'emailove-sablony' | 'integrace' | 'obrazky' | 'odeslat-notifikaci' | 'styly-stranek' | 'obsahove-boxy' | 'filtr-slov' | 'hledani' | 'zmenar' | 'uzivatele' | 'mezirozpravy';
 
 const tabGroups: { group: string; items: { key: Tab; label: string; icon: string }[] }[] = [
   { group: '📊 Přehled', items: [
@@ -48,6 +48,7 @@ const tabGroups: { group: string; items: { key: Tab; label: string; icon: string
     { key: 'oznameni', label: 'Oznámení', icon: '📢' },
     { key: 'notifikace', label: 'Přehled notifikací', icon: '🔔' },
     { key: 'odeslat-notifikaci', label: 'Odeslat notifikaci', icon: '📨' },
+    { key: 'mezirozpravy', label: 'Mezirozpravy', icon: '🤝' },
     { key: 'zpravy', label: 'Zprávy Alíkovi', icon: '✉' },
     { key: 'emailove-sablony', label: 'E-mail šablony', icon: '📧' },
   ]},
@@ -199,7 +200,7 @@ export default function Rektorat() {
   useEffect(() => {
     if (!user || (!isStaff && !isDeveloper && !isLektor)) return;
     loadAll();
-  }, [user, activeTab]);
+  }, [user, activeTab, isStaff, isDeveloper, isLektor]);
 
   const loadAll = async () => {
     const [c, f, q, n, s, ann, al, rep, notif, ur, pr, bl, fp, enr, bm, ss] = await Promise.all([
@@ -488,6 +489,8 @@ export default function Rektorat() {
         return <AdminSearch />;
       case 'zmenar':
         return <ChangelogPanel />;
+      case 'mezirozpravy':
+        return <div className="grid gap-4"><h3 className="mt-0 text-lg font-extrabold">🤝 Mezirozpravy</h3><p className="text-sm text-muted-foreground">Čekající žádosti, otevřené rozhovory a uzavřené výstupy.</p><button onClick={() => navigate('/rektorat/mezirozpravy')} className="btn-alik-primary text-sm w-fit">Otevřít správu mezirozprav</button></div>;
       case 'uzivatele': {
         if (!isDeveloper) return <div className="panel-card"><p className="text-muted-foreground">Pouze pro vývojáře.</p></div>;
         return (
