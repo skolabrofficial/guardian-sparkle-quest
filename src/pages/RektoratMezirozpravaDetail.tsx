@@ -6,6 +6,9 @@ import AppLayout from '@/components/layout/AppLayout';
 import { toast } from 'sonner';
 import { logAudit } from '@/lib/auditLog';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type Med = any;
 type Msg = { id: string; mediation_id: string; author_id: string; content: string; created_at: string };
@@ -26,6 +29,8 @@ export default function RektoratMezirozpravaDetail() {
   const [profiles, setProfiles] = useState<Record<string, any>>({});
   const [text, setText] = useState('');
   const [newStatus, setNewStatus] = useState<string>('');
+  const [resolution, setResolution] = useState('');
+  const [addToNotes, setAddToNotes] = useState(false);
   const [loading, setLoading] = useState(true);
 
   if (!isRektor && !isSpravce) {
@@ -74,6 +79,7 @@ export default function RektoratMezirozpravaDetail() {
   };
 
   const updateStatus = async (newSt: string) => {
+    if (newSt === 'closed') return toast.error('Uzavření proveď níže s povinným výstupem.');
     const { error } = await (supabase as any)
       .from('mediations_v2')
       .update({ status: newSt, updated_at: new Date().toISOString() })
@@ -82,6 +88,17 @@ export default function RektoratMezirozpravaDetail() {
     await logAudit('mediation.status', { entityType: 'mediations_v2', entityId: med.id, details: { newStatus: newSt }, minRole: 'rektor' });
     setNewStatus(newSt);
     toast.success(`Status změněn na "${STATUS_LABEL[newSt]}"`);
+    load();
+  };
+
+  const close = async () => {
+    if (resolution.trim().length < 5) return toast.error('Napiš výstup alespoň pěti znaky.');
+    const { error } = await (supabase as any).rpc('close_mediation_with_resolution', {
+      _mediation_id: med.id, _resolution: resolution.trim(), _add_to_notes: addToNotes,
+    });
+    if (error) return toast.error(error.message);
+    setResolution(''); setAddToNotes(false);
+    toast.success('Mezirozprava byla uzavřena.');
     load();
   };
 
@@ -124,7 +141,7 @@ export default function RektoratMezirozpravaDetail() {
         <div className="panel-card">
           <h3 className="mt-0 text-sm font-extrabold">🔧 Správa</h3>
           <div className="flex gap-2 flex-wrap">
-            {['requested', 'open', 'closed', 'archived'].map(st => (
+            {['requested', 'open', 'archived'].map(st => (
               <button
                 key={st}
                 onClick={() => updateStatus(st)}
@@ -139,7 +156,14 @@ export default function RektoratMezirozpravaDetail() {
               </button>
             ))}
           </div>
+          {med.status === 'open' && <div className="mt-4 rounded-xl border border-border p-3 grid gap-3">
+            <div><strong className="text-sm">Výstup uzavření</strong><Textarea value={resolution} onChange={e => setResolution(e.target.value)} maxLength={5000} placeholder="Shrnutí rozhodnutí, dohody nebo dalšího postupu…" /></div>
+            <label className="flex items-center gap-2 text-sm"><Checkbox checked={addToNotes} onCheckedChange={v => setAddToNotes(v === true)} /> Přidat do neveřejných poznámek uživatele</label>
+            <Button onClick={close} disabled={resolution.trim().length < 5}>Uzavřít s výstupem</Button>
+          </div>}
         </div>
+
+        {med.resolution && <div className="panel-card border-l-4 border-primary"><h3 className="mt-0 text-sm font-extrabold">✅ Výstup</h3><MarkdownRenderer content={med.resolution} /><p className="text-xs text-muted-foreground mt-2">{med.resolution_added_to_notes ? 'Přidáno také do poznámek uživatele.' : 'Výstup nebyl přidán do poznámek.'}</p></div>}
 
         {/* Messages */}
         <div className="panel-card">
