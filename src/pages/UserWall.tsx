@@ -16,6 +16,7 @@ import { logAudit } from '@/lib/auditLog';
 import { ProtokolFromAudit } from '@/components/Protokol';
 import { PoznamkaText } from '@/components/ProtokolByCode';
 import { getSpecialUserBadge, SpecialUserBadgeView } from '@/lib/userBadges';
+import AccountAccessControl from '@/components/AccountAccessControl';
 
 const db = () => supabase as any;
 
@@ -41,7 +42,7 @@ interface UserNote {
   created_at: string;
 }
 
-type SectionKey = 'overview' | 'activity' | 'notes' | 'searches' | 'blocks' | 'signout';
+type SectionKey = 'overview' | 'activity' | 'notes' | 'searches' | 'interventions' | 'blocks' | 'signout' | 'access';
 
 const BLOCK_PRESETS: { label: string; minutes: number | 'permanent' }[] = [
   { label: 'Deset minut', minutes: 10 },
@@ -65,6 +66,17 @@ export default function UserWall() {
   const [section, setSection] = useState<SectionKey>('overview');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [access, setAccess] = useState({ wall: false, searches: false, account_actions: false });
+
+  const loadAccess = async (targetUserId: string) => {
+    if (!me || !isStaff) return setAccess({ wall: false, searches: false, account_actions: false });
+    const [wall, searches, actions] = await Promise.all([
+      db().rpc('has_account_access', { _staff_id: me.id, _target_user_id: targetUserId, _scope: 'wall' }),
+      db().rpc('has_account_access', { _staff_id: me.id, _target_user_id: targetUserId, _scope: 'searches' }),
+      db().rpc('has_account_access', { _staff_id: me.id, _target_user_id: targetUserId, _scope: 'account_actions' }),
+    ]);
+    setAccess({ wall: wall.data === true, searches: searches.data === true, account_actions: actions.data === true });
+  };
 
   useEffect(() => {
     let alive = true;
@@ -83,6 +95,7 @@ export default function UserWall() {
         return;
       }
       setProfile(data);
+      loadAccess(data.user_id);
       const { data: r } = await db()
         .from('user_roles')
         .select('role')
@@ -101,14 +114,16 @@ export default function UserWall() {
     if (isStaff) {
       items.push({ key: 'activity', label: 'Veškerá aktivita', icon: '📝' });
       items.push({ key: 'notes', label: 'Poznámky', icon: '📓' });
+      items.push({ key: 'interventions', label: access.account_actions ? 'Zásahy v účtu' : '🔒 Zásahy v účtu', icon: '🛡' });
+      items.push({ key: 'searches', label: access.searches ? 'Vyhledávání' : '🔒 Vyhledávání', icon: '🔍' });
+      items.push({ key: 'access', label: 'Odemknout sekce', icon: '🔐' });
     }
     if (isDeveloper) {
-      items.push({ key: 'searches', label: 'Vyhledávání', icon: '🔍' });
       items.push({ key: 'blocks', label: 'Blokace', icon: '🚫' });
       items.push({ key: 'signout', label: 'Odhlásit', icon: '⏻' });
     }
     return items;
-  }, [isStaff, isDeveloper]);
+  }, [isStaff, isDeveloper, access]);
 
   if (loading) {
     return <AppLayout><div className="p-8 text-center text-muted-foreground">Načítám…</div></AppLayout>;
@@ -179,10 +194,12 @@ export default function UserWall() {
 
         {/* MAIN */}
         <main className="col-span-12 md:col-span-9 space-y-4">
-          {section === 'overview' && <OverviewSection profile={profile} role={targetRole} isMe={isMe} />}
+          {section === 'overview' && <OverviewSection profile={profile} role={targetRole} isMe={isMe} canStaffEdit={access.wall} onUpdated={() => { setProfile(null); window.location.reload(); }} />}
           {section === 'activity' && isStaff && <ActivitySection userId={profile.user_id} />}
           {section === 'notes' && isStaff && <NotesSection target={profile} canSeePrivate={isDeveloper} />}
-          {section === 'searches' && isDeveloper && <SearchesSection userId={profile.user_id} />}
+          {section === 'searches' && isStaff && (access.searches ? <SearchesSection userId={profile.user_id} /> : <LockedSection label="historii vyhledávání" />)}
+          {section === 'interventions' && isStaff && (access.account_actions ? <InterventionsSection userId={profile.user_id} /> : <LockedSection label="zásahy v účtu" />)}
+          {section === 'access' && isStaff && <AccountAccessControl targetUserId={profile.user_id} onAccessChanged={() => loadAccess(profile.user_id)} />}
           {section === 'blocks' && isDeveloper && <BlocksSection target={profile} />}
           {section === 'signout' && isDeveloper && <SignoutSection target={profile} />}
         </main>
