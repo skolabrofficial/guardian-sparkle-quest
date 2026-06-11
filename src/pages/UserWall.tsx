@@ -466,7 +466,7 @@ function SearchesSection({ userId }: { userId: string }) {
   useEffect(() => {
     (async () => {
       const { data } = await db()
-        .from('audit_log')
+        .from('user_search_history')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
@@ -478,16 +478,39 @@ function SearchesSection({ userId }: { userId: string }) {
   if (loading) return <div className="p-6">Načítám…</div>;
   return (
     <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-5 shadow-sm">
-      <h2 className="text-lg font-semibold mb-3">Audit (akce uživatele)</h2>
+      <h2 className="text-lg font-semibold mb-3">Historie vyhledávání</h2>
       {rows.length === 0 ? <div className="text-muted-foreground italic">Žádné záznamy.</div> : (
         <div>
-          {rows.map((r) => (
-            <ProtokolFromAudit key={r.id} row={r} />
-          ))}
+          {rows.map((r) => <div key={r.id} className="rounded-lg border border-border p-3 mb-2"><strong className="text-sm">🔍 {r.query}</strong><div className="text-xs text-muted-foreground mt-1">{r.context} • {new Date(r.created_at).toLocaleString('cs-CZ')}</div></div>)}
         </div>
       )}
     </div>
   );
+}
+
+/* ───────── Account interventions (code-gated) ───────── */
+function InterventionsSection({ userId }: { userId: string }) {
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    (async () => {
+      const [{ data: audit }, { data: blocks }, { data: mediations }, { data: histories }] = await Promise.all([
+        db().from('audit_log').select('*').or(`entity_id.eq.${userId},details->>target_user_id.eq.${userId}`).order('created_at', { ascending: false }).limit(200),
+        db().from('user_blocks').select('id,user_id,reason,is_active,blocked_at,unblocked_at').eq('user_id', userId).order('blocked_at', { ascending: false }),
+        db().from('mediations_v2').select('id,subject_user_id,status,request_reason,resolution,created_at,resolved_at').eq('subject_user_id', userId).order('created_at', { ascending: false }),
+        db().from('entity_history').select('*').eq('entity_id', userId).order('created_at', { ascending: false }),
+      ]);
+      const merged = [
+        ...(audit || []).map((x: any) => ({ ...x, when: x.created_at, kind: 'audit' })),
+        ...(blocks || []).map((x: any) => ({ id: `block-${x.id}`, when: x.blocked_at, action: x.is_active ? 'user.block' : 'user.unblock', details: { reason: x.reason }, kind: 'block' })),
+        ...(mediations || []).map((x: any) => ({ id: `med-${x.id}`, when: x.resolved_at || x.created_at, action: `mediation.${x.status}`, details: { reason: x.request_reason, resolution: x.resolution }, kind: 'mediation' })),
+        ...(histories || []).map((x: any) => ({ ...x, when: x.created_at, details: x.changes, kind: 'history' })),
+      ].sort((a, b) => +new Date(b.when) - +new Date(a.when));
+      setRows(merged); setLoading(false);
+    })();
+  }, [userId]);
+  if (loading) return <div className="p-6 text-muted-foreground">Načítám zásahy…</div>;
+  return <div className="rounded-2xl border border-border bg-card/70 p-5 shadow-sm"><h2 className="text-lg font-semibold mb-1">🛡 Zásahy v účtu</h2><p className="text-xs text-muted-foreground mb-4">Blokace, odblokování, změny blokací a zdí, mezirozpravy a pravomoci.</p>{rows.length === 0 ? <p className="text-sm text-muted-foreground">Žádné zásahy.</p> : rows.map(r => <div key={`${r.kind}-${r.id}`} className="rounded-lg border border-border p-3 mb-2"><div className="flex justify-between gap-3"><strong className="text-sm">{r.action}</strong><span className="text-xs text-muted-foreground">{new Date(r.when).toLocaleString('cs-CZ')}</span></div>{r.details && <pre className="text-xs whitespace-pre-wrap text-muted-foreground mt-1 font-sans">{JSON.stringify(r.details, null, 2)}</pre>}</div>)}</div>;
 }
 
 /* ───────── Blocks (developer) ───────── */
