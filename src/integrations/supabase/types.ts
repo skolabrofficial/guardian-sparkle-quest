@@ -1516,6 +1516,14 @@ export type Database = {
         Args: { _med_id: string; _uid: string }
         Returns: boolean
       }
+      close_mediation_with_resolution: {
+        Args: {
+          _add_to_notes?: boolean
+          _mediation_id: string
+          _resolution: string
+        }
+        Returns: undefined
+      }
       create_account_access_request: {
         Args: { _reason: string; _scope: string; _target_user_id: string }
         Returns: {
@@ -1548,6 +1556,10 @@ export type Database = {
       }
       revoke_account_access: { Args: { _grant_id: string }; Returns: undefined }
       slugify: { Args: { input: string }; Returns: string }
+      update_user_wall_with_access: {
+        Args: { _bio: string; _target_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "rektor" | "spravce" | "lektor" | "student"
