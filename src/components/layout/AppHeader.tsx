@@ -49,16 +49,18 @@ export default function AppHeader({ searchLabel = 'Najít', searchPlaceholder = 
           <Sparkles size={12} className="absolute -top-1 -right-1 text-secondary animate-pulse" />
         </div>
         <div>
-          <h1 className="m-0 text-[30px] lg:text-[34px] tracking-wide font-extrabold leading-tight" style={{
-            background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)) 40%, hsl(var(--secondary)))',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>
-            Alíkova Univerzita
-          </h1>
-          <p className="mt-0.5 font-bold text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
-            Vzdělávací odvětví webu Alík.cz
-          </p>
+          <Link to="/" className="block no-underline hover:opacity-90 transition-opacity" title="Na titulku">
+            <h1 className="m-0 text-[30px] lg:text-[34px] tracking-wide font-extrabold leading-tight" style={{
+              background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)) 40%, hsl(var(--secondary)))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>
+              Alíkova Univerzita
+            </h1>
+            <p className="mt-0.5 font-bold text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              Vzdělávací odvětví webu Alík.cz
+            </p>
+          </Link>
         </div>
       </div>
 
