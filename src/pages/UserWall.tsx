@@ -488,29 +488,142 @@ function SearchesSection({ userId }: { userId: string }) {
   );
 }
 
-/* ───────── Account interventions (code-gated) ───────── */
+/* ───────── Account interventions (NFP — Protokol format) ───────── */
 function InterventionsSection({ userId }: { userId: string }) {
   const [rows, setRows] = useState<any[]>([]);
+  const [actors, setActors] = useState<Record<string, { profile: any; role: string | null }>>({});
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     (async () => {
+      setLoading(true);
       const [{ data: audit }, { data: blocks }, { data: mediations }, { data: histories }] = await Promise.all([
         db().from('audit_log').select('*').or(`entity_id.eq.${userId},details->>target_user_id.eq.${userId}`).order('created_at', { ascending: false }).limit(200),
-        db().from('user_blocks').select('id,user_id,reason,is_active,blocked_at,unblocked_at').eq('user_id', userId).order('blocked_at', { ascending: false }),
-        db().from('mediations_v2').select('id,subject_user_id,status,request_reason,resolution,created_at,resolved_at').eq('subject_user_id', userId).order('created_at', { ascending: false }),
+        db().from('user_blocks').select('id,user_id,reason,is_active,is_permanent,expires_at,blocked_at,blocked_by,unblocked_at,unblocked_by').eq('user_id', userId).order('blocked_at', { ascending: false }),
+        db().from('mediations_v2').select('*').eq('subject_user_id', userId).order('created_at', { ascending: false }),
         db().from('entity_history').select('*').eq('entity_id', userId).order('created_at', { ascending: false }),
       ]);
-      const merged = [
-        ...(audit || []).map((x: any) => ({ ...x, when: x.created_at, kind: 'audit' })),
-        ...(blocks || []).map((x: any) => ({ id: `block-${x.id}`, when: x.blocked_at, action: x.is_active ? 'user.block' : 'user.unblock', details: { reason: x.reason }, kind: 'block' })),
-        ...(mediations || []).map((x: any) => ({ id: `med-${x.id}`, when: x.resolved_at || x.created_at, action: `mediation.${x.status}`, details: { reason: x.request_reason, resolution: x.resolution }, kind: 'mediation' })),
-        ...(histories || []).map((x: any) => ({ ...x, when: x.created_at, details: x.changes, kind: 'history' })),
-      ].sort((a, b) => +new Date(b.when) - +new Date(a.when));
-      setRows(merged); setLoading(false);
+
+      const synthetic: any[] = [];
+      // audit_log rows (already in shape)
+      (audit || []).forEach((x: any) => {
+        const a = (x.action || '').toLowerCase();
+        if (a.startsWith('user.') || a.startsWith('block.') || a.startsWith('mediation.') || a.startsWith('wall.') || a.startsWith('role.') || a.startsWith('account_access.') || a.startsWith('appeal.') || a.startsWith('note.')) {
+          synthetic.push({ ...x, __source: 'audit_log' });
+        }
+      });
+      // blocks → synthesise block + unblock entries
+      (blocks || []).forEach((b: any) => {
+        synthetic.push({
+          id: `block-${b.id}`, user_id: b.blocked_by, action: b.is_permanent ? 'block.permanent' : 'user.block',
+          entity_type: 'user_blocks', entity_id: b.id, created_at: b.blocked_at,
+          details: { target_user_id: userId, reason: b.reason, is_permanent: b.is_permanent, expires_at: b.expires_at },
+          __source: 'audit_log',
+        });
+        if (b.unblocked_at) {
+          synthetic.push({
+            id: `unblock-${b.id}`, user_id: b.unblocked_by, action: 'user.unblock',
+            entity_type: 'user_blocks', entity_id: b.id, created_at: b.unblocked_at,
+            details: { target_user_id: userId, reason: b.reason },
+            __source: 'audit_log',
+          });
+        }
+      });
+      // mediations
+      (mediations || []).forEach((m: any) => {
+        synthetic.push({
+          id: `med-open-${m.id}`, user_id: m.opened_by, action: 'mediation.open',
+          entity_type: 'mediations_v2', entity_id: m.id, created_at: m.created_at,
+          details: { target_user_id: userId, reason: m.request_reason, status: m.status },
+          __source: 'audit_log',
+        });
+        if (m.resolved_at) {
+          synthetic.push({
+            id: `med-close-${m.id}`, user_id: m.resolved_by, action: 'mediation.close',
+            entity_type: 'mediations_v2', entity_id: m.id, created_at: m.resolved_at,
+            details: { target_user_id: userId, resolution: m.resolution },
+            __source: 'audit_log',
+          });
+        }
+      });
+      // entity_history
+      (histories || []).forEach((h: any) => {
+        synthetic.push({ ...h, action: h.action || 'history.change', details: h.changes, __source: 'entity_history' });
+      });
+
+      synthetic.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+      setRows(synthetic);
+
+      // Fetch actor profiles & roles
+      const actorIds = Array.from(new Set(synthetic.map(r => r.user_id).filter(Boolean)));
+      if (actorIds.length) {
+        const [{ data: profs }, { data: roles }] = await Promise.all([
+          db().from('profiles').select('user_id, display_name, username, avatar_url').in('user_id', actorIds),
+          db().from('user_roles').select('user_id, role').in('user_id', actorIds),
+        ]);
+        const map: Record<string, { profile: any; role: string | null }> = {};
+        actorIds.forEach((id: string) => {
+          map[id] = {
+            profile: (profs || []).find((p: any) => p.user_id === id) || null,
+            role: (roles || []).find((r: any) => r.user_id === id)?.role || null,
+          };
+        });
+        setActors(map);
+      }
+      setLoading(false);
     })();
   }, [userId]);
+
   if (loading) return <div className="p-6 text-muted-foreground">Načítám zásahy…</div>;
-  return <div className="rounded-2xl border border-border bg-card/70 p-5 shadow-sm"><h2 className="text-lg font-semibold mb-1">🛡 Zásahy v účtu</h2><p className="text-xs text-muted-foreground mb-4">Blokace, odblokování, změny blokací a zdí, mezirozpravy a pravomoci.</p>{rows.length === 0 ? <p className="text-sm text-muted-foreground">Žádné zásahy.</p> : rows.map(r => <div key={`${r.kind}-${r.id}`} className="rounded-lg border border-border p-3 mb-2"><div className="flex justify-between gap-3"><strong className="text-sm">{r.action}</strong><span className="text-xs text-muted-foreground">{new Date(r.when).toLocaleString('cs-CZ')}</span></div>{r.details && <pre className="text-xs whitespace-pre-wrap text-muted-foreground mt-1 font-sans">{JSON.stringify(r.details, null, 2)}</pre>}</div>)}</div>;
+  return (
+    <div className="rounded-2xl border border-border bg-card/70 p-5 shadow-sm">
+      <h2 className="text-lg font-semibold mb-1">🛡 Zásahy v účtu (NFP)</h2>
+      <p className="text-xs text-muted-foreground mb-4">Blokace, odblokování, úpravy blokací, úpravy zdí, mezirozpravy, přiřazení pravomocí a odemykání.</p>
+      {rows.length === 0 ? <p className="text-sm text-muted-foreground">Žádné zásahy.</p> : (
+        <div className="grid gap-2">
+          {rows.map((r) => {
+            const a = r.user_id ? actors[r.user_id] : null;
+            return (
+              <ProtokolFromAudit
+                key={`${r.__source}-${r.id}`}
+                row={r}
+                profile={a?.profile}
+                role={a?.role}
+                sourceTable={r.__source}
+              />
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ───────── Staff: open mediation about this user ───────── */
+function OpenMediationCard({ target }: { target: ProfileRow }) {
+  const { user: me } = useAuth();
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState(false);
+  const open = async () => {
+    if (!me) return;
+    if (reason.trim().length < 5) return toast.error('Napiš stručný důvod (alespoň 5 znaků).');
+    setBusy(true);
+    const { data, error } = await db().from('mediations_v2').insert({
+      subject_user_id: target.user_id, opened_by: me.id, status: 'open', request_reason: reason.trim(),
+    }).select().single();
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    await logAudit('mediation.open', { entityType: 'mediations_v2', entityId: data.id, details: { target_user_id: target.user_id, target_username: target.username, reason: reason.trim() } });
+    toast.success('Mezirozprava otevřena.');
+    window.location.href = `/mezirozprava/${data.id}`;
+  };
+  return (
+    <div className="rounded-2xl border border-border bg-card/70 p-5 shadow-sm">
+      <h2 className="text-lg font-semibold mb-1">💬 Otevřít mezirozpravu s uživatelem</h2>
+      <p className="text-xs text-muted-foreground mb-3">Soukromá konverzace mezi vedením a uživatelem <strong>{target.display_name}</strong>. Otevření se zaprotokoluje.</p>
+      <Textarea value={reason} onChange={e => setReason(e.target.value)} rows={4} maxLength={2000} placeholder="Téma a důvod mezirozpravy…" />
+      <div className="flex justify-end mt-2"><Button onClick={open} disabled={busy}>Otevřít mezirozpravu</Button></div>
+    </div>
+  );
 }
 
 /* ───────── Blocks (developer) ───────── */
