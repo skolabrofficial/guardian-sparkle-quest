@@ -444,6 +444,85 @@ export default function Povereni() {
                 </section>
               );
             })}
+
+            {/* Custom boxes */}
+            {boxes.map(box => {
+              const members = (box.member_ids || []).map((id: string) => allProfiles.find(p => p.user_id === id)).filter(Boolean);
+              return (
+                <section key={box.id} className="staff-section rounded-2xl overflow-hidden" style={{ borderTop: `4px solid ${box.color || '#6366f1'}` }}>
+                  <div className="staff-section-header px-6 pt-5 pb-4" style={{ background: `linear-gradient(135deg, ${box.color}22, transparent)` }}>
+                    <h2 className="text-xl font-extrabold flex items-center gap-2 m-0">
+                      {box.title}
+                      <span className="staff-header-symbol">{box.symbol}</span>
+                      {!box.is_visible && <span className="text-xs opacity-60">(skryto)</span>}
+                    </h2>
+                    {box.description && <p className="text-sm mt-1 mb-0 opacity-90">{box.description}</p>}
+                    {isDeveloper && (
+                      <div className="flex gap-2 mt-2">
+                        <button onClick={() => { setEditingBoxId(box.id); setBoxForm(box); }} className="staff-btn text-[10px]">⚙ Upravit boxík</button>
+                        <button onClick={() => deleteBox(box.id)} className="staff-btn text-[10px] opacity-70">🗑 Smazat</button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="staff-grid px-6 py-5">
+                    {members.map((p: any) => (
+                      <div key={p.user_id} className="staff-card" style={{ borderTop: `3px solid ${box.color}` }}>
+                        <div className="staff-avatar">
+                          {p.avatar_url ? <img src={p.avatar_url} alt="" /> : <div className="staff-avatar-placeholder">{p.display_name?.[0]?.toUpperCase()}</div>}
+                        </div>
+                        <div className="staff-name"><span>{p.display_name}</span></div>
+                        <a href={`/uziv/${p.username}`} className="staff-btn">👤 Zeď</a>
+                      </div>
+                    ))}
+                    {members.length === 0 && <p className="text-xs opacity-60">Zatím žádní členové.</p>}
+                  </div>
+                </section>
+              );
+            })}
+
+            {/* Box editor (rector) */}
+            {isDeveloper && (
+              <section className="rounded-2xl border-2 border-dashed border-border p-5">
+                <h3 className="text-base font-extrabold mb-2">➕ Spravovat vlastní boxíky</h3>
+                {editingBoxId ? (
+                  <div className="grid gap-2">
+                    <input className="staff-edit-input" placeholder="Název boxíku" value={boxForm.title || ''} onChange={e => setBoxForm((f: any) => ({ ...f, title: e.target.value }))} />
+                    <textarea className="staff-edit-input" rows={2} placeholder="Popis (volitelné)" value={boxForm.description || ''} onChange={e => setBoxForm((f: any) => ({ ...f, description: e.target.value }))} />
+                    <div className="grid grid-cols-3 gap-2">
+                      <input className="staff-edit-input" placeholder="Symbol" value={boxForm.symbol || ''} onChange={e => setBoxForm((f: any) => ({ ...f, symbol: e.target.value }))} />
+                      <input className="staff-edit-input" type="color" value={boxForm.color || '#6366f1'} onChange={e => setBoxForm((f: any) => ({ ...f, color: e.target.value }))} />
+                      <input className="staff-edit-input" type="number" placeholder="Pořadí" value={boxForm.sort_order ?? 100} onChange={e => setBoxForm((f: any) => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))} />
+                    </div>
+                    <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={boxForm.is_visible !== false} onChange={e => setBoxForm((f: any) => ({ ...f, is_visible: e.target.checked }))} /> Zobrazit veřejně</label>
+                    <div>
+                      <label className="text-xs font-semibold">Členové</label>
+                      <div className="max-h-48 overflow-y-auto border rounded p-2 grid gap-1 mt-1">
+                        {allProfiles.map(p => {
+                          const checked = (boxForm.member_ids || []).includes(p.user_id);
+                          return (
+                            <label key={p.user_id} className="flex items-center gap-2 text-xs">
+                              <input type="checkbox" checked={checked} onChange={e => setBoxForm((f: any) => ({
+                                ...f,
+                                member_ids: e.target.checked
+                                  ? [...(f.member_ids || []), p.user_id]
+                                  : (f.member_ids || []).filter((x: string) => x !== p.user_id),
+                              }))} />
+                              {p.display_name} <span className="opacity-50">@{p.username}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={saveBox} className="staff-btn font-bold">Uložit</button>
+                      <button onClick={() => { setEditingBoxId(null); setBoxForm({ title: '', description: '', symbol: '✦', color: '#6366f1', member_ids: [], sort_order: 100, is_visible: true }); }} className="staff-btn opacity-60">Zrušit</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => setEditingBoxId('new')} className="staff-btn">➕ Nový boxík</button>
+                )}
+              </section>
+            )}
           </div>
         )}
       </div>
