@@ -160,10 +160,41 @@ export default function Povereni() {
 
     merged.sort((a, b) => a.sort_order - b.sort_order);
     setStaff(merged);
+
+    const [{ data: bxs }, { data: profs }] = await Promise.all([
+      db().from('staff_page_boxes').select('*').order('sort_order'),
+      db().from('profiles').select('user_id, display_name, username, avatar_url'),
+    ]);
+    setBoxes(bxs || []);
+    setAllProfiles(profs || []);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
+
+  const saveBox = async () => {
+    const payload = { ...boxForm, title: boxForm.title?.trim() };
+    if (!payload.title) return toast.error('Vyplň název boxíku');
+    if (editingBoxId && editingBoxId !== 'new') {
+      const { error } = await db().from('staff_page_boxes').update(payload).eq('id', editingBoxId);
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await db().from('staff_page_boxes').insert({ ...payload, created_by: user?.id });
+      if (error) return toast.error(error.message);
+    }
+    toast.success('Uloženo');
+    setEditingBoxId(null);
+    setBoxForm({ title: '', description: '', symbol: '✦', color: '#6366f1', member_ids: [], sort_order: 100, is_visible: true });
+    load();
+  };
+
+  const deleteBox = async (id: string) => {
+    if (!confirm('Smazat tento boxík?')) return;
+    const { error } = await db().from('staff_page_boxes').delete().eq('id', id);
+    if (error) return toast.error(error.message);
+    toast.success('Smazáno');
+    load();
+  };
 
   const saveSettings = async (member: StaffMember) => {
     const payload: Record<string, any> = { user_id: member.user_id };
