@@ -42,7 +42,7 @@ interface UserNote {
   created_at: string;
 }
 
-type SectionKey = 'overview' | 'activity' | 'notes' | 'searches' | 'interventions' | 'blocks' | 'signout' | 'access';
+type SectionKey = 'overview' | 'activity' | 'notes' | 'searches' | 'interventions' | 'mediation' | 'blocks' | 'signout' | 'access';
 
 const BLOCK_PRESETS: { label: string; minutes: number | 'permanent' }[] = [
   { label: 'Deset minut', minutes: 10 },
