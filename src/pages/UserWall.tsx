@@ -114,7 +114,8 @@ export default function UserWall() {
     if (isStaff) {
       items.push({ key: 'activity', label: 'Veškerá aktivita', icon: '📝' });
       items.push({ key: 'notes', label: 'Poznámky', icon: '📓' });
-      items.push({ key: 'interventions', label: access.account_actions ? 'Zásahy v účtu' : '🔒 Zásahy v účtu', icon: '🛡' });
+      items.push({ key: 'interventions', label: 'Zásahy v účtu', icon: '🛡' });
+      if (me?.id !== profile?.user_id) items.push({ key: 'mediation', label: 'Otevřít mezirozpravu', icon: '💬' });
       items.push({ key: 'searches', label: access.searches ? 'Vyhledávání' : '🔒 Vyhledávání', icon: '🔍' });
       items.push({ key: 'access', label: 'Odemknout sekce', icon: '🔐' });
     }
@@ -123,7 +124,7 @@ export default function UserWall() {
       items.push({ key: 'signout', label: 'Odhlásit', icon: '⏻' });
     }
     return items;
-  }, [isStaff, isDeveloper, access]);
+  }, [isStaff, isDeveloper, access, me, profile]);
 
   if (loading) {
     return <AppLayout><div className="p-8 text-center text-muted-foreground">Načítám…</div></AppLayout>;
