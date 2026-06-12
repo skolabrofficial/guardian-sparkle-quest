@@ -93,10 +93,14 @@ const TOGGLE_FIELDS = [
 export default function Povereni() {
   const { user, isDeveloper } = useAuth();
   const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [allProfiles, setAllProfiles] = useState<any[]>([]);
+  const [boxes, setBoxes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<StaffMember>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingBoxId, setEditingBoxId] = useState<string | null>(null);
+  const [boxForm, setBoxForm] = useState<any>({ title: '', description: '', symbol: '✦', color: '#6366f1', member_ids: [], sort_order: 100, is_visible: true });
 
   const load = async () => {
     setLoading(true);
