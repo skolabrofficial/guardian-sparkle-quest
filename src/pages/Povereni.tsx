@@ -46,9 +46,9 @@ interface StaffMember {
 const db = () => supabase as any;
 
 const ROLE_SECTION_INFO: Record<string, { title: string; description: string; symbol: string }> = {
-  developer: { title: 'Vývojáři', description: 'Vývojáři vytvářejí a spravují celou platformu Alíkovy univerzity.', symbol: '⚙' },
-  dohledci: { title: 'Dohledčí', description: 'Dohledčí dohlížejí na bezpečnost, schvalují obrázky a moderují příspěvky.', symbol: '♛' },
-  lektor: { title: 'Lektoři', description: 'Lektoři vedou kurzy, odpovídají na dotazy a starají se o obsah výuky.', symbol: '✦' },
+  rektor:  { title: 'Rektorát',  description: 'Rektor vede celou univerzitu, schvaluje pravomoci a dohlíží na všechny moduly.', symbol: '♛' },
+  spravce: { title: 'Správa',    description: 'Správci dohlížejí na bezpečnost, moderují obsah a řeší blokace.', symbol: '⚙' },
+  lektor:  { title: 'Lektoři',   description: 'Lektoři vedou kurzy, odpovídají na dotazy a starají se o obsah výuky.', symbol: '✦' },
 };
 
 const AVAILABILITY_LABELS: Record<string, { label: string; color: string }> = {
