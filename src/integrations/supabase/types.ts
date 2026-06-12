@@ -939,6 +939,48 @@ export type Database = {
           },
         ]
       }
+      staff_page_boxes: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_visible: boolean
+          member_ids: string[]
+          sort_order: number
+          symbol: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_visible?: boolean
+          member_ids?: string[]
+          sort_order?: number
+          symbol?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_visible?: boolean
+          member_ids?: string[]
+          sort_order?: number
+          symbol?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       staff_page_settings: {
         Row: {
           accepting_questions: boolean | null
