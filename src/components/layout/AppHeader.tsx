@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import NotificationBell from '@/components/NotificationBell';
 import OnlineIndicator from '@/components/OnlineIndicator';
 import { getRoleSymbol, ROLE_LABELS, ROLE_GRADIENT, ROLE_COLORS } from '@/lib/roleUtils';
