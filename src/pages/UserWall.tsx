@@ -199,7 +199,8 @@ export default function UserWall() {
           {section === 'activity' && isStaff && <ActivitySection userId={profile.user_id} />}
           {section === 'notes' && isStaff && <NotesSection target={profile} canSeePrivate={isDeveloper} />}
           {section === 'searches' && isStaff && (access.searches ? <SearchesSection userId={profile.user_id} /> : <LockedSection label="historii vyhledávání" />)}
-          {section === 'interventions' && isStaff && (access.account_actions ? <InterventionsSection userId={profile.user_id} /> : <LockedSection label="zásahy v účtu" />)}
+          {section === 'interventions' && isStaff && <InterventionsSection userId={profile.user_id} />}
+          {section === 'mediation' && isStaff && me?.id !== profile.user_id && <OpenMediationCard target={profile} />}
           {section === 'access' && isStaff && <AccountAccessControl targetUserId={profile.user_id} onAccessChanged={() => loadAccess(profile.user_id)} />}
           {section === 'blocks' && isDeveloper && <BlocksSection target={profile} />}
           {section === 'signout' && isDeveloper && <SignoutSection target={profile} />}
