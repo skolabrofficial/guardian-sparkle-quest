@@ -14,6 +14,8 @@ import FakultyDetail from "./pages/FakultyDetail";
 import Kurzy from "./pages/Kurzy";
 import KurzDetail from "./pages/KurzDetail";
 import Rozvrh from "./pages/Rozvrh";
+import Nauctura from "./pages/Nauctura";
+import NaucturaDetail from "./pages/NaucturaDetail";
 import Studium from "./pages/Studium";
 import Vypisky from "./pages/Vypisky";
 import Doucovani from "./pages/Doucovani";
@@ -50,6 +52,8 @@ const App = () => (
             <Route path="/kurzy" element={<BlockGuard><Kurzy /></BlockGuard>} />
             <Route path="/kurzy/:id" element={<BlockGuard><KurzDetail /></BlockGuard>} />
             <Route path="/rozvrh" element={<BlockGuard><Rozvrh /></BlockGuard>} />
+            <Route path="/nauctura" element={<BlockGuard><Nauctura /></BlockGuard>} />
+            <Route path="/nauctura/:id" element={<BlockGuard><NaucturaDetail /></BlockGuard>} />
             <Route path="/studium" element={<BlockGuard><Studium /></BlockGuard>} />
             <Route path="/vypisky" element={<BlockGuard><Vypisky /></BlockGuard>} />
             <Route path="/doucovani" element={<BlockGuard><Doucovani /></BlockGuard>} />
