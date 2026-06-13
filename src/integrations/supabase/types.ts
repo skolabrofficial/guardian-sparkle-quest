@@ -168,6 +168,340 @@ export type Database = {
         }
         Relationships: []
       }
+      article_editors: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          note: string | null
+          topic_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          note?: string | null
+          topic_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          note?: string | null
+          topic_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_editors_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "article_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_kvalitarka: {
+        Row: {
+          article_id: string
+          author_id: string
+          body: string
+          created_at: string
+          edited_at: string | null
+          id: string
+          is_deleted: boolean
+          parent_id: string | null
+        }
+        Insert: {
+          article_id: string
+          author_id: string
+          body: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          is_deleted?: boolean
+          parent_id?: string | null
+        }
+        Update: {
+          article_id?: string
+          author_id?: string
+          body?: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          is_deleted?: boolean
+          parent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_kvalitarka_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "article_kvalitarka_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "article_kvalitarka"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_originality_checks: {
+        Row: {
+          article_id: string
+          checked_by: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          score: number | null
+          sources: Json | null
+          verdict: string | null
+        }
+        Insert: {
+          article_id: string
+          checked_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          score?: number | null
+          sources?: Json | null
+          verdict?: string | null
+        }
+        Update: {
+          article_id?: string
+          checked_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          score?: number | null
+          sources?: Json | null
+          verdict?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_originality_checks_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_revisions: {
+        Row: {
+          article_id: string
+          created_at: string
+          diff_after: string | null
+          diff_before: string | null
+          diff_new: string | null
+          diff_old: string | null
+          editor_id: string | null
+          field: string
+          id: string
+          new_value: string | null
+          note: string | null
+          old_value: string | null
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          diff_after?: string | null
+          diff_before?: string | null
+          diff_new?: string | null
+          diff_old?: string | null
+          editor_id?: string | null
+          field: string
+          id?: string
+          new_value?: string | null
+          note?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          diff_after?: string | null
+          diff_before?: string | null
+          diff_new?: string | null
+          diff_old?: string | null
+          editor_id?: string | null
+          field?: string
+          id?: string
+          new_value?: string | null
+          note?: string | null
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_revisions_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_status_log: {
+        Row: {
+          actor_id: string | null
+          article_id: string
+          created_at: string
+          from_status: Database["public"]["Enums"]["article_status"] | null
+          id: string
+          reason: string | null
+          to_status: Database["public"]["Enums"]["article_status"]
+        }
+        Insert: {
+          actor_id?: string | null
+          article_id: string
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["article_status"] | null
+          id?: string
+          reason?: string | null
+          to_status: Database["public"]["Enums"]["article_status"]
+        }
+        Update: {
+          actor_id?: string | null
+          article_id?: string
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["article_status"] | null
+          id?: string
+          reason?: string | null
+          to_status?: Database["public"]["Enums"]["article_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_status_log_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_topics: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          symbol: string | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          symbol?: string | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          symbol?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      articles: {
+        Row: {
+          author_id: string | null
+          author_override: string | null
+          content: string | null
+          cover_image: string | null
+          created_at: string
+          deleted_reason: string | null
+          flagged_source: string | null
+          id: string
+          originality_checked_at: string | null
+          originality_notes: string | null
+          originality_score: number | null
+          perex: string | null
+          published_at: string | null
+          rejection_reason: string | null
+          scheduled_for: string | null
+          slug: string | null
+          status: Database["public"]["Enums"]["article_status"]
+          status_note: string | null
+          title: string
+          topic_id: string | null
+          updated_at: string
+          view_count: number | null
+          word_count: number | null
+        }
+        Insert: {
+          author_id?: string | null
+          author_override?: string | null
+          content?: string | null
+          cover_image?: string | null
+          created_at?: string
+          deleted_reason?: string | null
+          flagged_source?: string | null
+          id?: string
+          originality_checked_at?: string | null
+          originality_notes?: string | null
+          originality_score?: number | null
+          perex?: string | null
+          published_at?: string | null
+          rejection_reason?: string | null
+          scheduled_for?: string | null
+          slug?: string | null
+          status?: Database["public"]["Enums"]["article_status"]
+          status_note?: string | null
+          title?: string
+          topic_id?: string | null
+          updated_at?: string
+          view_count?: number | null
+          word_count?: number | null
+        }
+        Update: {
+          author_id?: string | null
+          author_override?: string | null
+          content?: string | null
+          cover_image?: string | null
+          created_at?: string
+          deleted_reason?: string | null
+          flagged_source?: string | null
+          id?: string
+          originality_checked_at?: string | null
+          originality_notes?: string | null
+          originality_score?: number | null
+          perex?: string | null
+          published_at?: string | null
+          rejection_reason?: string | null
+          scheduled_for?: string | null
+          slug?: string | null
+          status?: Database["public"]["Enums"]["article_status"]
+          status_note?: string | null
+          title?: string
+          topic_id?: string | null
+          updated_at?: string
+          view_count?: number | null
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articles_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "article_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -1558,6 +1892,10 @@ export type Database = {
         Args: { _med_id: string; _uid: string }
         Returns: boolean
       }
+      can_view_article: {
+        Args: { _article_id: string; _uid: string }
+        Returns: boolean
+      }
       close_mediation_with_resolution: {
         Args: {
           _add_to_notes?: boolean
@@ -1592,6 +1930,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_article_editor: {
+        Args: { _article_id: string; _uid: string }
+        Returns: boolean
+      }
       redeem_account_access_code: {
         Args: { _code: string; _request_id: string }
         Returns: string
@@ -1605,6 +1947,18 @@ export type Database = {
     }
     Enums: {
       app_role: "rektor" | "spravce" | "lektor" | "student"
+      article_status:
+        | "draft_author"
+        | "awaiting_review"
+        | "returned_to_author"
+        | "in_editing"
+        | "polishing"
+        | "ready_to_publish"
+        | "scheduled"
+        | "published"
+        | "rejected"
+        | "flagged_stolen"
+        | "deleted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1733,6 +2087,19 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["rektor", "spravce", "lektor", "student"],
+      article_status: [
+        "draft_author",
+        "awaiting_review",
+        "returned_to_author",
+        "in_editing",
+        "polishing",
+        "ready_to_publish",
+        "scheduled",
+        "published",
+        "rejected",
+        "flagged_stolen",
+        "deleted",
+      ],
     },
   },
 } as const
