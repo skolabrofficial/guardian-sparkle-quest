@@ -335,7 +335,7 @@ export default function NaucturaDetail() {
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider">Vepsaný autor (přepíše)</label>
                 <div className="flex gap-2 mt-1">
-                  <input value={authorOverrideDraft} onChange={e => setAuthorOverrideDraft(e.target.value)} placeholder="např. „Tomáš N. & redakce"" className="flex-1 border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
+                  <input value={authorOverrideDraft} onChange={e => setAuthorOverrideDraft(e.target.value)} placeholder='např. „Tomáš N. & redakce“' className="flex-1 border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
                   <button onClick={saveAuthorOverride} className="btn-alik-primary text-xs">Uložit</button>
                 </div>
               </div>
