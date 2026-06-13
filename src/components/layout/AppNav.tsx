@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 const navItems = [
   { href: '/fakulty', label: 'Fakulty', color: 's-blue' },
   { href: '/kurzy', label: 'Kurzy', color: 's-green' },
-  { href: '/rozvrh', label: 'Rozvrh', color: 's-cyan' },
+  { href: '/nauctura', label: 'Naučtura', color: 's-cyan' },
   { href: '/studium', label: 'Studium', color: 's-yellow' },
   { href: '/vypisky', label: 'Výpisky z hodin', color: 's-purple' },
   { href: '/doucovani', label: 'Doučování', color: 's-orange' },

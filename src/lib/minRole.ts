@@ -26,10 +26,12 @@ const RULES: Array<{ test: RegExp | string; role: MinRole }> = [
   { test: /^account_access\./,  role: 'spravce' },
   { test: /^wall\./,            role: 'spravce' },
 
-  // rektor + správce + lektor
+  // rektor + správce + lektor + autor
   { test: /^image\./,           role: 'lektor' },
   { test: /^tutoring\./,        role: 'lektor' },
   { test: /^course\./,          role: 'lektor' },
+  { test: /^article\.(publish|reject|delete|stolen|originality|change_author)/, role: 'spravce' },
+  { test: /^article\./,         role: 'lektor' },
 ];
 
 export function minRoleForAction(action: string): MinRole {
