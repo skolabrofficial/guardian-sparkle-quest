@@ -21,7 +21,7 @@ export default function Index() {
 
   useEffect(() => {
     // make scheduled articles auto-publish on every homepage load
-    (supabase as any).rpc('publish_due_articles').catch(() => {});
+    Promise.resolve((supabase as any).rpc('publish_due_articles')).catch(() => {});
   }, []);
 
   useEffect(() => {
