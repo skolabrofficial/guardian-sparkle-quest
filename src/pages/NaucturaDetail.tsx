@@ -7,7 +7,15 @@ import { STATUS_INFO, ArticleStatus, allowedTransitions } from '@/lib/articleSta
 import { computeDiffSnippet } from '@/lib/articleDiff';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import ArticleDiffView from '@/components/ArticleDiffView';
+import Protokol, { actionToDruh, roleToAutorita, FIELD_LABELS } from '@/components/Protokol';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Article {
   id: string; title: string; perex: string | null; content: string;
@@ -18,17 +26,12 @@ interface Article {
   flagged_source: string | null; scheduled_for: string | null;
   published_at: string | null; originality_score: number | null;
   originality_notes: string | null; originality_checked_at: string | null;
+  is_featured: boolean; featured_until: string | null;
+  taken_by: string | null; taken_at: string | null;
+  theft_source: string | null; rating: number | null;
   created_at: string; updated_at: string;
 }
 interface Topic { id: string; name: string; symbol: string; color: string; }
-
-const ROLE_BADGE: Record<string, { label: string; bg: string }> = {
-  rektor:  { label: 'rektor',   bg: '#254BFF' },
-  spravce: { label: 'správce',  bg: '#258B25' },
-  lektor:  { label: 'lektor',   bg: '#C0392B' },
-  student: { label: 'student',  bg: '#888' },
-  editor:  { label: 'redakce',  bg: '#7a4a8a' },
-};
 
 export default function NaucturaDetail() {
   const { id } = useParams();
@@ -40,25 +43,31 @@ export default function NaucturaDetail() {
   const [article, setArticle] = useState<Article | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [authorProfile, setAuthorProfile] = useState<any>(null);
+  const [takenProfile, setTakenProfile] = useState<any>(null);
   const [isEditorAccess, setIsEditorAccess] = useState(false);
   const [revisions, setRevisions] = useState<any[]>([]);
   const [statusLog, setStatusLog] = useState<any[]>([]);
   const [origChecks, setOrigChecks] = useState<any[]>([]);
   const [kval, setKval] = useState<any[]>([]);
-  const [kvalProfiles, setKvalProfiles] = useState<Record<string, any>>({});
-  const [kvalRoles, setKvalRoles] = useState<Record<string, string>>({});
+  const [pointsTx, setPointsTx] = useState<any[]>([]);
+  const [actorProfiles, setActorProfiles] = useState<Record<string, any>>({});
+  const [actorRoles, setActorRoles] = useState<Record<string, string>>({});
   const [newKval, setNewKval] = useState('');
   const [editForm, setEditForm] = useState<Partial<Article> | null>(null);
   const [transitionPick, setTransitionPick] = useState<{ to: ArticleStatus; needsReason?: boolean } | null>(null);
   const [transitionReason, setTransitionReason] = useState('');
   const [scheduledFor, setScheduledFor] = useState('');
-  const [deleteReason, setDeleteReason] = useState('');
+  const [theftSource, setTheftSource] = useState('');
+  const [publishFeatured, setPublishFeatured] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
   const [origDraft, setOrigDraft] = useState({ score: '', verdict: 'ok', notes: '', sources: '' });
   const [authorOverrideDraft, setAuthorOverrideDraft] = useState('');
   const [changeAuthorUsername, setChangeAuthorUsername] = useState('');
+  const [pointsDraft, setPointsDraft] = useState({ amount: '5', reason: '' });
+  const [ratingDraft, setRatingDraft] = useState<number>(0);
 
-  useEffect(() => { if (id) load(); }, [id]);
+  useEffect(() => { if (id) load(); /* eslint-disable-next-line */ }, [id]);
 
   async function load() {
     const sb: any = supabase;
@@ -71,33 +80,42 @@ export default function NaucturaDetail() {
     setArticle(art);
     setTopics(tRes.data || []);
     setAuthorOverrideDraft(art.author_override || '');
+    setRatingDraft(art.rating || 0);
 
     if (art.author_id) {
       const { data: p } = await sb.from('profiles').select('user_id, display_name, username, avatar_url').eq('user_id', art.author_id).maybeSingle();
       setAuthorProfile(p);
-    }
+    } else setAuthorProfile(null);
+    if (art.taken_by) {
+      const { data: p } = await sb.from('profiles').select('user_id, display_name, username, avatar_url').eq('user_id', art.taken_by).maybeSingle();
+      setTakenProfile(p);
+    } else setTakenProfile(null);
+
     if (user) {
       const { data: ed } = await sb.from('article_editors').select('id, topic_id').eq('user_id', user.id);
       const has = (ed || []).some((e: any) => !e.topic_id || e.topic_id === art.topic_id);
       setIsEditorAccess(has || isRektor);
     }
 
-    const [rRes, sRes, oRes, kRes] = await Promise.all([
+    const [rRes, sRes, oRes, kRes, ptRes] = await Promise.all([
       sb.from('article_revisions').select('*').eq('article_id', id).order('created_at', { ascending: false }),
       sb.from('article_status_log').select('*').eq('article_id', id).order('created_at', { ascending: false }),
       sb.from('article_originality_checks').select('*').eq('article_id', id).order('created_at', { ascending: false }),
       sb.from('article_kvalitarka').select('*').eq('article_id', id).order('created_at'),
+      sb.from('article_points').select('*').eq('article_id', id).order('created_at', { ascending: false }),
     ]);
     setRevisions(rRes.data || []);
     setStatusLog(sRes.data || []);
     setOrigChecks(oRes.data || []);
     setKval(kRes.data || []);
+    setPointsTx(ptRes.data || []);
 
     const allActorIds = [
       ...(rRes.data || []).map((r: any) => r.editor_id),
       ...(sRes.data || []).map((r: any) => r.actor_id),
       ...(oRes.data || []).map((r: any) => r.checked_by),
       ...(kRes.data || []).map((r: any) => r.author_id),
+      ...(ptRes.data || []).map((r: any) => r.granted_by),
     ].filter(Boolean);
     if (allActorIds.length) {
       const ids = [...new Set(allActorIds)];
@@ -107,7 +125,7 @@ export default function NaucturaDetail() {
       ]);
       const pm: Record<string, any> = {};
       (pRes.data || []).forEach((p: any) => { pm[p.user_id] = p; });
-      setKvalProfiles(pm);
+      setActorProfiles(pm);
       const { pickHighestRole } = await import('@/lib/rolePriority');
       const rm: Record<string, string> = {};
       ids.forEach(uid => {
@@ -115,7 +133,7 @@ export default function NaucturaDetail() {
         const best = pickHighestRole(roles);
         if (best) rm[uid] = best;
       });
-      setKvalRoles(rm);
+      setActorRoles(rm);
     }
   }
 
@@ -124,8 +142,9 @@ export default function NaucturaDetail() {
   const topic = topics.find(t => t.id === article.topic_id);
   const isAuthor = user?.id === article.author_id;
   const canEdit = isAuthor || isEditorAccess;
-  const actorRole = isRektor ? 'rektor' : isEditorAccess ? 'editor' : isAuthor ? 'author' : 'none';
-  const transitions = canEdit ? allowedTransitions(article.status, actorRole as any) : [];
+  const actorRoleStr: 'author' | 'editor' | 'rektor' | 'none' =
+    isRektor ? 'rektor' : isEditorAccess ? 'editor' : isAuthor ? 'author' : 'none';
+  const transitions = canEdit ? allowedTransitions(article.status, actorRoleStr as any) : [];
   const info = STATUS_INFO[article.status];
   const authorLabel = article.author_override || authorProfile?.display_name || 'Neznámý';
 
@@ -142,6 +161,7 @@ export default function NaucturaDetail() {
     if (!editForm || !user) return;
     const sb: any = supabase;
     const fields: (keyof Article)[] = ['title', 'perex', 'content', 'cover_image', 'topic_id'];
+    const saveGroup = crypto.randomUUID();
     const revRows: any[] = [];
     for (const f of fields) {
       const oldV = (article as any)[f] ?? '';
@@ -150,7 +170,7 @@ export default function NaucturaDetail() {
         const snip = computeDiffSnippet(String(oldV), String(newV));
         revRows.push({
           article_id: article!.id, editor_id: user.id, field: f as string,
-          old_value: String(oldV), new_value: String(newV),
+          old_value: String(oldV), new_value: String(newV), save_group: saveGroup,
           ...snip,
         });
       }
@@ -168,20 +188,29 @@ export default function NaucturaDetail() {
     if (transitionPick.needsReason && transitionReason.trim().length < 3) { toast.error('Zadejte důvod'); return; }
     const sb: any = supabase;
     const patch: any = { status: transitionPick.to, updated_at: new Date().toISOString() };
-    if (transitionPick.to === 'published') patch.published_at = new Date().toISOString();
+    if (transitionPick.to === 'published') {
+      patch.published_at = new Date().toISOString();
+      if (publishFeatured) {
+        patch.is_featured = true;
+        patch.featured_until = new Date(Date.now() + 3 * 86400000).toISOString();
+      }
+    }
     if (transitionPick.to === 'scheduled') {
       if (!scheduledFor) { toast.error('Vyberte datum a čas'); return; }
       patch.scheduled_for = new Date(scheduledFor).toISOString();
     }
     if (transitionPick.to === 'rejected') patch.rejection_reason = transitionReason;
-    if (transitionPick.to === 'flagged_stolen') patch.flagged_source = transitionReason;
+    if (transitionPick.to === 'flagged_stolen') {
+      patch.flagged_source = transitionReason;
+      patch.theft_source = theftSource || 'other';
+    }
     const { error } = await sb.from('articles').update(patch).eq('id', article!.id);
     if (error) { toast.error(error.message); return; }
     await sb.from('article_status_log').insert({
       article_id: article!.id, actor_id: user.id, from_status: article!.status, to_status: transitionPick.to,
       reason: transitionReason || null,
     });
-    setTransitionPick(null); setTransitionReason(''); setScheduledFor('');
+    setTransitionPick(null); setTransitionReason(''); setScheduledFor(''); setPublishFeatured(false); setTheftSource('');
     toast.success('Stav změněn'); load();
   }
 
@@ -221,7 +250,7 @@ export default function NaucturaDetail() {
   }
 
   async function saveAuthorOverride() {
-    if (!canEdit) return;
+    if (!isEditorAccess) { toast.error('Vepsaného autora upravuje jen redakce'); return; }
     const sb: any = supabase;
     const old = article!.author_override || '';
     if (old === authorOverrideDraft) return;
@@ -247,25 +276,81 @@ export default function NaucturaDetail() {
     setChangeAuthorUsername(''); toast.success('Autor změněn'); load();
   }
 
-  const statusBadge = (s: ArticleStatus) => {
-    const i = STATUS_INFO[s];
-    return <span className="px-2 py-0.5 rounded-full font-bold text-xs" style={{ background: i.bg, color: i.color }}>{i.short}</span>;
-  };
+  async function takeArticle() {
+    const sb: any = supabase;
+    const { error } = await sb.rpc('take_article', { _article_id: article!.id });
+    if (error) toast.error(error.message); else { toast.success('Přebral/a jsi posouzení článku'); load(); }
+  }
+  async function releaseArticle() {
+    const sb: any = supabase;
+    const { error } = await sb.rpc('release_article', { _article_id: article!.id });
+    if (error) toast.error(error.message); else { toast.success('Uvolněno'); load(); }
+  }
+
+  async function addPoints() {
+    const amt = Number(pointsDraft.amount);
+    if (!amt || !article?.author_id) { toast.error('Zadejte počet bodů a článek musí mít autora'); return; }
+    const sb: any = supabase;
+    const { error } = await sb.from('article_points').insert({
+      user_id: article.author_id, article_id: article.id, amount: amt,
+      reason: pointsDraft.reason || null, granted_by: user!.id,
+    });
+    if (error) toast.error(error.message); else { toast.success('Vavřínové body připsány'); setPointsDraft({ amount: '5', reason: '' }); load(); }
+  }
+
+  async function saveRating() {
+    const sb: any = supabase;
+    const { error } = await sb.from('articles').update({ rating: ratingDraft || null }).eq('id', article!.id);
+    if (error) toast.error(error.message); else { toast.success('Hodnocení uloženo'); load(); }
+  }
+
+  /* ---------- Render ---------- */
+
+  const totalPoints = pointsTx.reduce((s, p) => s + (p.amount || 0), 0);
+
+  // Group revisions by save_group (or by id when no group)
+  const groupedRevisions: Record<string, any[]> = {};
+  revisions.forEach(r => {
+    const k = r.save_group || r.id;
+    (groupedRevisions[k] = groupedRevisions[k] || []).push(r);
+  });
+  // Merge with status log into a chronological feed
+  type FeedItem = { type: 'status' | 'edit'; created_at: string; actor_id: string; data: any };
+  const feed: FeedItem[] = [
+    ...statusLog.map(s => ({ type: 'status' as const, created_at: s.created_at, actor_id: s.actor_id, data: s })),
+    ...Object.values(groupedRevisions).map(group => ({
+      type: 'edit' as const, created_at: group[0].created_at, actor_id: group[0].editor_id, data: group,
+    })),
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   return (
     <AppLayout>
       <Link to="/nauctura" className="text-sm text-muted-foreground hover:underline">← zpět do Naučtury</Link>
 
-      <article className="panel-card mt-3" style={{ background: 'linear-gradient(180deg, #fffaf0 0%, #fff 60%)', border: '2px solid #d6c388' }}>
-        {topic && <div className="text-xs uppercase tracking-wider font-bold" style={{ color: topic.color }}>{topic.symbol} {topic.name}</div>}
+      <article className="panel-card mt-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+          {topic && <div className="text-xs uppercase tracking-wider font-bold" style={{ color: topic.color }}>{topic.symbol} {topic.name}</div>}
+          <div className="flex items-center gap-2">
+            {article.is_featured && <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-xs font-bold">★ Významný</span>}
+            <span className="px-2 py-0.5 rounded-full font-bold text-xs" style={{ background: info.bg, color: info.color }}>{info.short}</span>
+          </div>
+        </div>
+
         {!editForm ? (
           <>
-            <h1 className="text-4xl mt-2 mb-2" style={{ fontFamily: 'Cormorant Garamond, serif', fontWeight: 700 }}>{article.title}</h1>
-            {article.perex && <p className="text-lg italic text-muted-foreground mb-3">{article.perex}</p>}
-            <div className="flex items-center gap-2 text-sm mb-2">
-              <span>— <strong>{authorLabel}</strong></span>
-              {statusBadge(article.status)}
+            <h1 className="text-3xl md:text-4xl mt-1 mb-2 font-bold">{article.title}</h1>
+            {article.perex && <p className="text-lg italic text-muted-foreground mb-3 whitespace-pre-wrap">{article.perex}</p>}
+            <div className="flex items-center gap-2 text-sm mb-2 flex-wrap">
+              <span>— {authorProfile?.username
+                ? <Link to={`/uziv/${authorProfile.username}`} className="font-bold hover:underline">{authorLabel}</Link>
+                : <strong>{authorLabel}</strong>}</span>
               {article.published_at && <span className="text-xs text-muted-foreground">vydáno {new Date(article.published_at).toLocaleString('cs')}</span>}
+              {article.rating && <span className="text-amber-600 font-bold">{'★'.repeat(article.rating)}</span>}
+              {totalPoints !== 0 && (
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${totalPoints > 0 ? 'bg-emerald-100 text-emerald-900' : 'bg-red-100 text-red-900'}`}>
+                  {totalPoints > 0 ? '+' : ''}{totalPoints} 🌿 Vavřínových bodů
+                </span>
+              )}
             </div>
             {article.cover_image && <img src={article.cover_image} alt="" className="w-full max-h-96 object-cover rounded-xl my-4" />}
             <div className="mt-4">
@@ -283,20 +368,41 @@ export default function NaucturaDetail() {
             <input value={editForm.cover_image || ''} onChange={e => setEditForm({ ...editForm, cover_image: e.target.value })} placeholder="URL obálky (volitelné)" className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm bg-card" />
             <textarea value={editForm.content || ''} onChange={e => setEditForm({ ...editForm, content: e.target.value })} placeholder="Obsah článku (Markdown, LaTeX)" rows={20} className="w-full border-2 border-border rounded-xl py-3 px-3 font-mono text-sm bg-card" />
             <div className="flex gap-2">
-              <button onClick={saveEdit} className="btn-alik-primary">Uložit</button>
-              <button onClick={cancelEdit} className="px-4 py-2 rounded-xl border-2 border-border">Zrušit</button>
+              <Button onClick={saveEdit}>Uložit (jako jeden záznam protokolu)</Button>
+              <Button variant="outline" onClick={cancelEdit}>Zrušit</Button>
             </div>
           </div>
         )}
       </article>
 
+      {/* Redakční přebírka */}
+      {isEditorAccess && !editForm && article.status !== 'published' && article.status !== 'deleted' && (
+        <div className="panel-card mt-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="text-sm">
+              {article.taken_by
+                ? <>Posuzuje: <strong>{takenProfile?.display_name || '(redaktor)'}</strong>{article.taken_at && <span className="text-xs text-muted-foreground"> od {new Date(article.taken_at).toLocaleString('cs')}</span>}</>
+                : <em className="text-muted-foreground">Článek si zatím nikdo z redakce nepřebral.</em>}
+            </div>
+            <div className="flex gap-2">
+              {(!article.taken_by || article.taken_by !== user?.id) && (
+                <Button size="sm" onClick={takeArticle}>👋 Přebrat článek</Button>
+              )}
+              {article.taken_by === user?.id && (
+                <Button size="sm" variant="outline" onClick={releaseArticle}>Uvolnit</Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Boční nástroje */}
       {canEdit && !editForm && (
         <div className="panel-card mt-4">
           <div className="flex flex-wrap gap-2">
-            <button onClick={startEdit} className="btn-alik-primary text-sm">✎ Upravit</button>
+            <Button size="sm" onClick={startEdit}>✎ Upravit</Button>
             {transitions.map(tr => (
-              <button key={tr.to} onClick={() => { setTransitionPick(tr); setTransitionReason(''); }} className="px-3 py-2 rounded-xl border-2 text-sm font-bold" style={{ borderColor: STATUS_INFO[tr.to].color, color: STATUS_INFO[tr.to].color }}>
+              <button key={tr.to} onClick={() => { setTransitionPick(tr); setTransitionReason(''); setPublishFeatured(false); }} className="px-3 py-2 rounded-xl border-2 text-sm font-bold" style={{ borderColor: STATUS_INFO[tr.to].color, color: STATUS_INFO[tr.to].color }}>
                 → {tr.label}
               </button>
             ))}
@@ -309,45 +415,103 @@ export default function NaucturaDetail() {
             <div className="mt-3 p-3 border-2 border-dashed border-border rounded-xl space-y-2">
               <div className="text-sm font-bold">Změna stavu: {STATUS_INFO[transitionPick.to].label}</div>
               {transitionPick.to === 'scheduled' && (
-                <input type="datetime-local" value={scheduledFor} onChange={e => setScheduledFor(e.target.value)} className="border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
+                <div>
+                  <Label className="text-xs">Datum a čas vydání</Label>
+                  <Input type="datetime-local" value={scheduledFor} onChange={e => setScheduledFor(e.target.value)} />
+                </div>
               )}
-              <textarea value={transitionReason} onChange={e => setTransitionReason(e.target.value)} placeholder={transitionPick.needsReason ? 'Důvod (povinné)' : 'Poznámka (volitelná)'} rows={2} className="w-full border-2 border-border rounded-lg py-2 px-2 text-sm" />
+              {transitionPick.to === 'published' && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={publishFeatured} onChange={e => setPublishFeatured(e.target.checked)} />
+                  <span><strong>★ Významný</strong> — automaticky se připne na titulku po dobu 3 dnů</span>
+                </label>
+              )}
+              {transitionPick.to === 'flagged_stolen' && (
+                <div>
+                  <Label className="text-xs">Zdroj krádeže</Label>
+                  <select value={theftSource} onChange={e => setTheftSource(e.target.value)} className="w-full border-2 border-border rounded-md py-1.5 px-2 text-sm bg-background">
+                    <option value="">— vyberte —</option>
+                    <option value="alikoviny">Alíkoviny</option>
+                    <option value="ai">AI (ChatGPT, Gemini, …)</option>
+                    <option value="web">Webový zdroj</option>
+                    <option value="book">Kniha / tištěné</option>
+                    <option value="other">Jiné</option>
+                  </select>
+                </div>
+              )}
+              <Textarea value={transitionReason} onChange={e => setTransitionReason(e.target.value)} placeholder={transitionPick.needsReason ? 'Důvod (povinné)' : 'Poznámka (volitelná)'} rows={2} />
               <div className="flex gap-2">
-                <button onClick={doTransition} className="btn-alik-primary text-sm">Potvrdit</button>
-                <button onClick={() => setTransitionPick(null)} className="px-3 py-1.5 rounded-lg border-2 border-border text-sm">Zrušit</button>
+                <Button size="sm" onClick={doTransition}>Potvrdit</Button>
+                <Button size="sm" variant="outline" onClick={() => setTransitionPick(null)}>Zrušit</Button>
               </div>
             </div>
           )}
           {showDelete && (
             <div className="mt-3 p-3 border-2 border-destructive rounded-xl space-y-2">
               <div className="text-sm font-bold text-destructive">Smazat článek</div>
-              <textarea value={deleteReason} onChange={e => setDeleteReason(e.target.value)} placeholder="Důvod smazání (povinné)" rows={2} className="w-full border-2 border-border rounded-lg py-2 px-2 text-sm" />
+              <Textarea value={deleteReason} onChange={e => setDeleteReason(e.target.value)} placeholder="Důvod smazání (povinné)" rows={2} />
               <div className="flex gap-2">
-                <button onClick={doDelete} className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-sm font-bold">Smazat</button>
-                <button onClick={() => setShowDelete(false)} className="px-3 py-1.5 rounded-lg border-2 border-border text-sm">Zrušit</button>
+                <Button size="sm" variant="destructive" onClick={doDelete}>Smazat</Button>
+                <Button size="sm" variant="outline" onClick={() => setShowDelete(false)}>Zrušit</Button>
               </div>
             </div>
           )}
 
-          {/* Vepsání autora + změna autora */}
-          {canEdit && (
-            <div className="mt-4 grid md:grid-cols-2 gap-3">
+          {/* Vepsání autora (jen redakce) + změna autora (rektor) */}
+          <div className="mt-4 grid md:grid-cols-2 gap-3">
+            {isEditorAccess && (
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider">Vepsaný autor (přepíše)</label>
+                <label className="text-xs font-bold uppercase tracking-wider">Vepsaný autor (přepíše skutečného)</label>
                 <div className="flex gap-2 mt-1">
-                  <input value={authorOverrideDraft} onChange={e => setAuthorOverrideDraft(e.target.value)} placeholder='např. „Tomáš N. & redakce“' className="flex-1 border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
-                  <button onClick={saveAuthorOverride} className="btn-alik-primary text-xs">Uložit</button>
+                  <Input value={authorOverrideDraft} onChange={e => setAuthorOverrideDraft(e.target.value)} placeholder='např. „Tomáš N. & redakce"' />
+                  <Button size="sm" onClick={saveAuthorOverride}>Uložit</Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">Upravuje pouze redakce.</p>
+              </div>
+            )}
+            {isRektor && (
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider">Změna skutečného autora (jen rektor)</label>
+                <div className="flex gap-2 mt-1">
+                  <Input value={changeAuthorUsername} onChange={e => setChangeAuthorUsername(e.target.value)} placeholder="username nového autora" />
+                  <Button size="sm" onClick={changeAuthor}>Změnit</Button>
                 </div>
               </div>
-              {isRektor && (
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider">Změna autora (jen rektor)</label>
-                  <div className="flex gap-2 mt-1">
-                    <input value={changeAuthorUsername} onChange={e => setChangeAuthorUsername(e.target.value)} placeholder="username nového autora" className="flex-1 border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
-                    <button onClick={changeAuthor} className="btn-alik-primary text-xs">Změnit</button>
-                  </div>
+            )}
+          </div>
+
+          {/* Hodnocení + Vavřínové body */}
+          {isEditorAccess && (
+            <div className="mt-4 border-t pt-3 grid md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-bold text-sm mb-2">★ Redakční hodnocení (1–5)</h4>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <button key={n} onClick={() => setRatingDraft(n)} className={`text-2xl ${n <= ratingDraft ? 'text-amber-500' : 'text-muted-foreground'}`}>★</button>
+                  ))}
+                  <Button size="sm" className="ml-2" onClick={saveRating}>Uložit</Button>
+                  {article.rating && <Button size="sm" variant="ghost" onClick={() => { setRatingDraft(0); saveRating(); }}>Zrušit</Button>}
                 </div>
-              )}
+              </div>
+              <div>
+                <h4 className="font-bold text-sm mb-2">🌿 Vavřínové body (odměna / trest)</h4>
+                <div className="flex gap-2">
+                  <Input type="number" value={pointsDraft.amount} onChange={e => setPointsDraft({ ...pointsDraft, amount: e.target.value })} className="w-20" placeholder="±n" />
+                  <Input value={pointsDraft.reason} onChange={e => setPointsDraft({ ...pointsDraft, reason: e.target.value })} placeholder="Důvod / poznámka" />
+                  <Button size="sm" onClick={addPoints}>Připsat</Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">Záporné číslo = strhnutí.</p>
+                {pointsTx.length > 0 && (
+                  <ul className="mt-2 text-xs space-y-1 max-h-32 overflow-auto">
+                    {pointsTx.map(p => (
+                      <li key={p.id} className="border border-border rounded px-2 py-1 flex justify-between">
+                        <span><strong className={p.amount > 0 ? 'text-emerald-600' : 'text-red-600'}>{p.amount > 0 ? '+' : ''}{p.amount}</strong> {p.reason}</span>
+                        <span className="text-muted-foreground">{actorProfiles[p.granted_by]?.display_name || '—'}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           )}
 
@@ -356,7 +520,7 @@ export default function NaucturaDetail() {
             <div className="mt-4 border-t pt-3">
               <h4 className="font-bold text-sm mb-2">🔍 Ověření originality</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <input type="number" min="0" max="100" value={origDraft.score} onChange={e => setOrigDraft({ ...origDraft, score: e.target.value })} placeholder="Skóre 0–100" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
+                <input type="number" min={0} max={100} value={origDraft.score} onChange={e => setOrigDraft({ ...origDraft, score: e.target.value })} placeholder="Skóre 0–100" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
                 <select value={origDraft.verdict} onChange={e => setOrigDraft({ ...origDraft, verdict: e.target.value })} className="border-2 border-border rounded-lg py-1.5 px-2 text-sm">
                   <option value="ok">OK</option>
                   <option value="suspicious">Podezřelé</option>
@@ -364,13 +528,13 @@ export default function NaucturaDetail() {
                 </select>
                 <input value={origDraft.notes} onChange={e => setOrigDraft({ ...origDraft, notes: e.target.value })} placeholder="Poznámka" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm col-span-2" />
                 <textarea value={origDraft.sources} onChange={e => setOrigDraft({ ...origDraft, sources: e.target.value })} placeholder="Zdroje, jeden URL na řádek" rows={2} className="col-span-2 md:col-span-3 border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
-                <button onClick={saveOriginality} className="btn-alik-primary text-xs">Zapsat</button>
+                <Button size="sm" onClick={saveOriginality}>Zapsat</Button>
               </div>
               {origChecks.length > 0 && (
                 <ul className="mt-3 text-xs space-y-1">
                   {origChecks.map(c => (
                     <li key={c.id} className="border border-border rounded-lg p-2">
-                      <strong>{c.verdict}</strong> {c.score != null && `(${c.score}%)`} — {kvalProfiles[c.checked_by]?.display_name || '?'} · {new Date(c.created_at).toLocaleString('cs')}
+                      <strong>{c.verdict}</strong> {c.score != null && `(${c.score}%)`} — {actorProfiles[c.checked_by]?.display_name || '?'} · {new Date(c.created_at).toLocaleString('cs')}
                       {c.notes && <div className="text-muted-foreground">{c.notes}</div>}
                     </li>
                   ))}
@@ -381,69 +545,76 @@ export default function NaucturaDetail() {
         </div>
       )}
 
-      {/* Protokol změn */}
+      {/* Protokol změn — jednotný formát Protokol */}
       {canEdit && (
-        <details className="panel-card mt-4">
-          <summary className="cursor-pointer font-extrabold">📜 Protokol změn ({revisions.length + statusLog.length})</summary>
+        <details className="panel-card mt-4" open>
+          <summary className="cursor-pointer font-extrabold">📜 Protokol změn ({feed.length})</summary>
           <div className="mt-3 space-y-3">
-            {statusLog.map(s => {
-              const r = kvalRoles[s.actor_id] || 'editor';
-              const badge = ROLE_BADGE[r] || ROLE_BADGE.editor;
+            {feed.length === 0 && <p className="text-muted-foreground text-sm">Zatím žádné záznamy.</p>}
+            {feed.map((item, idx) => {
+              const profile = actorProfiles[item.actor_id];
+              const role = actorRoles[item.actor_id] || 'editor';
+              if (item.type === 'status') {
+                const s = item.data;
+                return (
+                  <div key={`s-${s.id}`}>
+                    <Protokol
+                      druh={s.actor_id ? actionToDruh('status.' + s.to_status) : 223}
+                      autorita={s.actor_id ? roleToAutorita(role) : 1}
+                      nick={s.actor_id ? (profile?.display_name || 'redakce') : 'systém'}
+                      nickHref={profile?.username ? `/uziv/${profile.username}` : undefined}
+                      profilovka={profile?.avatar_url || undefined}
+                      cas={new Date(s.created_at)}
+                      kontext={<>změnu stavu článku{s.from_status ? <> z <em>{STATUS_INFO[s.from_status as ArticleStatus]?.label || s.from_status}</em></> : null} na <strong>{STATUS_INFO[s.to_status as ArticleStatus]?.label || s.to_status}</strong></>}
+                      text={s.reason ? <em>„{s.reason}"</em> : undefined}
+                    />
+                  </div>
+                );
+              }
+              // edit group
+              const group: any[] = item.data;
               return (
-                <div key={s.id} className="border-2 border-border rounded-xl p-3 text-sm">
-                  <div className="flex items-center gap-2 mb-1 text-xs">
-                    <span className="px-1.5 py-0.5 rounded font-bold text-white" style={{ background: badge.bg }}>{badge.label}</span>
-                    <strong>{kvalProfiles[s.actor_id]?.display_name || s.actor_id?.slice(0, 8)}</strong>
-                    <span className="text-muted-foreground">změnil stav</span>
-                    <span className="text-muted-foreground">· {new Date(s.created_at).toLocaleString('cs')}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    {s.from_status && statusBadge(s.from_status)} → {statusBadge(s.to_status)}
-                  </div>
-                  {s.reason && <div className="mt-1 italic text-muted-foreground">„{s.reason}"</div>}
-                </div>
-              );
-            })}
-            {revisions.map(r => {
-              const role = kvalRoles[r.editor_id] || 'editor';
-              const badge = ROLE_BADGE[role] || ROLE_BADGE.editor;
-              return (
-                <div key={r.id} className="border-2 border-border rounded-xl p-3 text-sm">
-                  <div className="flex items-center gap-2 mb-2 text-xs">
-                    <span className="px-1.5 py-0.5 rounded font-bold text-white" style={{ background: badge.bg }}>{badge.label}</span>
-                    <strong>{kvalProfiles[r.editor_id]?.display_name || r.editor_id?.slice(0, 8)}</strong>
-                    <span className="text-muted-foreground">upravil</span>
-                    <span className="text-muted-foreground">· {new Date(r.created_at).toLocaleString('cs')}</span>
-                  </div>
-                  <ArticleDiffView
-                    field={r.field}
-                    before={r.diff_before} oldChunk={r.diff_old} newChunk={r.diff_new} after={r.diff_after}
-                    fallbackOld={r.old_value} fallbackNew={r.new_value}
+                <div key={`e-${idx}`} className="space-y-2">
+                  <Protokol
+                    druh={24}
+                    autorita={roleToAutorita(role)}
+                    nick={profile?.display_name || '?'}
+                    nickHref={profile?.username ? `/uziv/${profile.username}` : undefined}
+                    profilovka={profile?.avatar_url || undefined}
+                    cas={new Date(group[0].created_at)}
+                    kontext={<>úpravu článku — změněno {group.length} {group.length === 1 ? 'pole' : group.length < 5 ? 'pole' : 'polí'} ({group.map(g => FIELD_LABELS[g.field] || g.field).join(', ')})</>}
                   />
-                  {r.note && <div className="mt-1 italic text-muted-foreground">„{r.note}"</div>}
+                  <div className="ml-8 space-y-2">
+                    {group.map(r => (
+                      <ArticleDiffView key={r.id}
+                        field={r.field}
+                        before={r.diff_before} oldChunk={r.diff_old} newChunk={r.diff_new} after={r.diff_after}
+                        fallbackOld={r.old_value} fallbackNew={r.new_value}
+                      />
+                    ))}
+                  </div>
                 </div>
               );
             })}
-            {revisions.length + statusLog.length === 0 && <p className="text-muted-foreground text-sm">Zatím žádné záznamy.</p>}
           </div>
         </details>
       )}
 
       {/* Kvalitárka */}
       {canEdit && (
-        <section className="panel-card mt-4" style={{ background: '#f6f1e6', border: '2px solid #c9b27a' }}>
-          <h3 className="text-2xl mt-0" style={{ fontFamily: 'Cormorant Garamond, serif', fontWeight: 700 }}>🗨️ Kvalitárka</h3>
+        <section className="panel-card mt-4">
+          <h3 className="text-2xl mt-0 font-bold">🗨️ Kvalitárka</h3>
           <p className="text-xs text-muted-foreground mb-3">Diskuse mezi autorem a redakcí pod článkem.</p>
           <div className="space-y-2 mb-3">
             {kval.filter(k => !k.parent_id).map(k => (
-              <KvalItem key={k.id} item={k} children={kval.filter(c => c.parent_id === k.id)} profiles={kvalProfiles} roles={kvalRoles} onReload={load} userId={user?.id} isRektor={isRektor} />
+              <KvalItem key={k.id} item={k} children={kval.filter(c => c.parent_id === k.id)} profiles={actorProfiles} roles={actorRoles} onReload={load} userId={user?.id} isRektor={isRektor} />
             ))}
             {kval.length === 0 && <p className="text-sm text-muted-foreground italic">Zatím žádný příspěvek.</p>}
           </div>
           {user && (
             <div>
-              <textarea value={newKval} onChange={e => setNewKval(e.target.value)} placeholder="Napište příspěvek…" rows={3} className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm bg-card" />
-              <button onClick={() => postKval(null)} className="btn-alik-primary text-sm mt-2">Odeslat</button>
+              <Textarea value={newKval} onChange={e => setNewKval(e.target.value)} placeholder="Napište příspěvek…" rows={3} />
+              <Button className="mt-2" onClick={() => postKval(null)}>Odeslat</Button>
             </div>
           )}
         </section>
@@ -452,6 +623,10 @@ export default function NaucturaDetail() {
   );
 }
 
+const ROLE_BADGE_BG: Record<string, string> = {
+  rektor: '#254BFF', spravce: '#258B25', lektor: '#C0392B', student: '#888', editor: '#7a4a8a',
+};
+
 function KvalItem({ item, children, profiles, roles, onReload, userId, isRektor }: any) {
   const sb: any = supabase;
   const [reply, setReply] = useState('');
@@ -459,7 +634,6 @@ function KvalItem({ item, children, profiles, roles, onReload, userId, isRektor 
   const [editBody, setEditBody] = useState<string | null>(null);
   const profile = profiles[item.author_id];
   const role = roles[item.author_id] || 'student';
-  const badge = ROLE_BADGE[role] || ROLE_BADGE.student;
   const canModify = item.author_id === userId || isRektor;
 
   async function send() {
@@ -480,17 +654,17 @@ function KvalItem({ item, children, profiles, roles, onReload, userId, isRektor 
   return (
     <div className="border-2 border-border bg-card rounded-xl p-3">
       <div className="flex items-center gap-2 mb-1 text-xs">
-        <span className="px-1.5 py-0.5 rounded font-bold text-white" style={{ background: badge.bg }}>{badge.label}</span>
+        <span className="px-1.5 py-0.5 rounded font-bold text-white" style={{ background: ROLE_BADGE_BG[role] || '#888' }}>{role}</span>
         <strong>{profile?.display_name || '?'}</strong>
         <span className="text-muted-foreground">· {new Date(item.created_at).toLocaleString('cs')}</span>
         {item.edited_at && <span className="text-muted-foreground text-[10px]">(upraveno)</span>}
       </div>
       {editBody != null ? (
         <div>
-          <textarea value={editBody} onChange={e => setEditBody(e.target.value)} rows={2} className="w-full border-2 border-border rounded-lg py-1 px-2 text-sm" />
+          <Textarea value={editBody} onChange={e => setEditBody(e.target.value)} rows={2} />
           <div className="flex gap-1 mt-1">
-            <button onClick={saveEdit} className="btn-alik-primary text-xs">Uložit</button>
-            <button onClick={() => setEditBody(null)} className="px-2 py-1 rounded-lg border-2 border-border text-xs">Zrušit</button>
+            <Button size="sm" onClick={saveEdit}>Uložit</Button>
+            <Button size="sm" variant="outline" onClick={() => setEditBody(null)}>Zrušit</Button>
           </div>
         </div>
       ) : (
@@ -503,8 +677,8 @@ function KvalItem({ item, children, profiles, roles, onReload, userId, isRektor 
       </div>
       {showReply && (
         <div className="mt-2">
-          <textarea value={reply} onChange={e => setReply(e.target.value)} rows={2} placeholder="Odpověď…" className="w-full border-2 border-border rounded-lg py-1 px-2 text-sm" />
-          <button onClick={send} className="btn-alik-primary text-xs mt-1">Odeslat</button>
+          <Textarea value={reply} onChange={e => setReply(e.target.value)} rows={2} placeholder="Odpověď…" />
+          <Button size="sm" className="mt-1" onClick={send}>Odeslat</Button>
         </div>
       )}
       {children.length > 0 && (
