@@ -37,7 +37,7 @@ export default function AccountAccessControl({ targetUserId, onAccessChanged }: 
 
   const createRequest = async () => {
     if (reason.trim().length < 5) return toast.error('Uveď důvod alespoň pěti znaky.');
-    const { data, error } = await db().rpc('create_account_access_request', { _target_user_id: targetUserId, _scope: scope, _reason: reason.trim() });
+    const { data, error } = await Promise.resolve(db().rpc('create_account_access_request', { _target_user_id: targetUserId, _scope: scope, _reason: reason.trim() }));
     if (error) return toast.error(error.message);
     setIssuedCode(data?.[0]?.access_code || '');
     setReason('');
@@ -46,7 +46,7 @@ export default function AccountAccessControl({ targetUserId, onAccessChanged }: 
   };
 
   const decide = async (requestId: string, decision: 'approved' | 'rejected') => {
-    const { error } = await db().rpc('decide_account_access_request', { _request_id: requestId, _decision: decision, _note: null });
+    const { error } = await Promise.resolve(db().rpc('decide_account_access_request', { _request_id: requestId, _decision: decision, _note: null }));
     if (error) return toast.error(error.message);
     toast.success(decision === 'approved' ? 'Schválení zaznamenáno.' : 'Žádost zamítnuta.');
     load();
@@ -55,7 +55,7 @@ export default function AccountAccessControl({ targetUserId, onAccessChanged }: 
   const redeem = async (requestId: string) => {
     const code = (codes[requestId] || '').trim();
     if (!code) return toast.error('Zadej přístupový kód.');
-    const { error } = await db().rpc('redeem_account_access_code', { _request_id: requestId, _code: code });
+    const { error } = await Promise.resolve(db().rpc('redeem_account_access_code', { _request_id: requestId, _code: code }));
     if (error) return toast.error(error.message);
     toast.success('Citlivá sekce byla odemčena.');
     setCodes(v => ({ ...v, [requestId]: '' }));
@@ -64,7 +64,7 @@ export default function AccountAccessControl({ targetUserId, onAccessChanged }: 
   };
 
   const revoke = async (grantId: string) => {
-    const { error } = await db().rpc('revoke_account_access', { _grant_id: grantId });
+    const { error } = await Promise.resolve(db().rpc('revoke_account_access', { _grant_id: grantId }));
     if (error) return toast.error(error.message);
     toast.success('Přístup byl odvolán.');
     await load();
@@ -79,13 +79,13 @@ export default function AccountAccessControl({ targetUserId, onAccessChanged }: 
         <h2 className="text-lg font-semibold">🔐 Odemknutí citlivých sekcí</h2>
         <p className="text-xs text-muted-foreground">Přístup schválí rektor, nebo dva různí správci. U správce se vlastní schválení nepočítá. Platí do ručního odvolání.</p>
       </div>
-      {issuedCode && <div className="rounded-xl border border-primary/40 bg-primary/10 p-3"><strong>Nový kód:</strong> <code className="ml-2 font-bold tracking-widest">{issuedCode}</code><p className="text-xs mt-1">Ulož si ho nyní. V databázi je jen jeho otisk.</p></div>}
+      {issuedCode && <div className="rounded-xl border border-primary/40 bg-primary/10 p-3"><strong>Nový kód:</strong> <code className="ml-2 font-bold tracking-widest">{issuedCode}</code><p clas[...]
       <div className="grid gap-2 md:grid-cols-[220px_1fr_auto] items-end">
-        <div><Label>Rozsah</Label><select value={scope} onChange={e => setScope(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="wall">Úprava zdi</option><option value="searches">Historie vyhledávání</option><option value="account_actions">Zásahy v účtu</option><option value="all">Odemknout vše</option></select></div>
+        <div><Label>Rozsah</Label><select value={scope} onChange={e => setScope(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="wa[...]
         <div><Label>Důvod přístupu</Label><Textarea value={reason} onChange={e => setReason(e.target.value)} maxLength={1000} className="min-h-10" /></div>
         <Button onClick={createRequest}>Založit žádost</Button>
       </div>
-      {grants.length > 0 && <div className="space-y-2"><h3 className="text-sm font-semibold">Aktivní přístupy</h3>{grants.map(g => <div key={g.id} className="flex justify-between items-center rounded-lg border p-2 text-sm"><span>{SCOPE_LABELS[g.scope]} • uděleno {new Date(g.granted_at).toLocaleString('cs-CZ')}</span><Button size="sm" variant="destructive" onClick={() => revoke(g.id)}>Odvolat</Button></div>)}</div>}
+      {grants.length > 0 && <div className="space-y-2"><h3 className="text-sm font-semibold">Aktivní přístupy</h3>{grants.map(g => <div key={g.id} className="flex justify-between items-center r[...]
       <div className="space-y-2">
         {requests.map(req => {
           const reqApprovals = approvals.filter(a => a.request_id === req.id && a.decision === 'approved');
@@ -95,8 +95,8 @@ export default function AccountAccessControl({ targetUserId, onAccessChanged }: 
             <div className="flex justify-between gap-3 flex-wrap"><strong>{SCOPE_LABELS[req.scope]}</strong><span className="text-xs uppercase font-bold">{req.status}</span></div>
             <p className="text-xs text-muted-foreground my-1">{req.reason} • schválení {reqApprovals.length}{isRektor ? ' (rektor může rozhodnout sám)' : '/2'}</p>
             <div className="flex gap-2 flex-wrap">
-              {req.status === 'pending' && !alreadyDecided && (isRektor || !mine) && <><Button size="sm" onClick={() => decide(req.id, 'approved')}>Schválit</Button><Button size="sm" variant="destructive" onClick={() => decide(req.id, 'rejected')}>Zamítnout</Button></>}
-              {req.status === 'approved' && mine && <><Input value={codes[req.id] || ''} onChange={e => setCodes(v => ({ ...v, [req.id]: e.target.value }))} placeholder="Přístupový kód" className="w-48"/><Button size="sm" onClick={() => redeem(req.id)}>Odemknout</Button></>}
+              {req.status === 'pending' && !alreadyDecided && (isRektor || !mine) && <><Button size="sm" onClick={() => decide(req.id, 'approved')}>Schválit</Button><Button size="sm" variant="des[...]
+              {req.status === 'approved' && mine && <><Input value={codes[req.id] || ''} onChange={e => setCodes(v => ({ ...v, [req.id]: e.target.value }))} placeholder="Přístupový kód" classN[...]
             </div>
           </div>;
         })}
