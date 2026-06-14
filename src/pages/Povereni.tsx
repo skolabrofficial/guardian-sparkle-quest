@@ -178,9 +178,9 @@ export default function Povereni() {
     const edIds = [...new Set((eds || []).map((e: any) => e.user_id))];
     const edTopics: Record<string, string[]> = {};
     (eds || []).forEach((e: any) => { edTopics[e.user_id] = edTopics[e.user_id] || []; if (e.topic_id) edTopics[e.user_id].push(e.topic_id); });
-    setEditorMembers(edIds.map(uid => {
+    setEditorMembers(edIds.map((uid: any) => {
       const p = (profs || []).find((x: any) => x.user_id === uid);
-      return { user_id: uid, display_name: p?.display_name || 'Redaktor', username: p?.username, avatar_url: p?.avatar_url, topic_ids: edTopics[uid] };
+      return { user_id: uid, display_name: p?.display_name || 'Redaktor', username: p?.username, avatar_url: p?.avatar_url, topic_ids: edTopics[uid as string] };
     }));
     setLoading(false);
   };
