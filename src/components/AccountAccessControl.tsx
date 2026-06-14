@@ -77,7 +77,7 @@ export default function AccountAccessControl({ targetUserId, onAccessChanged }: 
     <div className="rounded-2xl border border-border bg-card/70 p-5 shadow-sm space-y-4">
       <div>
         <h2 className="text-lg font-semibold">🔐 Odemknutí citlivých sekcí</h2>
-        <p className="text-xs text-muted-foreground">Přístup schválí rektor, nebo dva různí správci. U správce se vlastní schválení nepočítá. Platí do ručního odvolání.</p>
+        <p className="text-xs text-muted-foreground">Přístup schválí rektor, nebo dva různí (ne ty) správci. Platí do ručního odvolání.</p>
       </div>
       {issuedCode && <div className="rounded-xl border border-primary/40 bg-primary/10 p-3"><strong>Nový kód:</strong> <code className="ml-2 font-bold tracking-widest">{issuedCode}</code><p clas[...]
       <div className="grid gap-2 md:grid-cols-[220px_1fr_auto] items-end">
