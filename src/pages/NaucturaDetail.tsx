@@ -359,14 +359,14 @@ export default function NaucturaDetail() {
           </>
         ) : (
           <div className="space-y-3 mt-3">
-            <input value={editForm.title || ''} onChange={e => setEditForm({ ...editForm, title: e.target.value })} placeholder="Název" className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
-            <textarea value={editForm.perex || ''} onChange={e => setEditForm({ ...editForm, perex: e.target.value })} placeholder="Perex (krátký úvod)" rows={2} className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
+            <input value={editForm.title || ''} onChange={e => setEditForm({ ...editForm, title: e.target.value })} placeholder="Název" className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm" />
+            <textarea value={editForm.perex || ''} onChange={e => setEditForm({ ...editForm, perex: e.target.value })} placeholder="Perex (krátký úvod)" rows={2} className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm resize-none" />
             <select value={editForm.topic_id || ''} onChange={e => setEditForm({ ...editForm, topic_id: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm bg-card">
               <option value="">— bez tématu —</option>
               {topics.map(t => <option key={t.id} value={t.id}>{t.symbol} {t.name}</option>)}
             </select>
-            <input value={editForm.cover_image || ''} onChange={e => setEditForm({ ...editForm, cover_image: e.target.value })} placeholder="URL obálky (volitelné)" className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
-            <textarea value={editForm.content || ''} onChange={e => setEditForm({ ...editForm, content: e.target.value })} placeholder="Obsah článku (Markdown, LaTeX)" rows={20} className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
+            <input value={editForm.cover_image || ''} onChange={e => setEditForm({ ...editForm, cover_image: e.target.value })} placeholder="URL obálky (volitelné)" className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm" />
+            <textarea value={editForm.content || ''} onChange={e => setEditForm({ ...editForm, content: e.target.value })} placeholder="Obsah článku (Markdown, LaTeX)" rows={20} className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm font-mono resize-none" />
             <div className="flex gap-2">
               <Button onClick={saveEdit}>Uložit změny</Button>
               <Button variant="outline" onClick={cancelEdit}>Zrušit</Button>
@@ -402,7 +402,7 @@ export default function NaucturaDetail() {
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={startEdit}>✎ Upravit</Button>
             {transitions.map(tr => (
-              <button key={tr.to} onClick={() => { setTransitionPick(tr); setTransitionReason(''); setPublishFeatured(false); }} className="px-3 py-2 rounded-xl border-2 text-sm font-bold" style={{ borderColor: 'currentColor', color: '#10b981' }}>
+              <button key={tr.to} onClick={() => { setTransitionPick(tr); setTransitionReason(''); setPublishFeatured(false); }} className="px-3 py-2 rounded-xl border-2 text-sm font-bold" style={{ borderColor: tr.color, color: tr.color }}>
                 → {tr.label}
               </button>
             ))}
@@ -484,7 +484,7 @@ export default function NaucturaDetail() {
           {isEditorAccess && (
             <div className="mt-4 border-t pt-3 grid md:grid-cols-2 gap-4">
               <div>
-                <h4 className="font-bold text-sm mb-2">Kvalita článku z pohledu redakce (hvěždičky)</h4>
+                <h4 className="font-bold text-sm mb-2">Kvalita článku z pohledu redakce (hvězdičky)</h4>
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map(n => (
                     <button key={n} onClick={() => setRatingDraft(n)} className={`text-2xl ${n <= ratingDraft ? 'text-amber-500' : 'text-muted-foreground'}`}>★</button>
@@ -526,7 +526,7 @@ export default function NaucturaDetail() {
                   <option value="stolen">Ukradený</option>
                 </select>
                 <input value={origDraft.notes} onChange={e => setOrigDraft({ ...origDraft, notes: e.target.value })} placeholder="Poznámka" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
-                <textarea value={origDraft.sources} onChange={e => setOrigDraft({ ...origDraft, sources: e.target.value })} placeholder="Zdroje, jeden URL na řádek" rows={2} className="col-span-2 md:col-span-1 border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
+                <textarea value={origDraft.sources} onChange={e => setOrigDraft({ ...origDraft, sources: e.target.value })} placeholder="Zdroje, jeden URL na řádek" rows={2} className="col-span-2 md:col-span-1 border-2 border-border rounded-lg py-1.5 px-2 text-sm resize-none" />
                 <Button size="sm" onClick={saveOriginality}>Zapsat</Button>
               </div>
               {origChecks.length > 0 && (
@@ -603,7 +603,7 @@ export default function NaucturaDetail() {
       {canEdit && (
         <section className="panel-card mt-4">
           <h3 className="text-2xl mt-0 font-bold">🗨️ Kvalitárka</h3>
-          <p className="text-xs text-muted-foreground mb-3">Kvalitárka je veřejně nepřístupná (skrytá) diskuze mezi autorem článku a redakcí Naučtury, která slouží k doladění nedostatků článku před vydáním nebo i po vydání. Redakce si touto cestou může dělat poznámky pro sebe i pro autora, autor může reagovat na doplňující dotazy…/p>
+          <p className="text-xs text-muted-foreground mb-3">Kvalitárka je veřejně nepřístupná (skrytá) diskuze mezi autorem článku a redakcí Naučtury, která slouží k doladění nedostatků článku před vydáním nebo i po vydání. Redakce si touto cestou může dělat poznámky pro sebe i pro autora, autor může reagovat na doplňující dotazy…</p>
           <div className="space-y-2 mb-3">
             {kval.filter(k => !k.parent_id).map(k => (
               <KvalItem key={k.id} item={k} children={kval.filter(c => c.parent_id === k.id)} profiles={actorProfiles} roles={actorRoles} onReload={load} userId={user?.id} isRektor={isRektor} />
