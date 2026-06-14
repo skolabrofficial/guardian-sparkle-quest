@@ -1,6 +1,7 @@
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const navItems = [
   { href: '/fakulty', label: 'Fakulty', color: 's-blue' },
@@ -10,6 +11,29 @@ const navItems = [
   { href: '/vypisky', label: 'Výpisky z hodin', color: 's-purple' },
   { href: '/doucovani', label: 'Doučování', color: 's-orange' },
 ];
+
+function useNaucturaWarn() {
+  const { user, isRektor } = useAuth();
+  const [state, setState] = useState<{ warn: boolean; unrated: number }>({ warn: false, unrated: 0 });
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const sb: any = supabase;
+      const { data: ed } = await sb.from('article_editors').select('id').eq('user_id', user.id).limit(1);
+      if (!isRektor && !(ed && ed.length)) return;
+      const tomorrow = new Date(); tomorrow.setHours(24, 0, 0, 0);
+      const dayAfter = new Date(tomorrow.getTime() + 86400000);
+      const [{ count: tomorrowCount }, { count: unratedCount }] = await Promise.all([
+        sb.from('articles').select('id', { count: 'exact', head: true })
+          .eq('status', 'scheduled').gte('scheduled_for', tomorrow.toISOString()).lt('scheduled_for', dayAfter.toISOString()),
+        sb.from('articles').select('id', { count: 'exact', head: true })
+          .eq('status', 'published').is('rating', null),
+      ]);
+      setState({ warn: (tomorrowCount ?? 0) === 0, unrated: unratedCount ?? 0 });
+    })();
+  }, [user, isRektor]);
+  return state;
+}
 
 interface AdminItem { key: string; label: string; color: string; developerOnly?: boolean; }
 const ADMIN_ITEMS: AdminItem[] = [
