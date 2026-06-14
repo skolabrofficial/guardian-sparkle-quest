@@ -252,6 +252,23 @@ function OverviewSection({ profile, role, isMe, canStaffEdit, onUpdated }: { pro
           {isMe ? 'Zatím jsi o sobě nic nenapsal — klikni na „Upravit profil" a doplň své bio.' : 'Uživatel zatím nic o sobě nenapsal.'}
         </p>
       )}
+      {points.items.length > 0 && (
+        <div className="mt-5 rounded-xl border border-border bg-muted/30 p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="m-0 text-base font-bold flex items-center gap-2">🌿 Vavřínové body</h3>
+            <span className={`text-lg font-extrabold ${points.total >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{points.total > 0 ? '+' : ''}{points.total}</span>
+          </div>
+          <p className="text-xs text-muted-foreground mb-2">Odměny a tresty od redakce Naučtury, vázané vždy na konkrétní článek.</p>
+          <ul className="text-xs space-y-1 max-h-40 overflow-auto">
+            {points.items.map(p => (
+              <li key={p.id} className="flex items-center justify-between gap-2 border-b border-border/50 pb-1">
+                <span><strong className={p.amount > 0 ? 'text-emerald-600' : 'text-red-600'}>{p.amount > 0 ? '+' : ''}{p.amount}</strong> <Link to={`/nauctura/${p.article_id}`} className="hover:underline">článek</Link>{p.reason ? ` — ${p.reason}` : ''}</span>
+                <span className="text-muted-foreground">{new Date(p.created_at).toLocaleDateString('cs')}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
