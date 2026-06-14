@@ -55,6 +55,7 @@ export default function AppNav() {
 
   const canAdmin = isStaff || isDeveloper;
   const adminItems = ADMIN_ITEMS.filter(i => !i.developerOnly || isDeveloper);
+  const naucWarn = useNaucturaWarn();
 
   return (
     <nav className="my-6 mx-1.5">
