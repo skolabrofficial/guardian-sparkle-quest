@@ -214,6 +214,14 @@ export default function UserWall() {
 function OverviewSection({ profile, role, isMe, canStaffEdit, onUpdated }: { profile: ProfileRow; role: string | null; isMe?: boolean; canStaffEdit?: boolean; onUpdated?: () => void }) {
   const [editing, setEditing] = useState(false);
   const [bio, setBio] = useState(profile.bio || '');
+  const [points, setPoints] = useState<{ total: number; items: any[] }>({ total: 0, items: [] });
+  useEffect(() => {
+    (async () => {
+      const { data } = await db().from('article_points').select('id, amount, reason, article_id, created_at').eq('user_id', profile.user_id).order('created_at', { ascending: false }).limit(20);
+      const items = data || [];
+      setPoints({ total: items.reduce((s: number, p: any) => s + (p.amount || 0), 0), items });
+    })();
+  }, [profile.user_id]);
   const saveWall = async () => {
     const { error } = await db().rpc('update_user_wall_with_access', { _target_user_id: profile.user_id, _bio: bio });
     if (error) return toast.error(error.message);
