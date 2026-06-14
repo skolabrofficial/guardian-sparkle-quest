@@ -77,15 +77,26 @@ export default function AppNav() {
           </button>
         )}
 
-        {!adminOpen && navItems.map((item, i) => (
-          <Link
-            key={item.href}
-            to={item.href}
-            className={`sign-card sign-card-nav ${item.color} ${location.pathname === item.href ? 'active' : ''} animate-slide-up stagger-${i + 1}`}
-          >
-            {item.label}
-          </Link>
-        ))}
+        {!adminOpen && navItems.map((item, i) => {
+          const isNauc = item.href === '/nauctura';
+          const showWarn = isNauc && naucWarn.warn;
+          const showBadge = isNauc && naucWarn.unrated > 0;
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              className={`sign-card sign-card-nav ${item.color} ${location.pathname === item.href ? 'active' : ''} animate-slide-up stagger-${i + 1} relative`}
+            >
+              {item.label}
+              {showWarn && (
+                <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold grid place-items-center shadow ring-2 ring-background" title="Na zítřek není naplánovaný článek">!</span>
+              )}
+              {showBadge && !showWarn && (
+                <span className="absolute -top-2 -right-2 min-w-6 h-6 px-1 rounded-full bg-destructive text-destructive-foreground text-[11px] font-bold grid place-items-center shadow ring-2 ring-background" title="Neohodnocené články">{naucWarn.unrated}</span>
+              )}
+            </Link>
+          );
+        })}
 
         {adminOpen && canAdmin && adminItems.map((item, i) => {
           const href = `/rektorat?tab=${item.key}`;
