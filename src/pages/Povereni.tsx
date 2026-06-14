@@ -400,6 +400,41 @@ export default function Povereni() {
               );
             })}
 
+            {/* Redakce Naučtury (article_editors) */}
+            {(activeTab === 'all' || activeTab === 'redakce') && editorMembers.length > 0 && (() => {
+              const info = ROLE_SECTION_INFO.redakce;
+              return (
+                <section className="pov2-section">
+                  <header className="pov2-section-head">
+                    <span className="pov2-section-num">§ {String(roleGroups.length + 1).padStart(2,'0')}</span>
+                    <div>
+                      <div className="pov2-eyebrow">{info.eyebrow}</div>
+                      <h2 className="serif pov2-section-title">{info.title}</h2>
+                      <p className="pov2-section-desc">{info.description}</p>
+                    </div>
+                    <span className="pov2-section-sym" aria-hidden>{info.symbol}</span>
+                  </header>
+                  <div className="pov2-grid">
+                    {editorMembers.map((m: any) => (
+                      <article key={m.user_id} className="pov2-card" data-initial={(m.display_name || '?')[0]?.toUpperCase()} style={{ ['--accent' as any]: info.tone }}>
+                        <span className="accent" />
+                        <div className="flex items-center gap-3">
+                          {m.avatar_url ? <img src={m.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover" /> : <div className="w-12 h-12 rounded-full bg-muted grid place-items-center font-bold">{(m.display_name || '?')[0]}</div>}
+                          <div>
+                            <strong className="text-lg leading-tight block">
+                              <sup className="text-base mr-0.5">✒</sup>
+                              {m.username ? <a href={`/uziv/${m.username}`} className="hover:underline">{m.display_name}</a> : m.display_name}
+                            </strong>
+                            <span className="text-xs text-muted-foreground">{m.topic_ids?.length ? `Témata: ${m.topic_ids.length}` : 'Všechna témata'}</span>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
+
             {/* Custom boxes */}
             {boxes.filter(b => isDeveloper || b.is_visible).map((box, idx) => {
               if (activeTab !== 'all' && activeTab !== `box:${box.id}`) return null;
