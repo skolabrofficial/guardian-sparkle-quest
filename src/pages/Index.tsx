@@ -5,22 +5,68 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { getRoleSymbol } from '@/lib/roleUtils';
 
+interface PromoArticle {
+  id: string; title: string; perex: string | null; topic_id: string | null;
+  published_at: string | null; is_featured: boolean; rating: number | null;
+  author_id: string | null; author_override: string | null;
+}
+
 export default function Index() {
   const { user, profile, role } = useAuth();
   const [stats, setStats] = useState({ courses: 0, faculties: 0, students: 0, mentors: 0 });
   const [announcements, setAnnouncements] = useState<Array<{ id: string; title: string; content: string | null }>>([]);
+  const [recentArticle, setRecentArticle] = useState<PromoArticle | null>(null);
+  const [featuredArticle, setFeaturedArticle] = useState<PromoArticle | null>(null);
+  const [topics, setTopics] = useState<Record<string, { name: string; symbol: string; color: string }>>({});
+
+  useEffect(() => {
+    // make scheduled articles auto-publish on every homepage load
+    (supabase as any).rpc('publish_due_articles').catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!user) return;
+    const sb: any = supabase;
     Promise.all([
       supabase.from('courses').select('id', { count: 'exact', head: true }),
       supabase.from('faculties').select('id', { count: 'exact', head: true }),
       supabase.from('announcements').select('id, title, content').eq('is_active', true).order('created_at', { ascending: false }).limit(3),
-    ]).then(([courses, faculties, ann]) => {
+      sb.from('articles').select('id,title,perex,topic_id,published_at,is_featured,rating,author_id,author_override')
+        .eq('status', 'published').order('published_at', { ascending: false }).limit(1),
+      // significant first (featured), then best-rated as "success"
+      sb.from('articles').select('id,title,perex,topic_id,published_at,is_featured,rating,author_id,author_override')
+        .eq('status', 'published').or('is_featured.eq.true,rating.gte.4').order('rating', { ascending: false }).limit(20),
+      sb.from('article_topics').select('id,name,symbol,color'),
+    ]).then(([courses, faculties, ann, recent, success, tps]) => {
       setStats(s => ({ ...s, courses: courses.count || 0, faculties: faculties.count || 0 }));
       if (ann.data) setAnnouncements(ann.data);
+      setRecentArticle(recent.data?.[0] || null);
+      const pool: PromoArticle[] = (success.data || []).filter((x: any) => x.id !== recent.data?.[0]?.id);
+      if (pool.length) setFeaturedArticle(pool[Math.floor(Math.random() * pool.length)]);
+      const tm: Record<string, any> = {};
+      (tps.data || []).forEach((t: any) => { tm[t.id] = { name: t.name, symbol: t.symbol, color: t.color }; });
+      setTopics(tm);
     });
   }, [user]);
+
+  const renderPromo = (a: PromoArticle | null, badge: string) => {
+    if (!a) return null;
+    const t = a.topic_id ? topics[a.topic_id] : null;
+    return (
+      <Link to={`/nauctura/${a.id}`} className="block panel-card hover:-translate-y-0.5 hover:shadow-lg transition no-underline text-foreground">
+        <div className="flex items-center justify-between text-xs mb-1">
+          <span className="font-bold tracking-widest uppercase text-muted-foreground">{badge}</span>
+          {t && <span className="font-bold uppercase tracking-wider" style={{ color: t.color }}>{t.symbol} {t.name}</span>}
+        </div>
+        <h4 className="text-xl font-bold leading-tight mb-1 flex items-center gap-1">
+          {a.is_featured && <span className="text-amber-500">★</span>}
+          {a.title}
+        </h4>
+        {a.perex && <p className="text-sm text-muted-foreground whitespace-pre-wrap">{a.perex}</p>}
+        {a.rating && <div className="text-xs text-amber-600 font-bold mt-1">{'★'.repeat(a.rating)}</div>}
+      </Link>
+    );
+  };
 
   return (
     <AppLayout searchLabel="Najít přednášku" searchPlaceholder="např. komiksový výtvarník" searchTags={['katalog kurzů', 'rozvrh', 'knihovna']}>
@@ -46,6 +92,19 @@ export default function Index() {
               <div className="poster-gradient" />
             </div>
           </article>
+
+          {(recentArticle || featuredArticle) && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="m-0 text-lg">📚 Z Naučtury</h3>
+                <Link to="/nauctura" className="text-xs text-primary font-bold hover:underline">vše →</Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {renderPromo(recentArticle, 'Právě vyšlo')}
+                {renderPromo(featuredArticle, 'Úspěšný článek')}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
@@ -82,6 +141,7 @@ export default function Index() {
             <div className="grid gap-2">
               <Link to="/fakulty" className="btn-alik-outline text-center no-underline block hover:translate-x-1 transition-transform">Fakulty</Link>
               <Link to="/kurzy" className="btn-alik-outline text-center no-underline block hover:translate-x-1 transition-transform">Kurzy</Link>
+              <Link to="/nauctura" className="btn-alik-outline text-center no-underline block hover:translate-x-1 transition-transform">Naučtura</Link>
               <Link to="/doucovani" className="btn-alik-outline text-center no-underline block hover:translate-x-1 transition-transform">Doučování</Link>
               {user && <Link to="/mezirozprava" className="btn-alik-outline text-center no-underline block hover:translate-x-1 transition-transform">Mezirozpravy</Link>}
             </div>
