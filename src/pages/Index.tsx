@@ -46,6 +46,9 @@ export default function Index() {
       const tm: Record<string, any> = {};
       (tps.data || []).forEach((t: any) => { tm[t.id] = { name: t.name, symbol: t.symbol, color: t.color }; });
       setTopics(tm);
+    }).catch((err) => {
+      console.error('Homepage loading error:', err);
+      // Pokračuj bez dat - nezobrazí se promo články, ale stránka nešumí
     });
   }, [user]);
 
