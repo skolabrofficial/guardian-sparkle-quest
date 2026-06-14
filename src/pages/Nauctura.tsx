@@ -23,7 +23,7 @@ interface Article {
 interface Topic { id: string; slug: string; name: string; symbol: string; color: string; }
 interface Profile { user_id: string; display_name: string; username: string; avatar_url: string | null; }
 
-type Tab = 'vydane' | 'moje' | 'redakce' | 'naplanovane' | 'neohodnocene' | 'kos';
+type Tab = 'vydane' | 'moje' | 'redakce' | 'naplanovane' | 'neohodnocene' | 'kos' | 'valna-hromada';
 
 const TAB_LABELS: Record<Tab, string> = {
   vydane: 'Vydané',
@@ -32,6 +32,7 @@ const TAB_LABELS: Record<Tab, string> = {
   naplanovane: 'Naplánované',
   neohodnocene: 'Neohodnocené',
   kos: 'Smetiště',
+  'valna-hromada': 'Valná hromada',
 };
 
 export default function Nauctura() {
@@ -74,6 +75,7 @@ export default function Nauctura() {
     if (tab === 'vydane') q = q.eq('status', 'published');
     else if (tab === 'moje' && user) q = q.eq('author_id', user.id);
     else if (tab === 'redakce') q = q.in('status', ['awaiting_review', 'in_editing', 'polishing', 'returned_to_author']);
+    else if (tab === 'valna-hromada') q = q.in('status', ['awaiting_review', 'in_editing', 'polishing', 'returned_to_author', 'scheduled', 'ready_to_publish', 'draft_author']);
     else if (tab === 'naplanovane') q = q.in('status', ['scheduled', 'ready_to_publish']);
     else if (tab === 'neohodnocene') q = q.eq('status', 'published').is('rating', null);
     else if (tab === 'kos') q = q.in('status', ['deleted', 'rejected', 'flagged_stolen']);
@@ -120,7 +122,7 @@ export default function Nauctura() {
             <div className="text-xs font-bold tracking-widest uppercase text-muted-foreground">§ Naučná literatura</div>
             <h1 className="text-3xl mt-1 mb-1">Naučtura</h1>
             <p className="text-sm text-muted-foreground max-w-2xl">
-              Redakce naučných článků. Každý článek prochází posouzením, redakční úpravou a doladěním. Pod článkem vzniká <strong>Kvalitárka</strong> — rozprava mezi autorem a redakcí.
+              Redakce naučných články. Každý článek prochází posouzením, redakční úpravou a doladěním. Pod články vzniká <strong>Kvalitárka</strong> — rozprava mezi autorem a redakcí.
             </p>
           </div>
           {user && (
@@ -132,12 +134,12 @@ export default function Nauctura() {
           <div className="mt-3 grid gap-2">
             {warnNoTomorrow && (
               <div className="rounded-lg border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm">
-                <strong>⚠ Pozor:</strong> Na zítřek není naplánovaný žádný článek k vydání.
+                <strong>⚠ Pozor:</strong> Na zítřek není naplánovaný žádný články k vydání.
               </div>
             )}
             {unratedCount > 0 && (
               <button onClick={() => setTab('neohodnocene')} className="text-left rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm hover:bg-muted">
-                <strong>{unratedCount}</strong> neohodnocených vydaných článků čeká na redakční verdikt.
+                <strong>{unratedCount}</strong> neohodnocených vydaných články čeká na redakční verdikt.
               </button>
             )}
           </div>
@@ -148,13 +150,14 @@ export default function Nauctura() {
         {(Object.keys(TAB_LABELS) as Tab[]).map(k => {
           const visible =
             k === 'moje' ? !!user :
-            (k === 'redakce' || k === 'naplanovane' || k === 'neohodnocene' || k === 'kos') ? isEditor :
+            (k === 'redakce' || k === 'naplanovane' || k === 'neohodnocene' || k === 'kos' || k === 'valna-hromada') ? isEditor :
             true;
           if (!visible) return null;
           const badge = k === 'neohodnocene' && unratedCount > 0 ? unratedCount : null;
           return (
             <button key={k} onClick={() => setTab(k)}
-              className={`px-4 py-2 rounded-full border-2 text-xs font-bold uppercase tracking-wider ${tab === k ? 'bg-foreground text-background border-foreground' : 'bg-card border-border hover:border-foreground'}`}>
+              className={`px-4 py-2 rounded-full border-2 text-xs font-bold uppercase tracking-wider ${tab === k ? 'bg-foreground text-background border-foreground' : 'bg-card border-border hover:border-foreground'}`}
+            >
               {TAB_LABELS[k]} {badge != null && <span className="ml-1 inline-block px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground text-[10px]">{badge}</span>}
             </button>
           );
@@ -241,8 +244,8 @@ function CreateArticleDialog({ open, onClose, topics, onCreated }: { open: boole
     }).select().single();
     setSaving(false);
     if (error) { toast.error(error.message); return; }
-    await sb.from('article_status_log').insert({ article_id: data.id, actor_id: user.id, to_status: 'draft_author', reason: 'Vznik článku' });
-    toast.success('Článek založen — pokračuj v psaní');
+    await sb.from('article_status_log').insert({ article_id: data.id, actor_id: user.id, to_status: 'draft_author', reason: 'Vznik články' });
+    toast.success('Články založen — pokračuj v psaní');
     onCreated(data.id);
   }
 
@@ -250,9 +253,9 @@ function CreateArticleDialog({ open, onClose, topics, onCreated }: { open: boole
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">✒ Nový článek do Naučtury</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">✒ Nový články do Naučtury</DialogTitle>
           <DialogDescription>
-            Založíš si rozpracovaný článek. Pak ho dopíšeš a odešleš redakci k posouzení.
+            Založíš si rozpracovaný články. Pak ho dopíšeš a odešleš redakci k posouzení.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-3">
@@ -277,7 +280,7 @@ function CreateArticleDialog({ open, onClose, topics, onCreated }: { open: boole
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Zrušit</Button>
-          <Button onClick={create} disabled={saving}>{saving ? 'Zakládám…' : 'Založit článek'}</Button>
+          <Button onClick={create} disabled={saving}>{saving ? 'Zakládám…' : 'Založit články'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
