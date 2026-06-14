@@ -120,7 +120,7 @@ export default function Nauctura() {
             <div className="text-xs font-bold tracking-widest uppercase text-muted-foreground">§ Naučná literatura</div>
             <h1 className="text-3xl mt-1 mb-1">Naučtura</h1>
             <p className="text-sm text-muted-foreground max-w-2xl">
-              Redakce naučných článků. Každý článek prochází posouzením, redakční úpravou a doladěním. Pod článkem vzniká <strong>Kvalitárka</strong> — rozprava mezi autore[...]
+              Redakce naučných článků. Každý článek prochází posouzením, redakční úpravou a doladěním. Pod článkem vzniká <strong>Kvalitárka</strong> — rozprava mezi autorem a redakcí.
             </p>
           </div>
           {user && (
@@ -154,7 +154,7 @@ export default function Nauctura() {
           const badge = k === 'neohodnocene' && unratedCount > 0 ? unratedCount : null;
           return (
             <button key={k} onClick={() => setTab(k)}
-              className={`px-4 py-2 rounded-full border-2 text-xs font-bold uppercase tracking-wider ${tab === k ? 'bg-foreground text-background border-foreground' : 'bg-card border-border hover[...]
+              className={`px-4 py-2 rounded-full border-2 text-xs font-bold uppercase tracking-wider ${tab === k ? 'bg-foreground text-background border-foreground' : 'bg-card border-border hover:border-foreground'}`}>
               {TAB_LABELS[k]} {badge != null && <span className="ml-1 inline-block px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground text-[10px]">{badge}</span>}
             </button>
           );
@@ -272,7 +272,7 @@ function CreateArticleDialog({ open, onClose, topics, onCreated }: { open: boole
             <Textarea value={perex} onChange={e => setPerex(e.target.value)} rows={3} placeholder="Pár vět, které články uvedou…" />
           </div>
           <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-            <strong>Pracovní postup:</strong> Rozpracovaný → odeslat k posouzení → redakce přebírá → úpravy a doladění → vydání (ihned, naplánované nebo významné s automati[...]
+            <strong>Pracovní postup:</strong> Rozpracovaný → odeslat k posouzení → redakce přebírá → úpravy a doladění → vydání (ihned, naplánované nebo významné s automatickým upozorněním na titulku)
           </div>
         </div>
         <DialogFooter>
@@ -333,13 +333,13 @@ function RedakceAdmin({ topics, onChanged }: { topics: Topic[]; onChanged: () =>
           <div className="space-y-1 mb-3">
             {editors.map(e => (
               <div key={e.id} className="flex items-center justify-between text-sm border border-border rounded-lg px-3 py-1.5">
-                <span><strong>{profiles[e.user_id]?.display_name || e.user_id.slice(0, 8)}</strong> — {e.topic_id ? topics.find(t => t.id === e.topic_id)?.name : <em>všechna témata</em>}</spa[...]
+                <span><strong>{profiles[e.user_id]?.display_name || e.user_id.slice(0, 8)}</strong> — {e.topic_id ? topics.find(t => t.id === e.topic_id)?.name : <em>všechna témata</em>}</span>
                 <button onClick={() => removeEditor(e.id)} className="text-xs text-destructive">odebrat</button>
               </div>
             ))}
           </div>
           <div className="flex gap-2">
-            <input value={newEditorUsername} onChange={e => setNewEditorUsername(e.target.value)} placeholder="username" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm flex-1" /[...]
+            <input value={newEditorUsername} onChange={e => setNewEditorUsername(e.target.value)} placeholder="username" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm flex-1" />
             <select value={newEditorTopic} onChange={e => setNewEditorTopic(e.target.value)} className="border-2 border-border rounded-lg py-1.5 px-2 text-sm">
               <option value="">Všechna témata</option>
               {topics.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -353,9 +353,9 @@ function RedakceAdmin({ topics, onChanged }: { topics: Topic[]; onChanged: () =>
             {topics.map(t => <div key={t.id} className="border border-border rounded-lg px-3 py-1.5">{t.symbol} {t.name} <span className="text-xs text-muted-foreground">/{t.slug}/</span></div>)}
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <input value={newTopic.name} onChange={e => setNewTopic({ ...newTopic, name: e.target.value })} placeholder="Název" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm" [...]
+            <input value={newTopic.name} onChange={e => setNewTopic({ ...newTopic, name: e.target.value })} placeholder="Název" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
             <input value={newTopic.slug} onChange={e => setNewTopic({ ...newTopic, slug: e.target.value })} placeholder="slug" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
-            <input value={newTopic.symbol} onChange={e => setNewTopic({ ...newTopic, symbol: e.target.value })} placeholder="📰" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm[...]
+            <input value={newTopic.symbol} onChange={e => setNewTopic({ ...newTopic, symbol: e.target.value })} placeholder="📰" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
             <input type="color" value={newTopic.color} onChange={e => setNewTopic({ ...newTopic, color: e.target.value })} className="border-2 border-border rounded-lg h-9" />
           </div>
           <Button size="sm" className="mt-2" onClick={addTopic}>+ Přidat téma</Button>
