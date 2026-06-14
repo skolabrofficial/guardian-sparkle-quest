@@ -279,12 +279,12 @@ export default function NaucturaDetail() {
   async function takeArticle() {
     const sb: any = supabase;
     const { error } = await Promise.resolve(sb.rpc('take_article', { _article_id: article!.id }));
-    if (error) toast.error(error.message); else { toast.success('Přebral/a jsi posouzení článku'); load(); }
+    if (error) toast.error(error.message); else { toast.success('Od nynějška máš tenhle článek v péči ty.'); load(); }
   }
   async function releaseArticle() {
     const sb: any = supabase;
     const { error } = await Promise.resolve(sb.rpc('release_article', { _article_id: article!.id }));
-    if (error) toast.error(error.message); else { toast.success('Uvolněno'); load(); }
+    if (error) toast.error(error.message); else { toast.success('Uvolněno všem redaktorům.'); load(); }
   }
 
   async function addPoints() {
@@ -325,13 +325,13 @@ export default function NaucturaDetail() {
 
   return (
     <AppLayout>
-      <Link to="/nauctura" className="text-sm text-muted-foreground hover:underline">← zpět do Naučtury</Link>
+      <Link to="/nauctura" className="text-sm text-muted-foreground hover:underline">← zpět na hlavní seznam článků</Link>
 
       <article className="panel-card mt-3">
         <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
           {topic && <div className="text-xs uppercase tracking-wider font-bold" style={{ color: topic.color }}>{topic.symbol} {topic.name}</div>}
           <div className="flex items-center gap-2">
-            {article.is_featured && <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-xs font-bold">★ Významný</span>}
+            {article.is_featured && <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-xs font-bold">🏅 Významný</span>}
             <span className="px-2 py-0.5 rounded-full font-bold text-xs" style={{ background: info.bg, color: info.color }}>{info.short}</span>
           </div>
         </div>
@@ -368,7 +368,7 @@ export default function NaucturaDetail() {
             <input value={editForm.cover_image || ''} onChange={e => setEditForm({ ...editForm, cover_image: e.target.value })} placeholder="URL obálky (volitelné)" className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
             <textarea value={editForm.content || ''} onChange={e => setEditForm({ ...editForm, content: e.target.value })} placeholder="Obsah článku (Markdown, LaTeX)" rows={20} className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
             <div className="flex gap-2">
-              <Button onClick={saveEdit}>Uložit (jako jeden záznam protokolu)</Button>
+              <Button onClick={saveEdit}>Uložit změny</Button>
               <Button variant="outline" onClick={cancelEdit}>Zrušit</Button>
             </div>
           </div>
@@ -386,7 +386,7 @@ export default function NaucturaDetail() {
             </div>
             <div className="flex gap-2">
               {(!article.taken_by || article.taken_by !== user?.id) && (
-                <Button size="sm" onClick={takeArticle}>👋 Přebrat článek</Button>
+                <Button size="sm" onClick={takeArticle}>Přebrat článek</Button>
               )}
               {article.taken_by === user?.id && (
                 <Button size="sm" variant="outline" onClick={releaseArticle}>Uvolnit</Button>
@@ -423,7 +423,7 @@ export default function NaucturaDetail() {
               {transitionPick.to === 'published' && (
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={publishFeatured} onChange={e => setPublishFeatured(e.target.checked)} />
-                  <span><strong>★ Významný</strong> — automaticky se připne na titulku po dobu 3 dnů</span>
+                  <span><strong>Článek je významný</strong> — automaticky se připne na titulku po dobu 3 dnů</span>
                 </label>
               )}
               {transitionPick.to === 'flagged_stolen' && (
@@ -434,12 +434,12 @@ export default function NaucturaDetail() {
                     <option value="alikoviny">Alíkoviny</option>
                     <option value="ai">AI (ChatGPT, Gemini, …)</option>
                     <option value="web">Webový zdroj</option>
-                    <option value="book">Kniha / tištěné</option>
-                    <option value="other">Jiné</option>
+                    <option value="book">Kniha nebo něco tištěného</option>
+                    <option value="other">Něco jiného</option>
                   </select>
                 </div>
               )}
-              <Textarea value={transitionReason} onChange={e => setTransitionReason(e.target.value)} placeholder={transitionPick.needsReason ? 'Důvod (povinné)' : 'Poznámka (volitelná)'} rows={2} />
+              <Textarea value={transitionReason} onChange={e => setTransitionReason(e.target.value)} placeholder={transitionPick.needsReason ? 'Důvod (povinný)' : 'Poznámka (volitelná)'} rows={2} />
               <div className="flex gap-2">
                 <Button size="sm" onClick={doTransition}>Potvrdit</Button>
                 <Button size="sm" variant="outline" onClick={() => setTransitionPick(null)}>Zrušit</Button>
@@ -461,9 +461,9 @@ export default function NaucturaDetail() {
           <div className="mt-4 grid md:grid-cols-2 gap-3">
             {isEditorAccess && (
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider">Vepsaný autor (přepíše skutečného)</label>
+                <label className="text-xs font-bold uppercase tracking-wider">Vepsaný autor (přepíše pouze text)</label>
                 <div className="flex gap-2 mt-1">
-                  <Input value={authorOverrideDraft} onChange={e => setAuthorOverrideDraft(e.target.value)} placeholder='např. „Tomáš N. & redakce"' />
+                  <Input value={authorOverrideDraft} onChange={e => setAuthorOverrideDraft(e.target.value)} placeholder='např. „redakce, vedení, Alík a Koalík..."' />
                   <Button size="sm" onClick={saveAuthorOverride}>Uložit</Button>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-1">Upravuje pouze redakce.</p>
@@ -471,7 +471,7 @@ export default function NaucturaDetail() {
             )}
             {isRektor && (
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider">Změna skutečného autora (jen rektor)</label>
+                <label className="text-xs font-bold uppercase tracking-wider">Změna skutečného autora (přepíše i odkaz)</label>
                 <div className="flex gap-2 mt-1">
                   <Input value={changeAuthorUsername} onChange={e => setChangeAuthorUsername(e.target.value)} placeholder="username nového autora" />
                   <Button size="sm" onClick={changeAuthor}>Změnit</Button>
@@ -484,7 +484,7 @@ export default function NaucturaDetail() {
           {isEditorAccess && (
             <div className="mt-4 border-t pt-3 grid md:grid-cols-2 gap-4">
               <div>
-                <h4 className="font-bold text-sm mb-2">★ Redakční hodnocení (1–5)</h4>
+                <h4 className="font-bold text-sm mb-2">Kvalita článku z pohledu redakce (hvěždičky)</h4>
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map(n => (
                     <button key={n} onClick={() => setRatingDraft(n)} className={`text-2xl ${n <= ratingDraft ? 'text-amber-500' : 'text-muted-foreground'}`}>★</button>
@@ -494,13 +494,12 @@ export default function NaucturaDetail() {
                 </div>
               </div>
               <div>
-                <h4 className="font-bold text-sm mb-2">🌿 Vavřínové body (odměna / trest)</h4>
+                <h4 className="font-bold text-sm mb-2">🌿 Odměnění či potrestání autora za tento článek</h4>
                 <div className="flex gap-2">
                   <Input type="number" value={pointsDraft.amount} onChange={e => setPointsDraft({ ...pointsDraft, amount: e.target.value })} className="w-20" placeholder="±n" />
                   <Input value={pointsDraft.reason} onChange={e => setPointsDraft({ ...pointsDraft, reason: e.target.value })} placeholder="Důvod / poznámka" />
                   <Button size="sm" onClick={addPoints}>Připsat</Button>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">Záporné číslo = strhnutí.</p>
                 {pointsTx.length > 0 && (
                   <ul className="mt-2 text-xs space-y-1 max-h-32 overflow-auto">
                     {pointsTx.map(p => (
@@ -561,7 +560,7 @@ export default function NaucturaDetail() {
                     <Protokol
                       druh={s.actor_id ? actionToDruh('status.' + s.to_status) : 223}
                       autorita={s.actor_id ? roleToAutorita(role) : 1}
-                      nick={s.actor_id ? (profile?.display_name || 'redakce') : 'systém'}
+                      nick={s.actor_id ? (profile?.display_name || 'redakce') : 'veverka Renata'}
                       nickHref={profile?.username ? `/uziv/${profile.username}` : undefined}
                       profilovka={profile?.avatar_url || undefined}
                       cas={new Date(s.created_at)}
@@ -582,7 +581,7 @@ export default function NaucturaDetail() {
                     nickHref={profile?.username ? `/uziv/${profile.username}` : undefined}
                     profilovka={profile?.avatar_url || undefined}
                     cas={new Date(group[0].created_at)}
-                    kontext={<>úpravu článku — změněno {group.length} {group.length === 1 ? 'pole' : group.length < 5 ? 'pole' : 'polí'} ({group.map(g => FIELD_LABELS[g.field] || g.field).join(', ')})</>}
+                    kontext={<>ve článku {group.length} {group.length === 1 ? 'pole' : group.length < 5 ? 'pole' : 'polí'} ({group.map(g => FIELD_LABELS[g.field] || g.field).join(', ')})</>}
                   />
                   <div className="ml-8 space-y-2">
                     {group.map(r => (
@@ -604,7 +603,7 @@ export default function NaucturaDetail() {
       {canEdit && (
         <section className="panel-card mt-4">
           <h3 className="text-2xl mt-0 font-bold">🗨️ Kvalitárka</h3>
-          <p className="text-xs text-muted-foreground mb-3">Diskuse mezi autorem a redakcí pod článkem.</p>
+          <p className="text-xs text-muted-foreground mb-3">Kvalitárka je veřejně nepřístupná (skrytá) diskuze mezi autorem článku a redakcí Naučtury, která slouží k doladění nedostatků článku před vydáním nebo i po vydání. Redakce si touto cestou může dělat poznámky pro sebe i pro autora, autor může reagovat na doplňující dotazy…/p>
           <div className="space-y-2 mb-3">
             {kval.filter(k => !k.parent_id).map(k => (
               <KvalItem key={k.id} item={k} children={kval.filter(c => c.parent_id === k.id)} profiles={actorProfiles} roles={actorRoles} onReload={load} userId={user?.id} isRektor={isRektor} />
