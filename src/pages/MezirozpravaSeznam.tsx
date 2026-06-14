@@ -11,7 +11,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  requested: 'Čeká na schválení', open: 'Otevřená', closed: 'Uzavřená', archived: 'Archivovaná',
+  requested: 'K otevření', open: 'Otevřená', closed: 'Uzavřená', archived: 'Archivovaná',
 };
 
 export default function MezirozpravaSeznam() {
