@@ -235,8 +235,8 @@ export default function Povereni() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=JetBrains+Mono:wght@400;600&display=swap');
 
-        .pov2 { --ink:#1B1B2E; --paper:#F4ECD8; --paper-2:#EFE5CB; --line:#1B1B2E22; --gold:#C9A24B; --bord:#7A1F2B; --moss:#3A6B3E; color:var(--ink); }
-        .dark .pov2 { --ink:#F4ECD8; --paper:#16161F; --paper-2:#1C1C26; --line:#F4ECD822; --gold:#D7B968; --bord:#C2535F; --moss:#7BB07F; }
+        .pov2 { --ink: hsl(var(--foreground)); --paper: hsl(var(--background)); --paper-2: hsl(var(--card)); --line: hsl(var(--border)); --gold: hsl(var(--primary)); --bord: hsl(var(--destructive)); --moss: hsl(var(--secondary)); color:var(--ink); }
+        .dark .pov2 { --ink: hsl(var(--foreground)); --paper: hsl(var(--background)); --paper-2: hsl(var(--card)); --line: hsl(var(--border)); --gold: hsl(var(--primary)); --bord: hsl(var(--destructive)); --moss: hsl(var(--secondary)); }
         .pov2 .serif { font-family:'Cormorant Garamond', 'Playfair Display', Georgia, serif; font-feature-settings:'liga','dlig'; letter-spacing:-.005em; }
         .pov2 .mono { font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; }
 
