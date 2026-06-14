@@ -47,9 +47,10 @@ interface StaffMember {
 const db = () => supabase as any;
 
 const ROLE_SECTION_INFO: Record<string, { title: string; eyebrow: string; description: string; symbol: string; tone: string }> = {
-  rektor:  { title: 'Rektorát',  eyebrow: 'Vedení univerzity', description: 'Rektor vede celou univerzitu, schvaluje pravomoci a dohlíží na všechny moduly.', symbol: '♛', tone: '#7A1F2B' },
-  spravce: { title: 'Správa',    eyebrow: 'Bezpečnost a moderace', description: 'Správci dohlížejí na bezpečnost, moderují obsah a řeší blokace.', symbol: '⚙', tone: '#1B1B2E' },
-  lektor:  { title: 'Sbor lektorů', eyebrow: 'Výuka a doučování', description: 'Lektoři vedou kurzy, odpovídají na dotazy a starají se o obsah výuky.', symbol: '✦', tone: '#3A6B3E' },
+  rektor:  { title: 'Rektorát',  eyebrow: 'Vedení univerzity', description: 'Rektor vede celou univerzitu, schvaluje pravomoci a dohlíží na všechny moduly.', symbol: '♛', tone: 'hsl(var(--primary))' },
+  spravce: { title: 'Správa',    eyebrow: 'Bezpečnost a moderace', description: 'Správci dohlížejí na bezpečnost, moderují obsah a řeší blokace.', symbol: '⚙', tone: 'hsl(var(--secondary))' },
+  lektor:  { title: 'Sbor lektorů', eyebrow: 'Výuka a doučování', description: 'Lektoři vedou kurzy, odpovídají na dotazy a starají se o obsah výuky.', symbol: '✦', tone: 'hsl(var(--accent))' },
+  redakce: { title: 'Redakce Naučtury', eyebrow: 'Naučná literatura', description: 'Redaktoři posuzují, dolaďují a vydávají články v Naučtuře. Spravují Vavřínové body.', symbol: '✒', tone: 'hsl(var(--primary))' },
 };
 
 const AVAILABILITY_LABELS: Record<string, { label: string; color: string }> = {
@@ -96,6 +97,7 @@ export default function Povereni() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [allProfiles, setAllProfiles] = useState<any[]>([]);
   const [boxes, setBoxes] = useState<any[]>([]);
+  const [editorMembers, setEditorMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<StaffMember>>({});
@@ -165,12 +167,21 @@ export default function Povereni() {
     merged.sort((a, b) => a.sort_order - b.sort_order);
     setStaff(merged);
 
-    const [{ data: bxs }, { data: profs }] = await Promise.all([
+    const [{ data: bxs }, { data: profs }, { data: eds }] = await Promise.all([
       db().from('staff_page_boxes').select('*').order('sort_order'),
       db().from('profiles').select('user_id, display_name, username, avatar_url'),
+      db().from('article_editors').select('user_id, topic_id'),
     ]);
     setBoxes(bxs || []);
     setAllProfiles(profs || []);
+    // editor members: unique users from article_editors with their profiles
+    const edIds = [...new Set((eds || []).map((e: any) => e.user_id))];
+    const edTopics: Record<string, string[]> = {};
+    (eds || []).forEach((e: any) => { edTopics[e.user_id] = edTopics[e.user_id] || []; if (e.topic_id) edTopics[e.user_id].push(e.topic_id); });
+    setEditorMembers(edIds.map((uid: any) => {
+      const p = (profs || []).find((x: any) => x.user_id === uid);
+      return { user_id: uid, display_name: p?.display_name || 'Redaktor', username: p?.username, avatar_url: p?.avatar_url, topic_ids: edTopics[uid as string] };
+    }));
     setLoading(false);
   };
 
@@ -234,8 +245,8 @@ export default function Povereni() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=JetBrains+Mono:wght@400;600&display=swap');
 
-        .pov2 { --ink:#1B1B2E; --paper:#F4ECD8; --paper-2:#EFE5CB; --line:#1B1B2E22; --gold:#C9A24B; --bord:#7A1F2B; --moss:#3A6B3E; color:var(--ink); }
-        .dark .pov2 { --ink:#F4ECD8; --paper:#16161F; --paper-2:#1C1C26; --line:#F4ECD822; --gold:#D7B968; --bord:#C2535F; --moss:#7BB07F; }
+        .pov2 { --ink: hsl(var(--foreground)); --paper: hsl(var(--background)); --paper-2: hsl(var(--card)); --line: hsl(var(--border)); --gold: hsl(var(--primary)); --bord: hsl(var(--destructive)); --moss: hsl(var(--secondary)); color:var(--ink); }
+        .dark .pov2 { --ink: hsl(var(--foreground)); --paper: hsl(var(--background)); --paper-2: hsl(var(--card)); --line: hsl(var(--border)); --gold: hsl(var(--primary)); --bord: hsl(var(--destructive)); --moss: hsl(var(--secondary)); }
         .pov2 .serif { font-family:'Cormorant Garamond', 'Playfair Display', Georgia, serif; font-feature-settings:'liga','dlig'; letter-spacing:-.005em; }
         .pov2 .mono { font-family:'JetBrains Mono', ui-monospace, Menlo, monospace; }
 
@@ -389,6 +400,41 @@ export default function Povereni() {
               );
             })}
 
+            {/* Redakce Naučtury (article_editors) */}
+            {(activeTab === 'all' || activeTab === 'redakce') && editorMembers.length > 0 && (() => {
+              const info = ROLE_SECTION_INFO.redakce;
+              return (
+                <section className="pov2-section">
+                  <header className="pov2-section-head">
+                    <span className="pov2-section-num">§ {String(roleGroups.length + 1).padStart(2,'0')}</span>
+                    <div>
+                      <div className="pov2-eyebrow">{info.eyebrow}</div>
+                      <h2 className="serif pov2-section-title">{info.title}</h2>
+                      <p className="pov2-section-desc">{info.description}</p>
+                    </div>
+                    <span className="pov2-section-sym" aria-hidden>{info.symbol}</span>
+                  </header>
+                  <div className="pov2-grid">
+                    {editorMembers.map((m: any) => (
+                      <article key={m.user_id} className="pov2-card" data-initial={(m.display_name || '?')[0]?.toUpperCase()} style={{ ['--accent' as any]: info.tone }}>
+                        <span className="accent" />
+                        <div className="flex items-center gap-3">
+                          {m.avatar_url ? <img src={m.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover" /> : <div className="w-12 h-12 rounded-full bg-muted grid place-items-center font-bold">{(m.display_name || '?')[0]}</div>}
+                          <div>
+                            <strong className="text-lg leading-tight block">
+                              <sup className="text-base mr-0.5">✒</sup>
+                              {m.username ? <a href={`/uziv/${m.username}`} className="hover:underline">{m.display_name}</a> : m.display_name}
+                            </strong>
+                            <span className="text-xs text-muted-foreground">{m.topic_ids?.length ? `Témata: ${m.topic_ids.length}` : 'Všechna témata'}</span>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
+
             {/* Custom boxes */}
             {boxes.filter(b => isDeveloper || b.is_visible).map((box, idx) => {
               if (activeTab !== 'all' && activeTab !== `box:${box.id}`) return null;
@@ -396,7 +442,7 @@ export default function Povereni() {
               return (
                 <section key={box.id} className="pov2-section">
                   <header className="pov2-section-head">
-                    <span className="pov2-section-num">§ {String(roleGroups.length + idx + 1).padStart(2,'0')}</span>
+                    <span className="pov2-section-num">§ {String(roleGroups.length + 1 + idx + 1).padStart(2,'0')}</span>
                     <div>
                       <div className="pov2-eyebrow">Vlastní sekce</div>
                       <h2 className="serif pov2-section-title">{box.title}</h2>

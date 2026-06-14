@@ -292,6 +292,44 @@ export type Database = {
           },
         ]
       }
+      article_points: {
+        Row: {
+          amount: number
+          article_id: string
+          created_at: string
+          granted_by: string | null
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          article_id: string
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          article_id?: string
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_points_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       article_revisions: {
         Row: {
           article_id: string
@@ -306,6 +344,7 @@ export type Database = {
           new_value: string | null
           note: string | null
           old_value: string | null
+          save_group: string | null
         }
         Insert: {
           article_id: string
@@ -320,6 +359,7 @@ export type Database = {
           new_value?: string | null
           note?: string | null
           old_value?: string | null
+          save_group?: string | null
         }
         Update: {
           article_id?: string
@@ -334,6 +374,7 @@ export type Database = {
           new_value?: string | null
           note?: string | null
           old_value?: string | null
+          save_group?: string | null
         }
         Relationships: [
           {
@@ -424,18 +465,24 @@ export type Database = {
           cover_image: string | null
           created_at: string
           deleted_reason: string | null
+          featured_until: string | null
           flagged_source: string | null
           id: string
+          is_featured: boolean
           originality_checked_at: string | null
           originality_notes: string | null
           originality_score: number | null
           perex: string | null
           published_at: string | null
+          rating: number | null
           rejection_reason: string | null
           scheduled_for: string | null
           slug: string | null
           status: Database["public"]["Enums"]["article_status"]
           status_note: string | null
+          taken_at: string | null
+          taken_by: string | null
+          theft_source: string | null
           title: string
           topic_id: string | null
           updated_at: string
@@ -449,18 +496,24 @@ export type Database = {
           cover_image?: string | null
           created_at?: string
           deleted_reason?: string | null
+          featured_until?: string | null
           flagged_source?: string | null
           id?: string
+          is_featured?: boolean
           originality_checked_at?: string | null
           originality_notes?: string | null
           originality_score?: number | null
           perex?: string | null
           published_at?: string | null
+          rating?: number | null
           rejection_reason?: string | null
           scheduled_for?: string | null
           slug?: string | null
           status?: Database["public"]["Enums"]["article_status"]
           status_note?: string | null
+          taken_at?: string | null
+          taken_by?: string | null
+          theft_source?: string | null
           title?: string
           topic_id?: string | null
           updated_at?: string
@@ -474,18 +527,24 @@ export type Database = {
           cover_image?: string | null
           created_at?: string
           deleted_reason?: string | null
+          featured_until?: string | null
           flagged_source?: string | null
           id?: string
+          is_featured?: boolean
           originality_checked_at?: string | null
           originality_notes?: string | null
           originality_score?: number | null
           perex?: string | null
           published_at?: string | null
+          rating?: number | null
           rejection_reason?: string | null
           scheduled_for?: string | null
           slug?: string | null
           status?: Database["public"]["Enums"]["article_status"]
           status_note?: string | null
+          taken_at?: string | null
+          taken_by?: string | null
+          theft_source?: string | null
           title?: string
           topic_id?: string | null
           updated_at?: string
@@ -1934,12 +1993,15 @@ export type Database = {
         Args: { _article_id: string; _uid: string }
         Returns: boolean
       }
+      publish_due_articles: { Args: never; Returns: number }
       redeem_account_access_code: {
         Args: { _code: string; _request_id: string }
         Returns: string
       }
+      release_article: { Args: { _article_id: string }; Returns: undefined }
       revoke_account_access: { Args: { _grant_id: string }; Returns: undefined }
       slugify: { Args: { input: string }; Returns: string }
+      take_article: { Args: { _article_id: string }; Returns: undefined }
       update_user_wall_with_access: {
         Args: { _bio: string; _target_user_id: string }
         Returns: undefined
