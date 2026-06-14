@@ -359,14 +359,14 @@ export default function NaucturaDetail() {
           </>
         ) : (
           <div className="space-y-3 mt-3">
-            <input value={editForm.title || ''} onChange={e => setEditForm({ ...editForm, title: e.target.value })} placeholder="Název" className="w-full border-2 border-border rounded-xl py-2 p[...]
-            <textarea value={editForm.perex || ''} onChange={e => setEditForm({ ...editForm, perex: e.target.value })} placeholder="Perex (krátký úvod)" rows={2} className="w-full border-2 bor[...]
+            <input value={editForm.title || ''} onChange={e => setEditForm({ ...editForm, title: e.target.value })} placeholder="Název" className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
+            <textarea value={editForm.perex || ''} onChange={e => setEditForm({ ...editForm, perex: e.target.value })} placeholder="Perex (krátký úvod)" rows={2} className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
             <select value={editForm.topic_id || ''} onChange={e => setEditForm({ ...editForm, topic_id: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm bg-card">
               <option value="">— bez tématu —</option>
               {topics.map(t => <option key={t.id} value={t.id}>{t.symbol} {t.name}</option>)}
             </select>
-            <input value={editForm.cover_image || ''} onChange={e => setEditForm({ ...editForm, cover_image: e.target.value })} placeholder="URL obálky (volitelné)" className="w-full border-2 b[...]
-            <textarea value={editForm.content || ''} onChange={e => setEditForm({ ...editForm, content: e.target.value })} placeholder="Obsah článku (Markdown, LaTeX)" rows={20} className="w-fu[...]
+            <input value={editForm.cover_image || ''} onChange={e => setEditForm({ ...editForm, cover_image: e.target.value })} placeholder="URL obálky (volitelné)" className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
+            <textarea value={editForm.content || ''} onChange={e => setEditForm({ ...editForm, content: e.target.value })} placeholder="Obsah článku (Markdown, LaTeX)" rows={20} className="w-full border-2 border-border rounded-xl py-2 px-3 text-sm outline-none" />
             <div className="flex gap-2">
               <Button onClick={saveEdit}>Uložit (jako jeden záznam protokolu)</Button>
               <Button variant="outline" onClick={cancelEdit}>Zrušit</Button>
@@ -381,7 +381,7 @@ export default function NaucturaDetail() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="text-sm">
               {article.taken_by
-                ? <>Posuzuje: <strong>{takenProfile?.display_name || '(redaktor)'}</strong>{article.taken_at && <span className="text-xs text-muted-foreground"> od {new Date(article.taken_at).toL[...]
+                ? <>Posuzuje: <strong>{takenProfile?.display_name || '(redaktor)'}</strong>{article.taken_at && <span className="text-xs text-muted-foreground"> od {new Date(article.taken_at).toLocaleString('cs')}</span>}</>
                 : <em className="text-muted-foreground">Článek si zatím nikdo z redakce nepřebral.</em>}
             </div>
             <div className="flex gap-2">
@@ -402,7 +402,7 @@ export default function NaucturaDetail() {
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={startEdit}>✎ Upravit</Button>
             {transitions.map(tr => (
-              <button key={tr.to} onClick={() => { setTransitionPick(tr); setTransitionReason(''); setPublishFeatured(false); }} className="px-3 py-2 rounded-xl border-2 text-sm font-bold" style=[...]
+              <button key={tr.to} onClick={() => { setTransitionPick(tr); setTransitionReason(''); setPublishFeatured(false); }} className="px-3 py-2 rounded-xl border-2 text-sm font-bold" style={{ borderColor: 'currentColor', color: '#10b981' }}>
                 → {tr.label}
               </button>
             ))}
@@ -439,7 +439,7 @@ export default function NaucturaDetail() {
                   </select>
                 </div>
               )}
-              <Textarea value={transitionReason} onChange={e => setTransitionReason(e.target.value)} placeholder={transitionPick.needsReason ? 'Důvod (povinné)' : 'Poznámka (volitelná)'} rows[...]
+              <Textarea value={transitionReason} onChange={e => setTransitionReason(e.target.value)} placeholder={transitionPick.needsReason ? 'Důvod (povinné)' : 'Poznámka (volitelná)'} rows={2} />
               <div className="flex gap-2">
                 <Button size="sm" onClick={doTransition}>Potvrdit</Button>
                 <Button size="sm" variant="outline" onClick={() => setTransitionPick(null)}>Zrušit</Button>
@@ -520,14 +520,14 @@ export default function NaucturaDetail() {
             <div className="mt-4 border-t pt-3">
               <h4 className="font-bold text-sm mb-2">🔍 Ověření originality</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <input type="number" min={0} max={100} value={origDraft.score} onChange={e => setOrigDraft({ ...origDraft, score: e.target.value })} placeholder="Skóre 0–100" className="border[...]
+                <input type="number" min={0} max={100} value={origDraft.score} onChange={e => setOrigDraft({ ...origDraft, score: e.target.value })} placeholder="Skóre 0–100" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
                 <select value={origDraft.verdict} onChange={e => setOrigDraft({ ...origDraft, verdict: e.target.value })} className="border-2 border-border rounded-lg py-1.5 px-2 text-sm">
                   <option value="ok">OK</option>
                   <option value="suspicious">Podezřelé</option>
                   <option value="stolen">Ukradený</option>
                 </select>
-                <input value={origDraft.notes} onChange={e => setOrigDraft({ ...origDraft, notes: e.target.value })} placeholder="Poznámka" className="border-2 border-border rounded-lg py-1.5 px[...]
-                <textarea value={origDraft.sources} onChange={e => setOrigDraft({ ...origDraft, sources: e.target.value })} placeholder="Zdroje, jeden URL na řádek" rows={2} className="col-span[...]
+                <input value={origDraft.notes} onChange={e => setOrigDraft({ ...origDraft, notes: e.target.value })} placeholder="Poznámka" className="border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
+                <textarea value={origDraft.sources} onChange={e => setOrigDraft({ ...origDraft, sources: e.target.value })} placeholder="Zdroje, jeden URL na řádek" rows={2} className="col-span-2 md:col-span-1 border-2 border-border rounded-lg py-1.5 px-2 text-sm" />
                 <Button size="sm" onClick={saveOriginality}>Zapsat</Button>
               </div>
               {origChecks.length > 0 && (
@@ -565,7 +565,7 @@ export default function NaucturaDetail() {
                       nickHref={profile?.username ? `/uziv/${profile.username}` : undefined}
                       profilovka={profile?.avatar_url || undefined}
                       cas={new Date(s.created_at)}
-                      kontext={<>změnu stavu článku{s.from_status ? <> z <em>{STATUS_INFO[s.from_status as ArticleStatus]?.label || s.from_status}</em></> : null} na <strong>{STATUS_INFO[s.to_[...]
+                      kontext={<>změnu stavu články{s.from_status ? <> z <em>{STATUS_INFO[s.from_status as ArticleStatus]?.label || s.from_status}</em></> : null} na <strong>{STATUS_INFO[s.to_status as ArticleStatus]?.label || s.to_status}</strong></>}
                       text={s.reason ? <em>„{s.reason}"</em> : undefined}
                     />
                   </div>
@@ -582,7 +582,7 @@ export default function NaucturaDetail() {
                     nickHref={profile?.username ? `/uziv/${profile.username}` : undefined}
                     profilovka={profile?.avatar_url || undefined}
                     cas={new Date(group[0].created_at)}
-                    kontext={<>úpravu článku — změněno {group.length} {group.length === 1 ? 'pole' : group.length < 5 ? 'pole' : 'polí'} ({group.map(g => FIELD_LABELS[g.field] || g.field)[...]
+                    kontext={<>úpravu článku — změněno {group.length} {group.length === 1 ? 'pole' : group.length < 5 ? 'pole' : 'polí'} ({group.map(g => FIELD_LABELS[g.field] || g.field).join(', ')})</>}
                   />
                   <div className="ml-8 space-y-2">
                     {group.map(r => (
