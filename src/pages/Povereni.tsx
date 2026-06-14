@@ -442,7 +442,7 @@ export default function Povereni() {
               return (
                 <section key={box.id} className="pov2-section">
                   <header className="pov2-section-head">
-                    <span className="pov2-section-num">§ {String(roleGroups.length + idx + 1).padStart(2,'0')}</span>
+                    <span className="pov2-section-num">§ {String(roleGroups.length + 1 + idx + 1).padStart(2,'0')}</span>
                     <div>
                       <div className="pov2-eyebrow">Vlastní sekce</div>
                       <h2 className="serif pov2-section-title">{box.title}</h2>
