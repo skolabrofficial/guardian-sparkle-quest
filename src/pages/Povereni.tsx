@@ -97,6 +97,7 @@ export default function Povereni() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [allProfiles, setAllProfiles] = useState<any[]>([]);
   const [boxes, setBoxes] = useState<any[]>([]);
+  const [editorMembers, setEditorMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<StaffMember>>({});
