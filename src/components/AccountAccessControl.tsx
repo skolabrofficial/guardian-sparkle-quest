@@ -79,26 +79,67 @@ export default function AccountAccessControl({ targetUserId, onAccessChanged }: 
         <h2 className="text-lg font-semibold">🔐 Odemknutí citlivých sekcí</h2>
         <p className="text-xs text-muted-foreground">Přístup schválí rektor, nebo dva různí (ne ty) správci. Platí do ručního odvolání.</p>
       </div>
-      {issuedCode && <div className="rounded-xl border border-primary/40 bg-primary/10 p-3"><strong>Nový kód:</strong> <code className="ml-2 font-bold tracking-widest">{issuedCode}</code><p clas[...]
+      {issuedCode && (
+        <div className="rounded-xl border border-primary/40 bg-primary/10 p-3">
+          <strong>Nový kód:</strong> <code className="ml-2 font-bold tracking-widest">{issuedCode}</code>
+          <p className="text-xs text-muted-foreground mt-2">Zkopíruj si kód a bezpečně ho ulož. Znovu se nezobrazí.</p>
+        </div>
+      )}
       <div className="grid gap-2 md:grid-cols-[220px_1fr_auto] items-end">
-        <div><Label>Rozsah</Label><select value={scope} onChange={e => setScope(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="wa[...]
-        <div><Label>Důvod přístupu</Label><Textarea value={reason} onChange={e => setReason(e.target.value)} maxLength={1000} className="min-h-10" /></div>
+        <div>
+          <Label>Rozsah</Label>
+          <select value={scope} onChange={e => setScope(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+            <option value="wall">Úprava zdi</option>
+            <option value="searches">Historie vyhledávání</option>
+            <option value="account_actions">Zásahy v účtu</option>
+            <option value="all">Všechny citlivé sekce</option>
+          </select>
+        </div>
+        <div>
+          <Label>Důvod přístupu</Label>
+          <Textarea value={reason} onChange={e => setReason(e.target.value)} maxLength={1000} className="min-h-10" />
+        </div>
         <Button onClick={createRequest}>Založit žádost</Button>
       </div>
-      {grants.length > 0 && <div className="space-y-2"><h3 className="text-sm font-semibold">Aktivní přístupy</h3>{grants.map(g => <div key={g.id} className="flex justify-between items-center r[...]
+      {grants.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Aktivní přístupy</h3>
+          {grants.map(g => (
+            <div key={g.id} className="flex justify-between items-center rounded-lg border border-border p-2 text-sm">
+              <span>{SCOPE_LABELS[g.scope]} • od {new Date(g.granted_at).toLocaleDateString('cs')}</span>
+              <Button size="sm" variant="destructive" onClick={() => revoke(g.id)}>Odvolat</Button>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="space-y-2">
         {requests.map(req => {
           const reqApprovals = approvals.filter(a => a.request_id === req.id && a.decision === 'approved');
           const mine = req.requested_by === user.id;
           const alreadyDecided = approvals.some(a => a.request_id === req.id && a.approver_id === user.id);
-          return <div key={req.id} className="rounded-xl border border-border p-3 text-sm">
-            <div className="flex justify-between gap-3 flex-wrap"><strong>{SCOPE_LABELS[req.scope]}</strong><span className="text-xs uppercase font-bold">{req.status}</span></div>
-            <p className="text-xs text-muted-foreground my-1">{req.reason} • schválení {reqApprovals.length}{isRektor ? ' (rektor může rozhodnout sám)' : '/2'}</p>
-            <div className="flex gap-2 flex-wrap">
-              {req.status === 'pending' && !alreadyDecided && (isRektor || !mine) && <><Button size="sm" onClick={() => decide(req.id, 'approved')}>Schválit</Button><Button size="sm" variant="des[...]
-              {req.status === 'approved' && mine && <><Input value={codes[req.id] || ''} onChange={e => setCodes(v => ({ ...v, [req.id]: e.target.value }))} placeholder="Přístupový kód" classN[...]
+          return (
+            <div key={req.id} className="rounded-xl border border-border p-3 text-sm">
+              <div className="flex justify-between gap-3 flex-wrap">
+                <strong>{SCOPE_LABELS[req.scope]}</strong>
+                <span className="text-xs uppercase font-bold">{req.status}</span>
+              </div>
+              <p className="text-xs text-muted-foreground my-1">{req.reason} • schválení {reqApprovals.length}{isRektor ? ' (rektor může rozhodnout sám)' : '/2'}</p>
+              <div className="flex gap-2 flex-wrap">
+                {req.status === 'pending' && !alreadyDecided && (isRektor || !mine) && (
+                  <>
+                    <Button size="sm" onClick={() => decide(req.id, 'approved')}>Schválit</Button>
+                    <Button size="sm" variant="destructive" onClick={() => decide(req.id, 'rejected')}>Odmítnout</Button>
+                  </>
+                )}
+                {req.status === 'approved' && mine && (
+                  <>
+                    <Input value={codes[req.id] || ''} onChange={e => setCodes(v => ({ ...v, [req.id]: e.target.value }))} placeholder="Přístupový kód" className="text-sm h-9 flex-1 max-w-48" />
+                    <Button size="sm" onClick={() => redeem(req.id)}>Uplalit</Button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>;
+          );
         })}
       </div>
     </div>
