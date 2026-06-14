@@ -167,12 +167,21 @@ export default function Povereni() {
     merged.sort((a, b) => a.sort_order - b.sort_order);
     setStaff(merged);
 
-    const [{ data: bxs }, { data: profs }] = await Promise.all([
+    const [{ data: bxs }, { data: profs }, { data: eds }] = await Promise.all([
       db().from('staff_page_boxes').select('*').order('sort_order'),
       db().from('profiles').select('user_id, display_name, username, avatar_url'),
+      db().from('article_editors').select('user_id, topic_id'),
     ]);
     setBoxes(bxs || []);
     setAllProfiles(profs || []);
+    // editor members: unique users from article_editors with their profiles
+    const edIds = [...new Set((eds || []).map((e: any) => e.user_id))];
+    const edTopics: Record<string, string[]> = {};
+    (eds || []).forEach((e: any) => { edTopics[e.user_id] = edTopics[e.user_id] || []; if (e.topic_id) edTopics[e.user_id].push(e.topic_id); });
+    setEditorMembers(edIds.map(uid => {
+      const p = (profs || []).find((x: any) => x.user_id === uid);
+      return { user_id: uid, display_name: p?.display_name || 'Redaktor', username: p?.username, avatar_url: p?.avatar_url, topic_ids: edTopics[uid] };
+    }));
     setLoading(false);
   };
 
