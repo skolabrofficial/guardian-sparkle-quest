@@ -47,9 +47,10 @@ interface StaffMember {
 const db = () => supabase as any;
 
 const ROLE_SECTION_INFO: Record<string, { title: string; eyebrow: string; description: string; symbol: string; tone: string }> = {
-  rektor:  { title: 'Rektorát',  eyebrow: 'Vedení univerzity', description: 'Rektor vede celou univerzitu, schvaluje pravomoci a dohlíží na všechny moduly.', symbol: '♛', tone: '#7A1F2B' },
-  spravce: { title: 'Správa',    eyebrow: 'Bezpečnost a moderace', description: 'Správci dohlížejí na bezpečnost, moderují obsah a řeší blokace.', symbol: '⚙', tone: '#1B1B2E' },
-  lektor:  { title: 'Sbor lektorů', eyebrow: 'Výuka a doučování', description: 'Lektoři vedou kurzy, odpovídají na dotazy a starají se o obsah výuky.', symbol: '✦', tone: '#3A6B3E' },
+  rektor:  { title: 'Rektorát',  eyebrow: 'Vedení univerzity', description: 'Rektor vede celou univerzitu, schvaluje pravomoci a dohlíží na všechny moduly.', symbol: '♛', tone: 'hsl(var(--primary))' },
+  spravce: { title: 'Správa',    eyebrow: 'Bezpečnost a moderace', description: 'Správci dohlížejí na bezpečnost, moderují obsah a řeší blokace.', symbol: '⚙', tone: 'hsl(var(--secondary))' },
+  lektor:  { title: 'Sbor lektorů', eyebrow: 'Výuka a doučování', description: 'Lektoři vedou kurzy, odpovídají na dotazy a starají se o obsah výuky.', symbol: '✦', tone: 'hsl(var(--accent))' },
+  redakce: { title: 'Redakce Naučtury', eyebrow: 'Naučná literatura', description: 'Redaktoři posuzují, dolaďují a vydávají články v Naučtuře. Spravují Vavřínové body.', symbol: '✒', tone: 'hsl(var(--primary))' },
 };
 
 const AVAILABILITY_LABELS: Record<string, { label: string; color: string }> = {
