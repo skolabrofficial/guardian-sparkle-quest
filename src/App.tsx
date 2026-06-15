@@ -30,6 +30,7 @@ import Mezirozprava from "./pages/Mezirozprava";
 import MezirozpravaSeznam from "./pages/MezirozpravaSeznam";
 import RektoratMezirozpravy from "./pages/RektoratMezirozpravy";
 import RektoratMezirozpravaDetail from "./pages/RektoratMezirozpravaDetail";
+import Lavricnik from "./pages/Lavricnik";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/rektorat/mezirozprava/:id" element={<BlockGuard><RektoratMezirozpravaDetail /></BlockGuard>} />
             <Route path="/profil" element={<BlockGuard><Profil /></BlockGuard>} />
             <Route path="/povereni" element={<BlockGuard><Povereni /></BlockGuard>} />
+            <Route path="/lavricnik" element={<BlockGuard><Lavricnik /></BlockGuard>} />
             <Route path="/uziv/:username" element={<BlockGuard><UserWall /></BlockGuard>} />
             <Route path="/gdpr" element={<Gdpr />} />
             <Route path="/blokace/:id" element={<BlockGuard><BlokaceDetail /></BlockGuard>} />
