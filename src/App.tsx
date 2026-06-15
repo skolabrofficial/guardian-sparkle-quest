@@ -31,6 +31,7 @@ import MezirozpravaSeznam from "./pages/MezirozpravaSeznam";
 import RektoratMezirozpravy from "./pages/RektoratMezirozpravy";
 import RektoratMezirozpravaDetail from "./pages/RektoratMezirozpravaDetail";
 import Lavricnik from "./pages/Lavricnik";
+import ClankyPublic from "./pages/ClankyPublic";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,8 @@ const App = () => (
             <Route path="/rozvrh" element={<BlockGuard><Rozvrh /></BlockGuard>} />
             <Route path="/nauctura" element={<BlockGuard><Nauctura /></BlockGuard>} />
             <Route path="/nauctura/:id" element={<BlockGuard><NaucturaDetail /></BlockGuard>} />
+            <Route path="/clanky" element={<ClankyPublic />} />
+            <Route path="/clanky/:id" element={<ClankyPublic />} />
             <Route path="/studium" element={<BlockGuard><Studium /></BlockGuard>} />
             <Route path="/vypisky" element={<BlockGuard><Vypisky /></BlockGuard>} />
             <Route path="/doucovani" element={<BlockGuard><Doucovani /></BlockGuard>} />
