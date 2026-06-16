@@ -9,7 +9,7 @@ export const DRUHY: Record<number, { label: string; bg: string; fg: string; verb
   222: { label: 'Poznámka',       bg: '#CCC', fg: '#000', verb: f => f ? 'poznamenala' : 'poznamenal' },
   223: { label: 'Velká změna',         bg: '#444', fg: '#fff', verb: f => f ? 'provedla'  : 'provedl' },
   224: { label: 'Kritické',       bg: '#000', fg: '#fff', verb: f => f ? 'spustila'  : 'spustil' },
-  224: { label: 'Zveřejnění',       bg: '#CC2222', fg: '#fff', verb: f => f ? 'zveřejnila'  : 'zvejřejnil' },
+  225: { label: 'Zveřejnění',       bg: '#CC2222', fg: '#fff', verb: f => f ? 'zveřejnila'  : 'zvejřejnil' },
 };
 
 /* ─────────────── Autority ─────────────── */
