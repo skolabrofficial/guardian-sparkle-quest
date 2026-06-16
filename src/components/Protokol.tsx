@@ -9,13 +9,14 @@ export const DRUHY: Record<number, { label: string; bg: string; fg: string; verb
   222: { label: 'Poznámka',       bg: '#CCC', fg: '#000', verb: f => f ? 'poznamenala' : 'poznamenal' },
   223: { label: 'Velká změna',         bg: '#444', fg: '#fff', verb: f => f ? 'provedla'  : 'provedl' },
   224: { label: 'Kritické',       bg: '#000', fg: '#fff', verb: f => f ? 'spustila'  : 'spustil' },
+  224: { label: 'Zveřejnění',       bg: '#CC2222', fg: '#fff', verb: f => f ? 'zveřejnila'  : 'zvejřejnil' },
 };
 
 /* ─────────────── Autority ─────────────── */
 export const AUTORITY: Record<number, { label: string; bg?: string; fg?: string; bold?: boolean; show?: boolean }> = {
   1:   { label: 'host',     show: false },
   2:   { label: 'uživatel', bold: true, show: false },
-  48:  { label: 'lektor',   bg: '#C0392B', fg: '#fff', show: true },   // červená
+  48:  { label: 'lektor / redaktor',   bg: '#C0392B', fg: '#fff', show: true },   // červená
   192: { label: 'správce',  bg: '#258B25', fg: '#fff', show: true },   // zelená
   255: { label: 'rektor',   bg: '#254BFF', fg: '#fff', show: true },   // modrá
 };
@@ -53,8 +54,8 @@ const MESICE = ['ledna','února','března','dubna','května','června','červenc
 function fmtRel(d: Date, now: Date) {
   const diffMs = now.getTime() - d.getTime();
   const sec = Math.round(diffMs / 1000);
-  if (sec < 0)    return 'právě teď';
-  if (sec < 60)   return `před ${sec} s`;
+  if (sec < 0)    return 'před chvilinkou';
+  if (sec < 60)   return `${sec} sekund zpátky`;
   const min = Math.round(sec / 60);
   if (min < 60)   return `před ${min} min`;
   const hod = Math.round(min / 60);
