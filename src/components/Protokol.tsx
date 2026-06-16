@@ -7,7 +7,7 @@ export const DRUHY: Record<number, { label: string; bg: string; fg: string; verb
   191: { label: 'Smazání',        bg: '#C22', fg: '#fff', verb: f => f ? 'smazala'   : 'smazal' },
   192: { label: 'Trvalé smazání', bg: '#A22', fg: '#fff', verb: f => f ? 'trvale smazala' : 'trvale smazal' },
   222: { label: 'Poznámka',       bg: '#CCC', fg: '#000', verb: f => f ? 'poznamenala' : 'poznamenal' },
-  223: { label: 'Systém',         bg: '#444', fg: '#fff', verb: f => f ? 'provedla'  : 'provedl' },
+  223: { label: 'Velká změna',         bg: '#444', fg: '#fff', verb: f => f ? 'provedla'  : 'provedl' },
   224: { label: 'Kritické',       bg: '#000', fg: '#fff', verb: f => f ? 'spustila'  : 'spustil' },
 };
 
@@ -208,9 +208,9 @@ function describeAction(action: string, entityType?: string | null, det?: any): 
   if (a.startsWith('mediation.'))  return `zásah v mezirozpravě`;
   if (a === 'wall.update')         return `úpravu zdi ${target ?? 'uživatele'}`;
   if (a === 'account_access.request') return `žádost o odemknutí citlivé sekce ${target ?? 'účtu'}`;
-  if (a === 'account_access.approved') return `schválení přístupu k citlivé sekci ${target ?? 'účtu'}`;
-  if (a === 'account_access.rejected') return `zamítnutí přístupu k citlivé sekci ${target ?? 'účtu'}`;
-  if (a === 'account_access.unlocked') return `odemknutí citlivé sekce ${target ?? 'účtu'} speciálním kódem`;
+  if (a === 'account_access.approved') return `stav posouzení přístupu k citlivé sekci na schválený ${target ?? 'účtu'}`;
+  if (a === 'account_access.rejected') return `stav posouzení přístupu k citlivé sekci na zamítnutí ${target ?? 'účtu'}`;
+  if (a === 'account_access.unlocked') return ` stav odemknutí citlivé sekce na odemknutý ${target ?? 'účtu'} speciálním kódem`;
   if (a === 'account_access.revoked') return `odvolání přístupu k citlivé sekci ${target ?? 'účtu'}`;
   if (ent)                         return `${a.includes('create') ? 'nové' : 'změnu'} ${ent}`;
   return null;
