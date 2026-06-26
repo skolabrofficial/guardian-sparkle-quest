@@ -9,16 +9,23 @@ export const DRUHY: Record<number, { label: string; bg: string; fg: string; verb
   222: { label: 'Poznámka',       bg: '#CCC', fg: '#000', verb: f => f ? 'poznamenala' : 'poznamenal' },
   223: { label: 'Velká změna',         bg: '#444', fg: '#fff', verb: f => f ? 'provedla'  : 'provedl' },
   224: { label: 'Kritické',       bg: '#000', fg: '#fff', verb: f => f ? 'spustila'  : 'spustil' },
-  225: { label: 'Zveřejnění',       bg: '#CC2222', fg: '#fff', verb: f => f ? 'zveřejnila'  : 'zvejřejnil' },
+  225: { label: 'Zveřejnění',       bg: '#CC2222', fg: '#fff', verb: f => f ? 'zveřejnila'  : 'zveřejnil' },
+  226: { label: 'Přizvání',       bg: '#2196F3', fg: '#fff', verb: f => f ? 'přizvala'  : 'přizval' },
+  227: { label: 'Převzetí',       bg: '#FF9800', fg: '#fff', verb: f => f ? 'převzala'  : 'převzal' },
+  228: { label: 'Uvolnění',       bg: '#795548', fg: '#fff', verb: f => f ? 'uvolnila'  : 'uvolnil' },
+  229: { label: 'Kontrola originality', bg: '#673AB7', fg: '#fff', verb: f => f ? 'provedla' : 'provedl' },
+  230: { label: 'Kvalitářka',     bg: '#00BCD4', fg: '#fff', verb: f => f ? 'přidala' : 'přidal' },
+  231: { label: 'Přidání bodů',   bg: '#4CAF50', fg: '#fff', verb: f => f ? 'přidala' : 'přidal' },
 };
 
 /* ─────────────── Autority ─────────────── */
 export const AUTORITY: Record<number, { label: string; bg?: string; fg?: string; bold?: boolean; show?: boolean }> = {
   1:   { label: 'host',     show: false },
   2:   { label: 'uživatel', bold: true, show: false },
-  48:  { label: 'lektor / redaktor',   bg: '#C0392B', fg: '#fff', show: true },   // červená
-  192: { label: 'správce',  bg: '#258B25', fg: '#fff', show: true },   // zelená
-  255: { label: 'rektor',   bg: '#254BFF', fg: '#fff', show: true },   // modrá
+  24:  { label: 'redaktor', bg: '#7a4a8a', fg: '#fff', show: true },  // fialová
+  48:  { label: 'lektor',   bg: '#C0392B', fg: '#fff', show: true },  // červená
+  192: { label: 'správce',  bg: '#258B25', fg: '#fff', show: true },  // zelená
+  255: { label: 'rektor',   bg: '#254BFF', fg: '#fff', show: true },  // modrá
 };
 
 /* ─────────────── Helpers ─────────────── */
@@ -29,6 +36,7 @@ export function roleToAutorita(role?: string | null): number {
     case 'spravce':
     case 'dohledci':  return 192;
     case 'lektor':    return 48;
+    case 'redaktor':  return 24;
     case 'student':   return 2;
     default:          return 1;
   }
@@ -43,6 +51,13 @@ export function actionToDruh(action: string): number {
   if (a.includes('create') || a.includes('add') || a.includes('insert') || a.includes('register')) return 16;
   if (a.includes('update') || a.includes('edit')   || a.includes('change') || a.includes('move') || a.includes('pin') || a.includes('lock') || a.includes('approve')) return 24;
   if (a.includes('note') || a.includes('comment'))                               return 222;
+  if (a.includes('publish'))                                                     return 225;
+  if (a.includes('invite') || a.includes('přizvat'))                             return 226;
+  if (a.includes('take') || a.includes('převzít') || a.includes('převzetí'))     return 227;
+  if (a.includes('release') || a.includes('uvolnit') || a.includes('uvolnění'))  return 228;
+  if (a.includes('originality') || a.includes('plagiát'))                        return 229;
+  if (a.includes('kvalitářka') || a.includes('quality'))                         return 230;
+  if (a.includes('points') || a.includes('bodu'))                                return 231;
   return 223;
 }
 

@@ -1,7 +1,7 @@
 // Minimální role potřebná pro danou akci. Když se akce zaloguje, v protokolu
 // se zobrazí odznáček TÉTO role (ne skutečné role aktéra). Tím se v logu vždy
 // ukáže, jaká nejnižší pravomoc by k dané akci stačila.
-export type MinRole = 'rektor' | 'spravce' | 'lektor' | 'student';
+export type MinRole = 'rektor' | 'spravce' | 'lektor' | 'redaktor' | 'student';
 
 const RULES: Array<{ test: RegExp | string; role: MinRole }> = [
   // POUZE rektor
@@ -10,7 +10,6 @@ const RULES: Array<{ test: RegExp | string; role: MinRole }> = [
   { test: /^mediation\.(approve|reject|invite_lektor)/, role: 'rektor' },
   { test: /^user\.force_signout/, role: 'rektor' },
   { test: /^block\.permanent/,  role: 'rektor' },
-  { test: /^block\.ip/,         role: 'rektor' },
   { test: /^settings\./,        role: 'rektor' },
 
   // rektor + správce
@@ -26,12 +25,12 @@ const RULES: Array<{ test: RegExp | string; role: MinRole }> = [
   { test: /^account_access\./,  role: 'spravce' },
   { test: /^wall\./,            role: 'spravce' },
 
-  // rektor + správce + lektor + autor
+  // rektor + správce + lektor + redaktor
   { test: /^image\./,           role: 'lektor' },
   { test: /^tutoring\./,        role: 'lektor' },
   { test: /^course\./,          role: 'lektor' },
   { test: /^article\.(publish|reject|delete|stolen|originality|change_author)/, role: 'spravce' },
-  { test: /^article\./,         role: 'lektor' },
+  { test: /^article\./,         role: 'redaktor' },
 ];
 
 export function minRoleForAction(action: string): MinRole {

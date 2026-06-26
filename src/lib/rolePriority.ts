@@ -1,10 +1,11 @@
 // Priorita role (vyšší = silnější). Když má uživatel víc rolí, vrať nejsilnější.
 export const ROLE_PRIORITY: Record<string, number> = {
-  rektor: 4,
-  developer: 4,
-  spravce: 3,
-  dohledci: 3,
-  lektor: 2,
+  rektor: 5,
+  developer: 5,
+  spravce: 4,
+  dohledci: 4,
+  lektor: 3,
+  redaktor: 2,
   student: 1,
 };
 

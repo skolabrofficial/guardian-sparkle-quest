@@ -3,6 +3,7 @@ export const ROLE_SYMBOLS: Record<string, string> = {
   rektor: '⚙',     // ozubené kolo (dříve developer)
   spravce: '♛',    // koruna (dříve dohledci)
   lektor: '✦',     // hvězda
+  redaktor: '✎',   // tužka
   // staré názvy – pro jistotu, pokud by někde zůstaly
   developer: '⚙',
   dohledci: '♛',
@@ -12,6 +13,7 @@ export const ROLE_LABELS: Record<string, string> = {
   rektor: 'Rektor',
   spravce: 'Správce',
   lektor: 'Lektor',
+  redaktor: 'Redaktor',
   student: 'Student',
   developer: 'Rektor',
   dohledci: 'Správce',
@@ -22,6 +24,7 @@ export const ROLE_COLORS: Record<string, string> = {
   rektor: '#254BFF',
   spravce: '#258B25',
   lektor: '#C0392B',
+  redaktor: '#7a4a8a', // fialová
   student: '#1e40af',
   developer: '#254BFF',
   dohledci: '#258B25',
@@ -31,6 +34,7 @@ export const ROLE_GRADIENT: Record<string, string> = {
   rektor: 'from-blue-400 to-indigo-600',
   spravce: 'from-green-400 to-emerald-600',
   lektor: 'from-red-400 to-rose-600',
+  redaktor: 'from-purple-400 to-purple-600',
   student: 'from-slate-300 to-slate-500',
   developer: 'from-blue-400 to-indigo-600',
   dohledci: 'from-green-400 to-emerald-600',

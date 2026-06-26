@@ -184,7 +184,7 @@ export default function Rektorat() {
 
   // Content blocks
   const [contentBlocks, setContentBlocks] = useState<any[]>([]);
-  const [newBlock, setNewBlock] = useState({ page_path: '/', title: '', content: '', style_preset: 'announcement', position: 'top', link_url: '', link_text: '', image_url: '', custom_css: '' });
+  const [newBlock, setNewBlock] = useState({ page_path: '/', title: '', content: '', style_preset: 'announcement', position: 'top', link_url: '', link_text: '', image_url: '', custom_css: '', target_role: null, show_from: null, show_until: null });
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
   const [blockEdit, setBlockEdit] = useState<Record<string, any>>({});
 
@@ -241,7 +241,7 @@ export default function Rektorat() {
     const psRes = await supabase.from('page_styles').select('*').order('page_path');
     if (psRes.data) setPageStyles(psRes.data);
     const cbRes = await supabase.from('content_blocks').select('*').order('sort_order');
-    if (cbRes.data) setContentBlocks(cbRes.data);
+    if (cbRes.data) setContentBlocks(cbRes.data.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)));
     setStats({
       courses: c.data?.length || 0,
       faculties: f.data?.length || 0,
@@ -1517,14 +1517,18 @@ export default function Rektorat() {
 
       case 'obsahove-boxy': {
         const PRESET_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
-          announcement: { label: 'Oznámení', emoji: '📢', color: '#8b6914' },
-          contest: { label: 'Soutěž', emoji: '🏆', color: '#b8860b' },
-          joke: { label: 'Vtip', emoji: '😄', color: '#7c3aed' },
-          article: { label: 'Článek', emoji: '📰', color: '#3d6b00' },
-          promo: { label: 'Promo', emoji: '🔵', color: '#1a5aa0' },
-          warning: { label: 'Varování', emoji: '⚠️', color: '#991b1b' },
-          custom: { label: 'Vlastní', emoji: '🎨', color: '#666' },
-        };
+                announcement: { label: 'Oznámení', emoji: '📢', color: '#8b6914' },
+                contest: { label: 'Soutěž', emoji: '🏆', color: '#b8860b' },
+                joke: { label: 'Vtip', emoji: '😄', color: '#7c3aed' },
+                article: { label: 'Článek', emoji: '📰', color: '#3d6b00' },
+                promo: { label: 'Promo', emoji: '🔵', color: '#1a5aa0' },
+                warning: { label: 'Varování', emoji: '⚠️', color: '#991b1b' },
+                success: { label: 'Úspěch', emoji: '✅', color: '#15803d' },
+                info: { label: 'Info', emoji: 'ℹ️', color: '#0369a1' },
+                event: { label: 'Událost', emoji: '🎉', color: '#be123c' },
+                tip: { label: 'Tip', emoji: '💡', color: '#ca8a04' },
+                custom: { label: 'Vlastní', emoji: '🎨', color: '#666' },
+              };
         const PAGES = ['/', '/kurzy', '/fakulty', '/rozvrh', '/studium', '/vypisky', '/doucovani', '/profil', '*'];
         return (
           <div className="grid gap-4">
@@ -1534,19 +1538,34 @@ export default function Rektorat() {
             </div>
 
             {/* Preview of preset styles */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {Object.entries(PRESET_LABELS).map(([key, val]) => (
-                <div key={key} className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold" style={{ background: key === 'contest' ? '#fffbe0' : key === 'joke' ? '#f7e8fe' : key === 'article' ? '#eefacc' : key === 'promo' ? '#e8f0ff' : key === 'warning' ? '#fde8e8' : '#fff7cc', color: val.color }}>
-                  <span>{val.emoji}</span> {val.label}
-                </div>
-              ))}
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2">
+              {Object.entries(PRESET_LABELS).map(([key, val]) => {
+                const bgColors: Record<string, string> = {
+                  announcement: '#fffbe0',
+                  contest: '#fef3c7',
+                  joke: '#f3e8ff',
+                  article: '#f0fdf4',
+                  promo: '#dbeafe',
+                  warning: '#fef2f2',
+                  success: '#d1fae5',
+                  info: '#e0f2fe',
+                  event: '#ffe4e6',
+                  tip: '#fffbeb',
+                  custom: '#f3f4f6',
+                };
+                return (
+                  <div key={key} className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold" style={{ background: bgColors[key] || '#fff7cc', color: val.color }}>
+                    <span>{val.emoji}</span> {val.label}
+                  </div>
+                );
+              })}
             </div>
 
             {/* New block form */}
             <div className="panel-card border-l-4 border-primary">
               <h4 className="mt-0 mb-2 text-sm font-extrabold">➕ Přidat nový box</h4>
               <div className="grid gap-2">
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <select value={newBlock.page_path} onChange={e => setNewBlock({ ...newBlock, page_path: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card focus:border-secondary transition-colors">
                     {PAGES.map(p => <option key={p} value={p}>{p === '*' ? 'Všechny stránky' : p}</option>)}
                   </select>
@@ -1558,6 +1577,30 @@ export default function Rektorat() {
                     <option value="bottom">⬇ Dole</option>
                     <option value="sidebar">📎 Sidebar</option>
                   </select>
+                  <select value={newBlock.target_role || ''} onChange={e => setNewBlock({ ...newBlock, target_role: e.target.value || null })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none bg-card focus:border-secondary transition-colors">
+                    <option value="">Všechny role</option>
+                    <option value="student">Student</option>
+                    <option value="redaktor">Redaktor</option>
+                    <option value="lektor">Lektor</option>
+                    <option value="spravce">Správce</option>
+                    <option value="rektor">Rektor</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <input 
+                    type="datetime-local" 
+                    placeholder="Zobrazit od" 
+                    value={newBlock.show_from ? new Date(newBlock.show_from).toISOString().slice(0, 16) : ''} 
+                    onChange={e => setNewBlock({ ...newBlock, show_from: e.target.value ? new Date(e.target.value).toISOString() : null })} 
+                    className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" 
+                  />
+                  <input 
+                    type="datetime-local" 
+                    placeholder="Zobrazit do" 
+                    value={newBlock.show_until ? new Date(newBlock.show_until).toISOString().slice(0, 16) : ''} 
+                    onChange={e => setNewBlock({ ...newBlock, show_until: e.target.value ? new Date(e.target.value).toISOString() : null })} 
+                    className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" 
+                  />
                 </div>
                 <input placeholder="Nadpis boxu" value={newBlock.title} onChange={e => setNewBlock({ ...newBlock, title: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none focus:border-secondary transition-colors" />
                 <textarea placeholder="Obsah (Markdown)..." value={newBlock.content} onChange={e => setNewBlock({ ...newBlock, content: e.target.value })} className="border-2 border-border rounded-xl py-2 px-3 text-sm outline-none min-h-[80px] font-mono focus:border-secondary transition-colors" />
@@ -1580,12 +1623,13 @@ export default function Rektorat() {
                     image_url: newBlock.image_url || null,
                     custom_css: newBlock.custom_css || null,
                     created_by: user.id,
+                    sort_order: contentBlocks.length,
                   });
                   if (error) toast.error(error.message);
                   else {
                     await recordHistory('content_block', 'new', user.id, 'create', { title: newBlock.title, page: newBlock.page_path });
                     toast.success('Box přidán');
-                    setNewBlock({ page_path: '/', title: '', content: '', style_preset: 'announcement', position: 'top', link_url: '', link_text: '', image_url: '', custom_css: '' });
+                    setNewBlock({ page_path: '/', title: '', content: '', style_preset: 'announcement', position: 'top', link_url: '', link_text: '', image_url: '', custom_css: '', target_role: null, show_from: null, show_until: null });
                     loadAll();
                   }
                 }} className="btn-alik-primary text-xs w-fit">📦 Přidat box</button>

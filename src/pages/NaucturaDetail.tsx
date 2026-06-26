@@ -35,7 +35,7 @@ interface Topic { id: string; name: string; symbol: string; color: string; }
 
 export default function NaucturaDetail() {
   const { id } = useParams();
-  const { user, isRektor } = useAuth();
+  const { user, isRektor, isRedaktor } = useAuth();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const editMode = params.get('edit') === '1';
@@ -94,7 +94,7 @@ export default function NaucturaDetail() {
     if (user) {
       const { data: ed } = await sb.from('article_editors').select('id, topic_id').eq('user_id', user.id);
       const has = (ed || []).some((e: any) => !e.topic_id || e.topic_id === art.topic_id);
-      setIsEditorAccess(has || isRektor);
+      setIsEditorAccess(has || isRektor || isRedaktor);
     }
 
     const [rRes, sRes, oRes, kRes, ptRes] = await Promise.all([
@@ -245,6 +245,19 @@ export default function NaucturaDetail() {
       originality_score: origDraft.score ? Number(origDraft.score) : null,
       originality_notes: origDraft.notes, originality_checked_at: new Date().toISOString(),
     }).eq('id', article!.id);
+    // Log to audit log
+    await sb.from('audit_log').insert({
+      user_id: user.id,
+      action: 'article.originality',
+      entity_type: 'article',
+      entity_id: article!.id,
+      details: {
+        article_title: article!.title,
+        score: origDraft.score ? Number(origDraft.score) : null,
+        verdict: origDraft.verdict,
+        min_role: 'redaktor'
+      }
+    });
     setOrigDraft({ score: '', verdict: 'ok', notes: '', sources: '' });
     toast.success('Originalita zaznamenána'); load();
   }
@@ -279,12 +292,40 @@ export default function NaucturaDetail() {
   async function takeArticle() {
     const sb: any = supabase;
     const { error } = await Promise.resolve(sb.rpc('take_article', { _article_id: article!.id }));
-    if (error) toast.error(error.message); else { toast.success('Od nynějška máš tenhle článek v péči ty.'); load(); }
+    if (error) toast.error(error.message);
+    else {
+      // Log to audit log
+      if (user) {
+        await sb.from('audit_log').insert({
+          user_id: user.id,
+          action: 'article.take',
+          entity_type: 'article',
+          entity_id: article!.id,
+          details: { article_title: article!.title, min_role: 'redaktor' }
+        });
+      }
+      toast.success('Od nynějška máš tenhle článek v péči ty.');
+      load();
+    }
   }
   async function releaseArticle() {
     const sb: any = supabase;
     const { error } = await Promise.resolve(sb.rpc('release_article', { _article_id: article!.id }));
-    if (error) toast.error(error.message); else { toast.success('Uvolněno všem redaktorům.'); load(); }
+    if (error) toast.error(error.message);
+    else {
+      // Log to audit log
+      if (user) {
+        await sb.from('audit_log').insert({
+          user_id: user.id,
+          action: 'article.release',
+          entity_type: 'article',
+          entity_id: article!.id,
+          details: { article_title: article!.title, min_role: 'redaktor' }
+        });
+      }
+      toast.success('Uvolněno všem redaktorům.');
+      load();
+    }
   }
 
   async function addPoints() {
@@ -295,13 +336,52 @@ export default function NaucturaDetail() {
       user_id: article.author_id, article_id: article.id, amount: amt,
       reason: pointsDraft.reason || null, granted_by: user!.id,
     });
-    if (error) toast.error(error.message); else { toast.success('Vavřínové body připsány'); setPointsDraft({ amount: '5', reason: '' }); load(); }
+    if (error) toast.error(error.message);
+    else {
+      // Log to audit log
+      if (user) {
+        await sb.from('audit_log').insert({
+          user_id: user.id,
+          action: 'article.points',
+          entity_type: 'article',
+          entity_id: article!.id,
+          details: {
+            article_title: article!.title,
+            amount: amt,
+            reason: pointsDraft.reason,
+            target_user_id: article.author_id,
+            min_role: 'redaktor'
+          }
+        });
+      }
+      toast.success('Vavřínové body připsány');
+      setPointsDraft({ amount: '5', reason: '' });
+      load();
+    }
   }
 
   async function saveRating() {
     const sb: any = supabase;
     const { error } = await sb.from('articles').update({ rating: ratingDraft || null }).eq('id', article!.id);
-    if (error) toast.error(error.message); else { toast.success('Hodnocení uloženo'); load(); }
+    if (error) toast.error(error.message);
+    else {
+      // Log to audit log
+      if (user) {
+        await sb.from('audit_log').insert({
+          user_id: user.id,
+          action: 'article.rating',
+          entity_type: 'article',
+          entity_id: article!.id,
+          details: {
+            article_title: article!.title,
+            rating: ratingDraft,
+            min_role: 'redaktor'
+          }
+        });
+      }
+      toast.success('Hodnocení uloženo');
+      load();
+    }
   }
 
   /* ---------- Render ---------- */
@@ -623,7 +703,7 @@ export default function NaucturaDetail() {
 }
 
 const ROLE_BADGE_BG: Record<string, string> = {
-  rektor: '#254BFF', spravce: '#258B25', lektor: '#C0392B', student: '#888', editor: '#7a4a8a',
+  rektor: '#254BFF', spravce: '#258B25', lektor: '#C0392B', redaktor: '#7a4a8a', student: '#888', editor: '#7a4a8a',
 };
 
 function KvalItem({ item, children, profiles, roles, onReload, userId, isRektor }: any) {

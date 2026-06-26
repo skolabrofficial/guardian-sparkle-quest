@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 import { pickHighestRole } from '@/lib/rolePriority';
 
-type AppRole = 'rektor' | 'spravce' | 'lektor' | 'student';
+type AppRole = 'rektor' | 'spravce' | 'lektor' | 'redaktor' | 'student';
 
 interface AuthContextType {
   user: User | null;
@@ -19,6 +19,7 @@ interface AuthContextType {
   isRektor: boolean;
   isSpravce: boolean;
   isLektor: boolean;
+  isRedaktor: boolean;
   /** @deprecated use isRektor */
   isDeveloper: boolean;
   /** @deprecated use isSpravce */
@@ -114,12 +115,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isRektor = role === 'rektor';
   const isSpravce = role === 'spravce';
   const isLektor = role === 'lektor';
-  const isStaff = isRektor || isSpravce;
+  const isRedaktor = role === 'redaktor';
+  const isStaff = isRektor || isSpravce || isRedaktor;
   const isDeveloper = isRektor;   // alias pro zpětnou kompatibilitu
   const isDohledci = isSpravce;   // alias pro zpětnou kompatibilitu
 
   return (
-    <AuthContext.Provider value={{ user, session, role, profile, loading, isBlocked, signIn, signUp, signOut, isStaff, isRektor, isSpravce, isLektor, isDeveloper, isDohledci }}>
+    <AuthContext.Provider value={{ user, session, role, profile, loading, isBlocked, signIn, signUp, signOut, isStaff, isRektor, isSpravce, isLektor, isRedaktor, isDeveloper, isDohledci }}>
       {children}
     </AuthContext.Provider>
   );
