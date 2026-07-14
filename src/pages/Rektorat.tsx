@@ -63,6 +63,7 @@ const tabGroups: { group: string; items: { key: Tab; label: string; icon: string
   { group: '⚙ Systém', items: [
     { key: 'reporty', label: 'Hlášení', icon: '⚠' },
     { key: 'audit', label: 'Audit log', icon: '📋' },
+    { key: 'protokol-doc', label: 'Systém protokolů', icon: '📖' },
     { key: 'zmenar', label: 'Změnář', icon: '📝' },
     { key: 'filtr-slov', label: 'Filtr slov', icon: '🤬' },
     { key: 'bezpecnost', label: 'Bezpečnost', icon: '🛡' },
