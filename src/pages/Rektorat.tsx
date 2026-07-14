@@ -15,8 +15,9 @@ import AdminSearch from '@/components/AdminSearch';
 import ChangelogPanel from '@/components/ChangelogPanel';
 import UserLink from '@/components/UserLink';
 import { ProtokolFromAudit } from '@/components/Protokol';
+import ProtokolSystemDoc from '@/components/ProtokolSystemDoc';
 
-type Tab = 'prehled' | 'kurzy' | 'lektori' | 'studenti' | 'fakulty' | 'rozvrh' | 'dotazy' | 'vypisky' | 'oznameni' | 'reporty' | 'audit' | 'nastaveni' | 'notifikace' | 'role' | 'statistiky' | 'rozpocet' | 'smernice' | 'zpravy' | 'zadosti' | 'kvalita' | 'export' | 'import' | 'hromadne' | 'harmonogram' | 'bezpecnost' | 'klubovny' | 'kapacity' | 'mentori' | 'plany' | 'hodnoceni' | 'blokace' | 'forum' | 'emailove-sablony' | 'integrace' | 'obrazky' | 'odeslat-notifikaci' | 'styly-stranek' | 'obsahove-boxy' | 'filtr-slov' | 'hledani' | 'zmenar' | 'uzivatele' | 'mezirozpravy';
+type Tab = 'prehled' | 'kurzy' | 'lektori' | 'studenti' | 'fakulty' | 'rozvrh' | 'dotazy' | 'vypisky' | 'oznameni' | 'reporty' | 'audit' | 'nastaveni' | 'notifikace' | 'role' | 'statistiky' | 'rozpocet' | 'smernice' | 'zpravy' | 'zadosti' | 'kvalita' | 'export' | 'import' | 'hromadne' | 'harmonogram' | 'bezpecnost' | 'klubovny' | 'kapacity' | 'mentori' | 'plany' | 'hodnoceni' | 'blokace' | 'forum' | 'emailove-sablony' | 'integrace' | 'obrazky' | 'odeslat-notifikaci' | 'styly-stranek' | 'obsahove-boxy' | 'filtr-slov' | 'hledani' | 'zmenar' | 'uzivatele' | 'mezirozpravy' | 'protokol-doc';
 
 const tabGroups: { group: string; items: { key: Tab; label: string; icon: string }[] }[] = [
   { group: '📊 Přehled', items: [
@@ -62,6 +63,7 @@ const tabGroups: { group: string; items: { key: Tab; label: string; icon: string
   { group: '⚙ Systém', items: [
     { key: 'reporty', label: 'Hlášení', icon: '⚠' },
     { key: 'audit', label: 'Audit log', icon: '📋' },
+    { key: 'protokol-doc', label: 'Systém protokolů', icon: '📖' },
     { key: 'zmenar', label: 'Změnář', icon: '📝' },
     { key: 'filtr-slov', label: 'Filtr slov', icon: '🤬' },
     { key: 'bezpecnost', label: 'Bezpečnost', icon: '🛡' },
@@ -1058,6 +1060,9 @@ export default function Rektorat() {
             {reports.length === 0 && <p className="text-muted-foreground text-sm">Žádné reporty.</p>}
           </div>
         );
+
+      case 'protokol-doc':
+        return <ProtokolSystemDoc />;
 
       case 'audit':
         return (
