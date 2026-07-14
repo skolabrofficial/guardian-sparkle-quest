@@ -143,6 +143,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           priority: string | null
+          scheduled_for: string | null
           target_role: Database["public"]["Enums"]["app_role"] | null
           title: string
         }
@@ -153,6 +154,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           priority?: string | null
+          scheduled_for?: string | null
           target_role?: Database["public"]["Enums"]["app_role"] | null
           title: string
         }
@@ -163,6 +165,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           priority?: string | null
+          scheduled_for?: string | null
           target_role?: Database["public"]["Enums"]["app_role"] | null
           title?: string
         }
@@ -1614,6 +1617,7 @@ export type Database = {
       }
       tutoring_questions: {
         Row: {
+          assigned_to: string | null
           context: string | null
           created_at: string
           id: string
@@ -1624,6 +1628,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assigned_to?: string | null
           context?: string | null
           created_at?: string
           id?: string
@@ -1634,6 +1639,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assigned_to?: string | null
           context?: string | null
           created_at?: string
           id?: string
@@ -1974,6 +1980,10 @@ export type Database = {
         Args: { _decision: string; _note?: string; _request_id: string }
         Returns: string
       }
+      get_highest_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -2008,7 +2018,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "rektor" | "spravce" | "lektor" | "student"
+      app_role: "rektor" | "spravce" | "redaktor" | "lektor" | "student"
       article_status:
         | "draft_author"
         | "awaiting_review"
@@ -2148,7 +2158,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["rektor", "spravce", "lektor", "student"],
+      app_role: ["rektor", "spravce", "redaktor", "lektor", "student"],
       article_status: [
         "draft_author",
         "awaiting_review",
