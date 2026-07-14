@@ -1061,6 +1061,9 @@ export default function Rektorat() {
           </div>
         );
 
+      case 'protokol-doc':
+        return <ProtokolSystemDoc />;
+
       case 'audit':
         return (
           <div className="grid gap-2">
