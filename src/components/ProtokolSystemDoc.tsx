@@ -381,18 +381,34 @@ export default function ProtokolSystemDoc() {
   };
   const demoProfile = { display_name: 'Anička', username: 'anicka', avatar_url: null };
 
+  const proseClass = "text-sm leading-relaxed space-y-3 [&_p]:m-0 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:bg-muted [&_code]:text-[12px]";
+
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-5">
       <div>
-        <h3 className="mt-0 text-lg font-extrabold">📖 Systém protokolů (NFP)</h3>
-        <p className="text-sm text-muted-foreground m-0">
-          Kompletní popis protokolového systému pro přenos do jiného projektu.
-          Každý blok zkopíruj tlačítkem „Kopírovat" a vlož do cílového projektu na příslušné místo.
-        </p>
+        <h3 className="mt-0 text-lg font-extrabold">📖 Systém protokolů (NFP – Nová Forma Protokolu)</h3>
+        <div className={proseClass + " text-muted-foreground mt-2"}>
+          <p>
+            Tento dokument popisuje kompletní protokolový systém tak, jak běží v této univerzitě,
+            a je psán tak, abys ho mohl krok po kroku přenést do libovolného jiného projektu
+            postaveného na Reactu a Supabase. Každý blok kódu níže má vpravo nahoře tlačítko
+            <b> „📋 Kopírovat"</b> – zkopíruj obsah přímo do schránky a vlož ho v cílovém projektu
+            na místo, které je v nadpisu bloku uvedené (např. <code>src/lib/minRole.ts</code>).
+          </p>
+          <p>
+            Cílem systému je, aby <b>každá moderátorská akce</b> (zablokování, odblokování, úprava zdi,
+            zveřejnění článku, přiřazení role, otevření mezirozpravy…) i <b>každá změna obsahu</b>
+            (title, content, tagy…) měla v aplikaci jednu konzistentní vizuální kartu – tzv. „protokol". Ten
+            říká <i>kdo</i> (nick + odznáček nejnižší role, která k tomu stačí), <i>co</i> (druh akce a
+            kontext), <i>kdy</i> (relativní čas) a případně i <i>co konkrétně se změnilo</i>
+            (before/after diff). Každý protokol lze navíc adresovat krátkým kódem <code>[[PRT-XXXXXX]]</code>,
+            který jde vložit do poznámky, komentáře nebo mezirozpravy a on se pak sám zobrazí jako živá karta.
+          </p>
+        </div>
       </div>
 
       <section className="rounded-xl border border-border bg-card p-4">
-        <div className="text-sm font-bold mb-2">🎬 Ukázka výsledné karty</div>
+        <div className="text-sm font-bold mb-3">🎬 Jak to vypadá (dvě reálné karty)</div>
         <ProtokolFromAudit row={demoRow as any} profile={demoProfile as any} role="spravce" sourceTable="audit_log" />
         <Protokol
           druh={225}
@@ -403,27 +419,154 @@ export default function ProtokolSystemDoc() {
           kontext={<>zveřejnění článku <em>„Jak se učí Alík"</em></>}
           kod="PRT-DEMO01"
         />
+        <p className="text-xs text-muted-foreground mt-2 mb-0">
+          První karta vzniká z řádku <code>audit_log</code> (akce <code>user.block</code>) – odznáček ukazuje
+          <b> správce</b>, protože blokace je minimální role „správce". Druhá karta je ručně sestavená
+          <code> &lt;Protokol/&gt;</code> pro ukázku zveřejnění článku redaktorem.
+        </p>
       </section>
 
-      <section className="rounded-xl border border-border bg-muted/30 p-4">
-        <div className="text-sm font-bold mb-2">🧭 Architektura ve zkratce</div>
-        <ol className="text-sm space-y-1 pl-5 list-decimal m-0">
-          <li><b>audit_log</b> – globální log akcí (kdo/co/kdy/detaily).</li>
-          <li><b>entity_history</b> – změny polí konkrétní entity (before/after).</li>
-          <li><b>protokol_codes</b> – krátké kódy <code>[[PRT-XXXXXX]]</code> jako odkazy.</li>
-          <li><b>minRole</b> – z názvu akce dopočítá minimální roli; ta se ukládá do <code>details.min_role</code> a barví odznáček autority.</li>
-          <li><b>Protokol.tsx</b> – vizuální karta (druh + autorita + nick + čas + kontext + změny + kód).</li>
-          <li><b>ProtokolByCode.tsx</b> – zobrazí kartu podle kódu, a <code>PoznamkaText</code> rozparsuje kódy v libovolném textu.</li>
-        </ol>
+      <section className={"rounded-xl border border-border bg-muted/30 p-4 " + proseClass}>
+        <div className="text-sm font-bold">🧭 Z čeho se to skládá</div>
+        <p>
+          Data leží ve <b>třech tabulkách</b>. <code>audit_log</code> je globální kniha akcí –
+          zapisuje se do ní ručně voláním <code>logAudit('user.block', {'{'}…{'}'})</code>, kdykoli se
+          děje něco moderátorského. <code>entity_history</code> je změnová historie polí konkrétní entity
+          (např. změna <code>title</code> a <code>content</code> článku) – zapisuje se přes
+          <code>recordHistory(entityType, id, userId, 'update', {'{'} title:{'{'}from,to{'}'} {'}'})</code>.
+          A <code>protokol_codes</code> je jen slovník krátkých kódů – když někdo první krát klikne
+          na „📎 kód", vygeneruje se <code>PRT-AB12CD</code> a napevno se spáruje s daným řádkem.
+        </p>
+        <p>
+          Logiku drží <b>dva soubory v <code>src/lib/</code></b>. <code>minRole.ts</code> je tabulka
+          pravidel – z názvu akce (<code>article.publish</code>) vrátí minimální roli
+          (<code>'spravce'</code>). Tahle role se ukládá do <code>details.min_role</code> a řídí barvu
+          odznáčku v kartě: takže i když článek zveřejní rektor osobně, karta ukáže odznáček „správce",
+          protože „to zvládne i správce". <code>auditLog.ts</code> je jen tenká obálka nad Supabase
+          insertem, která tuhle roli automaticky dopočítá.
+        </p>
+        <p>
+          Vizuál drží <b>dva komponenty</b>. <code>Protokol.tsx</code> je samotná karta (svislý pruh
+          s druhem vlevo, avatar + nick + odznáček autority + čas + kontext + volitelné before/after
+          diffy + kód vpravo). <code>ProtokolByCode.tsx</code> exportuje <code>&lt;PoznamkaText text=... /&gt;</code>,
+          což je náhrada za obyčejný <code>&lt;p&gt;</code>: v textu najde všechny <code>[[PRT-XXXXXX]]</code>
+          a nahradí je živou kartou daného protokolu.
+        </p>
       </section>
 
-      <Block title="1) SQL schéma + RLS" code={SQL_SCHEMA} lang="sql" />
+      <Block title="1) SQL schéma + RLS (spusť jako migraci)" code={SQL_SCHEMA} lang="sql" />
+      <div className={proseClass + " text-muted-foreground -mt-2"}>
+        <p>
+          Tři tabulky, u každé jsou <b>GRANTy</b> pro role <code>authenticated</code> a
+          <code>service_role</code> (bez nich by PostgREST vrátil „permission denied" i s RLS)
+          a <b>RLS policies</b>. Zásadní je, že <code>audit_log</code> a <code>entity_history</code>
+          si smí insertovat každý přihlášený, ale <b>číst</b> je smí jen role <code>rektor</code>
+          nebo <code>spravce</code> (a u historie i autor záznamu). Protokolové kódy může číst kdokoliv
+          přihlášený – jinak by rozklikávání krátkých odkazů v poznámkách nefungovalo. Funkce
+          <code> has_role(uuid, app_role)</code> se předpokládá stejná jako u tebe v projektu
+          (SECURITY DEFINER, čte z tabulky <code>user_roles</code>).
+        </p>
+      </div>
+
       <Block title="2) src/lib/minRole.ts" code={TS_MIN_ROLE} lang="ts" />
+      <div className={proseClass + " text-muted-foreground -mt-2"}>
+        <p>
+          Pravidla jsou <b>seřazená od nejpřísnějších</b> – první match vyhrává. Když zavoláš
+          <code> minRoleForAction('article.publish')</code>, projde to regexem
+          <code> /^article\.(publish|reject|delete|…)/</code> a vrátí <code>'spravce'</code>.
+          Když zavoláš <code>minRoleForAction('article.save_draft')</code>, spadne to až na obecný
+          <code> /^article\./</code> a vrátí <code>'redaktor'</code>. Chceš přidat vlastní akci?
+          Prostě přidej řádek do <code>RULES</code> nad ten obecnější.
+        </p>
+        <p>
+          <b>Příklad:</b> chceš, aby akce <code>shop.refund</code> vyžadovala rektora →
+          přidej <code>{"{ test: /^shop\\.refund/, role: 'rektor' }"}</code> úplně nahoru.
+        </p>
+      </div>
+
       <Block title="3) src/lib/auditLog.ts" code={TS_AUDIT_LOG} lang="ts" />
+      <div className={proseClass + " text-muted-foreground -mt-2"}>
+        <p>
+          Toto je jediné, co budeš volat v aplikaci. Nikdy <b>neinsertuj do <code>audit_log</code>
+          napřímo</b> – přišel bys o automatické dopočítání <code>min_role</code>. Volej vždy
+          <code> logAudit(action, {'{'} entityType, entityId, details {'}'})</code>.
+        </p>
+        <p><b>Příklad – zablokování uživatele:</b></p>
+        <pre className="text-xs bg-muted p-2 rounded m-0 overflow-auto"><code>{`await logAudit('user.block', {
+  entityType: 'profiles',
+  entityId: target.id,
+  details: {
+    target_username: target.username,
+    reason: 'opakované urážky v mezirozpravě',
+    hours: 48,
+  },
+});`}</code></pre>
+        <p><b>Příklad – zveřejnění článku:</b></p>
+        <pre className="text-xs bg-muted p-2 rounded m-0 overflow-auto"><code>{`await logAudit('article.publish', {
+  entityType: 'articles',
+  entityId: article.id,
+  details: { title: article.title, topic: article.topic_slug },
+});`}</code></pre>
+      </div>
+
       <Block title="4) src/lib/protokolCodes.ts" code={TS_PROTOKOL_CODES} lang="ts" />
-      <Block title="5) src/components/Protokol.tsx (hlavička – kompletní verzi zkopíruj přímo ze souboru v projektu)" code={TS_PROTOKOL} lang="tsx" />
-      <Block title="6) CSS (do src/index.css)" code={CSS_BLOCK} lang="css" />
-      <Block title="7) Použití v aplikaci" code={USAGE} lang="ts" />
+      <div className={proseClass + " text-muted-foreground -mt-2"}>
+        <p>
+          Kódy se <b>generují lazy</b> – teprve když si někdo v UI klikne na „📎 kód protokolu",
+          zavolá se <code>ensureProtokolCode('audit_log', row.id)</code>, která vrátí existující
+          kód nebo vytvoří nový (např. <code>PRT-K4X9QM</code>). Abeceda záměrně vynechává
+          <code> 0/O/1/I</code>, aby se kódy daly diktovat po telefonu.
+        </p>
+        <p>
+          Opačným směrem funguje <code>lookupProtokolByCode('PRT-K4X9QM')</code> – vrátí buď řádek
+          z <code>audit_log</code>, nebo z <code>entity_history</code>, podle toho, kam kód ukazuje.
+          To využívá <code>&lt;PoznamkaText/&gt;</code>, aby v textu poznámky
+          („viz [[PRT-K4X9QM]]") vyrenderoval živou kartu.
+        </p>
+      </div>
+
+      <Block title="5) src/components/Protokol.tsx (hlavička – celý soubor zkopíruj přímo ze zdroje)" code={TS_PROTOKOL} lang="tsx" />
+      <div className={proseClass + " text-muted-foreground -mt-2"}>
+        <p>
+          <b>Druh</b> je číslo – jeho význam určuje slovník dole. Barevný svislý pruh vlevo je
+          jeho vizuální „štítek". <b>Autorita</b> je taky číslo, ale mapuje se na roli (255 = rektor
+          modře, 192 = správce zeleně, 48 = lektor červeně, 24 = redaktor fialově). <code>feminin</code>
+          přepíná mezi „zablokovala/zablokoval" – v Protokolu ideálně čti z profilu uživatele.
+          <code> kontext</code> je libovolný <code>ReactNode</code>: obvykle věta typu
+          <i> „uživateli petr / za spam v diskuzi"</i>.
+        </p>
+        <p>
+          Karta má i variantu <code>&lt;ProtokolFromAudit row={'{'}...{'}'} profile={'{'}...{'}'} role="spravce" /&gt;</code>,
+          která si sama vytáhne druh a min_role z <code>row.action</code> a <code>row.details.min_role</code> –
+          v praxi ji použiješ pro celé seznamy logu.
+        </p>
+      </div>
+
+      <Block title="6) CSS (přidej na konec src/index.css)" code={CSS_BLOCK} lang="css" />
+      <div className={proseClass + " text-muted-foreground -mt-2"}>
+        <p>
+          CSS používá tokeny <code>--card</code>, <code>--border</code>, <code>--foreground</code>,
+          <code> --muted</code>, <code>--muted-foreground</code> (standardní shadcn tokeny). Když je
+          v cílovém projektu nemáš, nadefinuj si je v <code>:root</code> jako HSL trojice, nebo
+          v CSS nahraď <code>hsl(var(--card))</code> za pevné barvy.
+        </p>
+      </div>
+
+      <Block title="7) Použití – ukázky z reálné aplikace" code={USAGE} lang="ts" />
+      <div className={proseClass + " text-muted-foreground -mt-2"}>
+        <p>
+          Typický scénář na stránce „Zásahy v účtu" vypadá takhle: SELECT z <code>audit_log</code>
+          filtrovaný přes <code>entity_id = userId OR details-&gt;&gt;'target_id' = userId</code>,
+          pak <code>rows.map</code> do <code>&lt;ProtokolFromAudit/&gt;</code>. K tomu si předem
+          načteš profily a role všech <code>user_id</code> jedním dotazem a předáš je jako props.
+        </p>
+        <p>
+          Scénář „historie článku" je stejný, jen zdroj je <code>entity_history</code>
+          filtrovaný na <code>entity_type='articles' AND entity_id=:id</code>. Když je
+          <code> changes</code> více polí najednou, sesbírej je do jedné karty přes společný
+          <code> save_group</code> (UUID přidané do <code>changes.__group</code> při zápisu).
+        </p>
+      </div>
 
       <section className="rounded-xl border border-border bg-card p-4 text-sm">
         <div className="font-bold mb-2">📚 Slovník druhů (id → význam)</div>
@@ -440,11 +583,26 @@ export default function ProtokolSystemDoc() {
           <div><b>24</b> redaktor</div><div><b>48</b> lektor</div>
           <div><b>192</b> správce</div><div><b>255</b> rektor</div>
         </div>
-        <div className="mt-3 text-muted-foreground text-xs">
-          Konvence názvů akcí: <code>entity.akce</code> (např. <code>user.block</code>, <code>article.publish</code>,
-          <code>forum.delete</code>). Odpovídající druh a minimální role se automaticky odvodí ze jména akce
-          (viz <code>actionToDruh</code> v <code>Protokol.tsx</code> a <code>minRoleForAction</code> v <code>minRole.ts</code>).
-        </div>
+        <p className="mt-3 text-muted-foreground text-xs m-0">
+          <b>Konvence názvů akcí:</b> <code>entity.akce</code> (např. <code>user.block</code>,
+          <code> article.publish</code>, <code>forum.delete</code>). Držet se jí je důležité,
+          protože jak <code>actionToDruh</code> v <code>Protokol.tsx</code>, tak
+          <code> minRoleForAction</code> v <code>minRole.ts</code> hádají druh a minimální roli
+          <b> z prefixu</b>. Když si vymyslíš <code>userBlock</code> místo <code>user.block</code>,
+          spadne to na fallback „student / Poznámka" a karta bude šedivá.
+        </p>
+      </section>
+
+      <section className={"rounded-xl border border-border bg-muted/30 p-4 " + proseClass}>
+        <div className="text-sm font-bold">✅ Checklist pro přenos do jiného projektu</div>
+        <ol className="pl-5 list-decimal space-y-1">
+          <li>Spusť blok <b>1) SQL schéma</b> jako migraci (funkci <code>has_role</code> už máš).</li>
+          <li>Vlož soubory <b>2) minRole.ts</b>, <b>3) auditLog.ts</b>, <b>4) protokolCodes.ts</b> do <code>src/lib/</code>.</li>
+          <li>Zkopíruj <b>Protokol.tsx</b> a <b>ProtokolByCode.tsx</b> ze zdroje do <code>src/components/</code>.</li>
+          <li>Přilep <b>6) CSS</b> na konec <code>src/index.css</code>.</li>
+          <li>V každém moderátorském handleru zavolej <code>logAudit(...)</code>, u editorů obsahu <code>recordHistory(...)</code>.</li>
+          <li>Na stránce „logy" mapuj řádky do <code>&lt;ProtokolFromAudit/&gt;</code>, v textech (poznámky, kvalitářka) použij <code>&lt;PoznamkaText/&gt;</code>.</li>
+        </ol>
       </section>
     </div>
   );

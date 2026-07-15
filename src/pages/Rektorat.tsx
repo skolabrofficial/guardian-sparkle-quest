@@ -1621,7 +1621,7 @@ export default function Rektorat() {
                 )}
                 <button onClick={async () => {
                   if (!newBlock.title || !user) return;
-                  const { error } = await supabase.from('content_blocks').insert({
+                  const { error } = await (supabase.from('content_blocks') as any).insert({
                     ...newBlock,
                     link_url: newBlock.link_url || null,
                     link_text: newBlock.link_text || null,

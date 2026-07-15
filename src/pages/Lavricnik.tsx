@@ -68,12 +68,14 @@ export default function Lavricnik() {
       setLaurels(laurelData || []);
 
       // Načti transakce (jen pro adminy/rektora)
+      let txData: any[] | null = null;
       if (isStaff || isRektor) {
-        const { data: txData } = await sb
+        const res = await sb
           .from('laurel_transactions')
           .select('*')
           .order('timestamp', { ascending: false })
           .limit(100);
+        txData = res.data;
         setTransactions(txData || []);
       }
 
