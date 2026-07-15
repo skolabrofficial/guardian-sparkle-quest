@@ -482,7 +482,7 @@ export default function NaucturaDetail() {
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={startEdit}>✎ Upravit</Button>
             {transitions.map(tr => (
-              <button key={tr.to} onClick={() => { setTransitionPick(tr); setTransitionReason(''); setPublishFeatured(false); }} className="px-3 py-2 rounded-xl border-2 text-sm font-bold" style={{ borderColor: tr.color, color: tr.color }}>
+              <button key={tr.to} onClick={() => { setTransitionPick(tr); setTransitionReason(''); setPublishFeatured(false); }} className="px-3 py-2 rounded-xl border-2 text-sm font-bold" style={{ borderColor: STATUS_INFO[tr.to]?.color, color: STATUS_INFO[tr.to]?.color }}>
                 → {tr.label}
               </button>
             ))}
